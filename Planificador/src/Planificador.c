@@ -23,13 +23,15 @@
 #define PACKAGESIZE 1024
 
 
+//prueba para hilos
+/*
 struct param{
  int socket;
  int n;
 };
 
 void escuchar (struct param *parametros) {
-
+*/
 
 }
 
@@ -69,7 +71,7 @@ int main() {
 		if (L == -1)
 			perror("LISTEN");
 
-	//Hilo para escucha
+	//Hilo para escucha (prueba)
 
 /*
 	struct param param1 = {0,0};
