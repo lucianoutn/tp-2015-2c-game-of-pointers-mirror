@@ -24,16 +24,34 @@
 
 
 //prueba para hilos
-/*
-struct param{
- int socket;
- int n;
-};
+/*se pueden conectar varios clientes y envia mensajes dependiendo cm se le de la gana al hilo
+ * por ahora lo dejo asi, porque con 1 solo CPU anda bien, y mejor terminar el resto antes de
+ * seguir con esto. Tambien depende de como mandemos las instrucciones y demas de la planificacion
+ * que todavia no hicimos del TP para saber como tendria que mandar los mensajes.
+ */
 
-void escuchar (struct param *parametros) {
-*/
+
+void *multiplesConexiones (void *socket_desc) {
+
+	int socket_instrucciones = *(int *)socket_desc;
+
+	//Envio de instrucciones
+
+	int enviar = 1;
+	char message[PACKAGESIZE];
+
+	printf("Conectado al CPU en el Socket=%d. Ya puede enviar instrucciones. Escriba 'exit' para finalizar\n",socket_instrucciones);
+
+	while(enviar){
+		fgets(message, PACKAGESIZE, stdin);			// Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
+		if (!strcmp(message,"exit\n")) enviar = 0;			// Chequeo que el usuario no quiera salir
+		if (enviar) send(socket_instrucciones, message, strlen(message) + 1, 0); 	// Solo envio si el usuario no quiere salir.
+	}
+
 
 }
+
+
 
 
 int main() {
@@ -71,36 +89,33 @@ int main() {
 		if (L == -1)
 			perror("LISTEN");
 
-	//Hilo para escucha (prueba)
-
-/*
-	struct param param1 = {0,0};
-	pthread_t hiloListen;
-	pthread_create (&hiloListen, NULL, (void*)escuchar, (void*)&param1);
-*/
-
 
 
 	//Estructura que tendra los datos de la conexion del cliente
 	struct sockaddr_in addr;
 	socklen_t addrlen = sizeof(addr);
+	int socketPlanificador, *nuevo_socket;
 
-	int socketPlanificador = accept(listenningSocket, (struct sockaddr *) &addr,
-			&addrlen);
-	printf("Conexion recibida\n");
+	//Hilo para escucha (prueba)
 
-	//Envio de instrucciones
+	while( (socketPlanificador = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen) ) )
+	{
+		printf("Conexion aceptada Socket=&d\n",socketPlanificador);
 
-	int enviar = 1;
-		char message[PACKAGESIZE];
+		pthread_t hilo;
+		nuevo_socket=malloc(1);
+		*nuevo_socket=socketPlanificador;
 
-		printf("Conectado al CPU. Ya puede enviar instrucciones. Escriba 'exit' para finalizar\n");
-
-		while(enviar){
-			fgets(message, PACKAGESIZE, stdin);			// Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
-			if (!strcmp(message,"exit\n")) enviar = 0;			// Chequeo que el usuario no quiera salir
-			if (enviar) send(socketPlanificador, message, strlen(message) + 1, 0); 	// Solo envio si el usuario no quiere salir.
+		if(pthread_create(&hilo,NULL,multiplesConexiones,(void*)nuevo_socket)<0)
+		{
+			perror("No se puede crear el hilo");
+			return 1;
 		}
+
+		puts("Nueva conexion asignada");
+	}
+
+		//free(nuevo_socket);
 
 		close(socketPlanificador);
 		close(listenningSocket);
