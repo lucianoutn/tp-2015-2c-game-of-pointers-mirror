@@ -45,9 +45,10 @@ int main()
 
 	//Conexion al servidor Planificador
 	int C = connect(cpuSocket, serverInfo->ai_addr, serverInfo->ai_addrlen);
-	if (C==-1)
+	if (C==-1){
 		perror ("CONNECT");
-	else
+		return -1;
+	}else
 		printf ("Conexion con el Planificador lograda\n");
 
 	freeaddrinfo(serverInfo);

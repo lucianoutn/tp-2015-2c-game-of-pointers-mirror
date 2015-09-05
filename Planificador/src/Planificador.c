@@ -22,6 +22,7 @@
 #define BACKLOG 10
 #define PACKAGESIZE 1024
 
+<<<<<<< HEAD
 //struct para conexiones
 struct Conexiones {
 	int socket_escucha;
@@ -29,6 +30,14 @@ struct Conexiones {
 	socklen_t tamanio_direccion;
 	int CPUS[10];
 } conexiones;
+=======
+//prueba para hilos
+/*se pueden conectar varios clientes y envia mensajes dependiendo cm se le de la gana al hilo
+ * por ahora lo dejo asi, porque con 1 solo CPU anda bien, y mejor terminar el resto antes de
+ * seguir con esto. Tambien depende de como mandemos las instrucciones y demas de la planificacion
+ * que todavia no hicimos del TP para saber como tendria que mandar los mensajes.
+ */
+>>>>>>> branch 'master' of https://github.com/sisoputnfrba/tp-2015-2c-game-of-pointers.git
 
 //Funcion encargada de acceptar nuevas peticiones de conexion
 void *escuchar (struct Conexiones *conexion){
