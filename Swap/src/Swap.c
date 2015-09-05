@@ -61,26 +61,26 @@ int main(void) {
 		if (L == -1)
 			perror("LISTEN");
 
-		int socketSwap, *nuevo_socket;
-		while( (socketSwap = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen) ) )
-		{
+		int socketSwap;
+		socketSwap = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen);
 			printf("Conexion aceptada Socket= %d \n",socketSwap);
-
 
 			//Recepcion de instrucciones
 			char package[PACKAGESIZE];
 			int status;		// Estructura que manjea el status de los recieve.
 			printf("ADM de Memoria conectado. Esperando instrucciones:\n");
-			status = recv(socketSwap, (void*) package, PACKAGESIZE, 0);
-			if (status != 0){
-				printf("RECIBIDO! %s", package);
-			}else{
-				puts("conexion perdida!");
-			};
 
+			while(strcmp(package,"salir\n") !=0)
+			{
+				status = recv(socketSwap, (void*) package, PACKAGESIZE, 0);
+				if (status != 0){
+					printf("RECIBIDO! =D\n%s", package);
+				}else{
+					puts("conexion perdida! =(");
+					break;
+				};
+			}
 
-
-		}
 
 			close(socketSwap);
 			close(listenningSocket);

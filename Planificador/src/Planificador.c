@@ -93,43 +93,41 @@ int main() {
 	while(conexiones.CPUS[0] == 0){
 	};
 
-	while(1)
-	{
 
-		int socket_instrucciones;
-		puts("Elija CPU:\n");
-		int j = 0;
-		while ( j < 5) {
-			printf("CPU n°:%d, puerto: %d\n",j,conexiones.CPUS[j]);
+	int socket_instrucciones, caracter, enviar;
+	char message[PACKAGESIZE];
+
+	while(strcmp(message,"salir\n") !=0)
+	{
+		puts("Elija CPU: ¡¡¡¡SOLO NUMEROS!!!\n");
+		int j = 1;
+		while ( j < 6) {
+			printf("CPU n°:%d, puerto: %d\n",j,conexiones.CPUS[j-1]);
 			j++;
 		}
-		int caracter;
 		scanf("%d", &caracter);
+		enviar =1;
 		switch (caracter) {
-			case 0: socket_instrucciones = conexiones.CPUS[0];
+			case 1: socket_instrucciones = conexiones.CPUS[0];
 				break;
-			case 1: socket_instrucciones = conexiones.CPUS[1];
+			case 2: socket_instrucciones = conexiones.CPUS[1];
 				break;
-			case 2: socket_instrucciones = conexiones.CPUS[2];
+			case 3: socket_instrucciones = conexiones.CPUS[2];
 				break;
-			case 3: socket_instrucciones = conexiones.CPUS[3];
+			case 4: socket_instrucciones = conexiones.CPUS[3];
 				break;
-			case 4: socket_instrucciones = conexiones.CPUS[4];
+			case 5: socket_instrucciones = conexiones.CPUS[4];
 				break;
-			case 5: socket_instrucciones = conexiones.CPUS[5];
-				break;
-			default: puts("CPU NO VALIDA!");
+			default: {puts("CPU NO VALIDA!"); enviar=0; caracter=0;};
 				break;
 		}
-		int enviar = 1;
-		char message[PACKAGESIZE];
 
-		printf("Ya puede enviar instrucciones.\nEscriba 'correr' para enviar una señal al CPU\n'exit' para cambiar de CPU\n");
-
+		printf("Ya puede enviar instrucciones.\nEscriba 'correr programa' para enviar una señal al CPU\n'cpu' para cambiar de CPU\n'salir' para cerrar los procesos\n");
 		while(enviar){
 		fgets(message, PACKAGESIZE, stdin);			// Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
-		if (!strcmp(message,"exit\n")) enviar = 0;			// Chequeo que el usuario no quiera salir
-		if (!strcmp(message,"correr\n")) send(socket_instrucciones, message, strlen(message) + 1, 0); 	// Solo envio si el usuario no quiere salir.
+		if (!strcmp(message,"cpu\n")) enviar = 0;			// Chequeo que el usuario no quiera salir
+		if (!strcmp(message,"correr programa\n")) send(socket_instrucciones, message, strlen(message) + 1, 0); 	// Solo envio si el usuario no quiere salir.
+		if (!strcmp(message,"salir\n")){ send(socket_instrucciones, message, strlen(message) + 1, 0); break;};
 		}
 
 	}

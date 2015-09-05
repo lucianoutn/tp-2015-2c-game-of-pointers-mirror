@@ -111,22 +111,21 @@ int main(void) {
 
 		//fin server
 
-
-
+			char message[PACKAGESIZE] = "lalala";
+			int status;
+			printf("CPU conectada. Esperando instrucciones:\n");
 	//Envio de instrucciones
-
-		char message[PACKAGESIZE];
-		int status;		// Estructura que manjea el status de los recieve.
-
-		printf("CPU conectada. Esperando instrucciones:\n");
-		status = recv(conexiones.CPUS[0], (void*) message, PACKAGESIZE, 0);
-		if (status != 0){
-			printf("RECIBIDO! =D\n%s", message);
-			send(memSocket, message, strlen(message) + 1, 0);
-		}else{
-			puts("conexion perdida! =(");
+		while(strcmp(message,"salir\n") !=0)
+		{
+			status = recv(conexiones.CPUS[0], (void*) message, PACKAGESIZE, 0);
+			if (status != 0){
+				printf("RECIBIDO! =D\n%s", message);
+				send(memSocket, message, strlen(message) + 1, 0);
+			}else{
+				puts("conexion perdida! =(");
+				break;
+			}
 		}
-
 
 
 		return EXIT_SUCCESS;

@@ -72,20 +72,22 @@ int main()
 
 //Recepcion de instrucciones
 
-
 	char package[PACKAGESIZE];
 	int status;		// Estructura que manjea el status de los recieve.
-
 	printf("CPU conectada. Esperando instrucciones:\n");
 
-	status = recv(socketPlanificador, (void*) package, PACKAGESIZE, 0);
-	if (status != 0){
-		printf("RECIBIDO! =D\n%s", package);
-		send(socketMemoria, package, strlen(package) + 1, 0);
-	}else{
-		puts("conexion perdida! =(");
-	}
+	while(strcmp(package,"salir\n") !=0)
+	{
+		status = recv(socketPlanificador, (void*) package, PACKAGESIZE, 0);
+		if (status != 0){
+			printf("RECIBIDO! =D\n%s", package);
+			send(socketMemoria, package, strlen(package) + 1, 0);
+		}else{
+			puts("conexion perdida! =(");
+			break;
+		}
 
+	}
 
 	close(socketPlanificador);
 
