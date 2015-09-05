@@ -63,44 +63,27 @@ int main(void) {
 
 		int socketSwap, *nuevo_socket;
 		while( (socketSwap = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen) ) )
-			{
-				printf("Conexion aceptada Socket= %d \n",socketSwap);
-
-				/*pthread_t hilo;
-				nuevo_socket=malloc(1);
-				*nuevo_socket=socketSwap;
-
-				if(pthread_create(&hilo,NULL,multiplesConexiones,(void*)nuevo_socket)<0)
-				{
-					perror("No se puede crear el hilo");
-					return 1;
-				}
-
-				puts("Nueva conexion asignada");*/
+		{
+			printf("Conexion aceptada Socket= %d \n",socketSwap);
 
 
-				//Recepcion de instrucciones
-
-				char package[PACKAGESIZE];
-				int status = 1;		// Estructura que manjea el status de los recieve.
-				printf("ADM de Memoria conectado. Esperando instrucciones:\n");
-				while (status != 0){
-					status = recv(socketSwap, (void*) package, PACKAGESIZE, 0);
-					if (status != 0) printf("%s", package);
-
-				}
+			//Recepcion de instrucciones
+			char package[PACKAGESIZE];
+			int status;		// Estructura que manjea el status de los recieve.
+			printf("ADM de Memoria conectado. Esperando instrucciones:\n");
+			status = recv(socketSwap, (void*) package, PACKAGESIZE, 0);
+			if (status != 0){
+				printf("RECIBIDO! %s", package);
+			}else{
+				puts("conexion perdida!");
+			};
 
 
 
-			  }
+		}
 
-				//free(nuevo_socket);
-
-
-
-
-				close(socketSwap);
-				close(listenningSocket);
+			close(socketSwap);
+			close(listenningSocket);
 
 
 

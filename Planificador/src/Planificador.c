@@ -124,12 +124,12 @@ int main() {
 		int enviar = 1;
 		char message[PACKAGESIZE];
 
-		printf("Ya puede enviar instrucciones. Escriba 'exit' para cambiar de CPU\n");
+		printf("Ya puede enviar instrucciones.\nEscriba 'correr' para enviar una señal al CPU\n'exit' para cambiar de CPU\n");
 
 		while(enviar){
 		fgets(message, PACKAGESIZE, stdin);			// Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
 		if (!strcmp(message,"exit\n")) enviar = 0;			// Chequeo que el usuario no quiera salir
-		if (enviar) send(socket_instrucciones, message, strlen(message) + 1, 0); 	// Solo envio si el usuario no quiere salir.
+		if (!strcmp(message,"correr\n")) send(socket_instrucciones, message, strlen(message) + 1, 0); 	// Solo envio si el usuario no quiere salir.
 		}
 
 	}

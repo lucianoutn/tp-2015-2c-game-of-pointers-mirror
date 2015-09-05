@@ -17,9 +17,32 @@
 #include <unistd.h>
 
 #define IP "127.0.0.1"
-#define PUERTO "9000" //este es el puerto de swap??
+#define PUERTOSWAP "9000" //este es el puerto de swap
+#define PUERTOCPU "8090"
 #define BACKLOG 10
 #define PACKAGESIZE 1024
+
+//struct para conexiones
+struct Conexiones {
+	int socket_escucha;
+	struct sockaddr_in direccion;
+	socklen_t tamanio_direccion;
+	int CPUS[10];
+} conexiones;
+
+//Funcion encargada de acceptar nuevas peticiones de conexion
+void *escuchar (struct Conexiones *conexion){
+	int i =0;
+
+	while( i<=5 ) //limite temporal de 5 CPUS conectadas
+	{
+		//guarda las nuevas conexiones para acceder a ellas desde cualquier parte del codigo
+		conexion->CPUS[i] = accept(conexion->socket_escucha, (struct sockaddr *) &conexion->direccion, &conexion->tamanio_direccion);
+		puts("NUEVO HILO ESCUCHA!\n");
+		i++;
+	}
+	return NULL;
+}
 
 
 int main(void) {
@@ -33,7 +56,7 @@ int main(void) {
 		hints.ai_family = AF_UNSPEC;		// Permite que la maquina se encargue de verificar si usamos IPv4 o IPv6
 		hints.ai_socktype = SOCK_STREAM;	// Indica que usaremos el protocolo TCP
 
-		getaddrinfo(IP, PUERTO, &hints, &serverInfo);	// Carga en serverInfo los datos de la conexion
+		getaddrinfo(IP, PUERTOSWAP, &hints, &serverInfo);	// Carga en serverInfo los datos de la conexion
 
 	//se crea un nuevo socket que se utilizara para la conexion con el swap
 		int memSocket; //descriptor del socket de la memoria
@@ -49,19 +72,59 @@ int main(void) {
 		else
 			printf ("Conexion con el Swap lograda\n");
 
-		freeaddrinfo(serverInfo);
+		//freeaddrinfo(serverInfo);
+
+		getaddrinfo(IP, PUERTOCPU, &hints, &serverInfo);
+
+		//inicio server
+			int listenningSocket;
+			listenningSocket = socket(serverInfo->ai_family, serverInfo->ai_socktype,
+					serverInfo->ai_protocol);
+			//se comprueba que el socket se creo correctamente
+			if (listenningSocket == -1)
+				perror("SOCKET");
+
+			//se comprueba que la asociacion fue exitosa
+			int B = bind(listenningSocket, serverInfo->ai_addr, serverInfo->ai_addrlen);
+			if (B == -1)
+				perror("BIND");
+
+			freeaddrinfo(serverInfo);
+
+
+			//funcion que permite al programa ponerse a la espera de nuevas conexiones
+				int L = listen(listenningSocket, BACKLOG);
+				if (L == -1)
+					perror("LISTEN");
+				puts("LISTEN EJECUTANDOSE");
+
+
+			//Estructura que tendra los datos de la conexion del cliente
+			conexiones.socket_escucha = listenningSocket;
+			conexiones.tamanio_direccion = sizeof(conexiones.direccion);
+			pthread_t hilo_escuchas;
+			if(pthread_create(&hilo_escuchas,NULL,escuchar,&conexiones)<0)
+				puts("Error HILO ESCUCHAS!");
+
+			puts("ESPERANDO CPU....\n");
+			while(conexiones.CPUS[0]==0);
+
+		//fin server
+
+
 
 	//Envio de instrucciones
 
-		int enviar = 1;
 		char message[PACKAGESIZE];
-		if (C!=1)
-			printf("Conectado al Swap en el Socket=%d. Ya puede enviar instrucciones. Escriba 'exit' para finalizar\n",memSocket);
+		int status;		// Estructura que manjea el status de los recieve.
 
-		while(enviar){
-			fgets(message, PACKAGESIZE, stdin);			// Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
-			if (!strcmp(message,"exit\n")) enviar = 0;			// Chequeo que el usuario no quiera salir
-			if (enviar) send(memSocket, message, strlen(message) + 1, 0); 	// Solo envio si el usuario no quiere salir.
+		printf("CPU conectada. Esperando instrucciones:\n");
+		status = recv(conexiones.CPUS[0], (void*) message, PACKAGESIZE, 0);
+		if (status != 0){
+			printf("RECIBIDO! =D\n%s", message);
+			send(memSocket, message, strlen(message) + 1, 0);
+		}else{
+			puts("conexion perdida! =(");
 		}
 
 
