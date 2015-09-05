@@ -4,7 +4,7 @@
  Author      : Game of Pointers
  Version     :
  Copyright   : Your copyright notice
- Description : Modulo - CPU
+ Description : Modulo - Planificador
  ============================================================================
  */
 
@@ -22,36 +22,27 @@
 #define BACKLOG 10
 #define PACKAGESIZE 1024
 
-//prueba commit sadasdaadaadad
-//prueba para hilos
-/*se pueden conectar varios clientes y envia mensajes dependiendo cm se le de la gana al hilo
- * por ahora lo dejo asi, porque con 1 solo CPU anda bien, y mejor terminar el resto antes de
- * seguir con esto. Tambien depende de como mandemos las instrucciones y demas de la planificacion
- * que todavia no hicimos del TP para saber como tendria que mandar los mensajes.
- */
+//struct para conexiones
+struct Conexiones {
+	int socket_escucha;
+	struct sockaddr_in direccion;
+	socklen_t tamanio_direccion;
+	int CPUS[10];
+} conexiones;
 
+//Funcion encargada de acceptar nuevas peticiones de conexion
+void *escuchar (struct Conexiones *conexion){
+	int i =0;
 
-void *multiplesConexiones (void *socket_desc) {
-
-	int socket_instrucciones = *(int *)socket_desc;
-
-	//Envio de instrucciones
-
-	int enviar = 1;
-	char message[PACKAGESIZE];
-
-	printf("Conectado al CPU en el Socket=%d. Ya puede enviar instrucciones. Escriba 'exit' para finalizar\n",socket_instrucciones);
-
-	while(enviar){
-		fgets(message, PACKAGESIZE, stdin);			// Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
-		if (!strcmp(message,"exit\n")) enviar = 0;			// Chequeo que el usuario no quiera salir
-		if (enviar) send(socket_instrucciones, message, strlen(message) + 1, 0); 	// Solo envio si el usuario no quiere salir.
+	while( i<=5 ) //limite temporal de 5 CPUS conectadas
+	{
+		//guarda las nuevas conexiones para acceder a ellas desde cualquier parte del codigo
+		conexion->CPUS[i] = accept(conexion->socket_escucha, (struct sockaddr *) &conexion->direccion, &conexion->tamanio_direccion);
+		puts("NUEVO HILO ESCUCHA!\n");
+		i++;
 	}
-
-
+	return NULL;
 }
-
-
 
 
 int main() {
@@ -88,37 +79,64 @@ int main() {
 		int L = listen(listenningSocket, BACKLOG);
 		if (L == -1)
 			perror("LISTEN");
-
+		puts("LISTEN EJECUTANDOSE");
 
 
 	//Estructura que tendra los datos de la conexion del cliente
-	struct sockaddr_in addr;
-	socklen_t addrlen = sizeof(addr);
-	int socketPlanificador, *nuevo_socket;
+	conexiones.socket_escucha = listenningSocket;
+	conexiones.tamanio_direccion = sizeof(conexiones.direccion);
+	pthread_t hilo_escuchas;
+	if(pthread_create(&hilo_escuchas,NULL,escuchar,&conexiones)<0)
+		puts("Error HILO ESCUCHAS!");
 
-	//Hilo para escucha (prueba)
+	puts("ESPERANDO CONEXIONES....\n");
+	while(conexiones.CPUS[0] == 0){
+	};
 
-	while( (socketPlanificador = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen) ) )
+	while(1)
 	{
-		printf("Conexion aceptada Socket=&d\n",socketPlanificador);
 
-		pthread_t hilo;
-		nuevo_socket=malloc(1);
-		*nuevo_socket=socketPlanificador;
+		int socket_instrucciones;
+		puts("Elija CPU:\n");
+		int j = 0;
+		while ( j < 5) {
+			printf("CPU n°:%d, puerto: %d\n",j,conexiones.CPUS[j]);
+			j++;
+		}
+		int caracter;
+		scanf("%d", &caracter);
+		switch (caracter) {
+			case 0: socket_instrucciones = conexiones.CPUS[0];
+				break;
+			case 1: socket_instrucciones = conexiones.CPUS[1];
+				break;
+			case 2: socket_instrucciones = conexiones.CPUS[2];
+				break;
+			case 3: socket_instrucciones = conexiones.CPUS[3];
+				break;
+			case 4: socket_instrucciones = conexiones.CPUS[4];
+				break;
+			case 5: socket_instrucciones = conexiones.CPUS[5];
+				break;
+			default: puts("CPU NO VALIDA!");
+				break;
+		}
+		int enviar = 1;
+		char message[PACKAGESIZE];
 
-		if(pthread_create(&hilo,NULL,multiplesConexiones,(void*)nuevo_socket)<0)
-		{
-			perror("No se puede crear el hilo");
-			return 1;
+		printf("Ya puede enviar instrucciones. Escriba 'exit' para cambiar de CPU\n");
+
+		while(enviar){
+		fgets(message, PACKAGESIZE, stdin);			// Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
+		if (!strcmp(message,"exit\n")) enviar = 0;			// Chequeo que el usuario no quiera salir
+		if (enviar) send(socket_instrucciones, message, strlen(message) + 1, 0); 	// Solo envio si el usuario no quiere salir.
 		}
 
-		puts("Nueva conexion asignada");
 	}
 
-		//free(nuevo_socket);
-
-		close(socketPlanificador);
+		close(conexiones.socket_escucha);
 		close(listenningSocket);
 
 	return EXIT_SUCCESS;
 }
+
