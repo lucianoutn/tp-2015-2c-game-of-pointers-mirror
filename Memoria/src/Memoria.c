@@ -15,6 +15,7 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <pthread.h>
 
 #define IP "127.0.0.1"
 #define PUERTOSWAP "9000" //este es el puerto de swap
@@ -102,7 +103,7 @@ int main(void) {
 	conexiones.socket_escucha = listenningSocket;
 	conexiones.tamanio_direccion = sizeof(conexiones.direccion);
 	pthread_t hilo_escuchas;
-	if(pthread_create(&hilo_escuchas,NULL,escuchar,&conexiones)<0)
+	if(pthread_create(&hilo_escuchas, NULL, escuchar,&conexiones)<0)
 		puts("Error HILO ESCUCHAS!");
 
 	puts("ESPERANDO CPU....\n");

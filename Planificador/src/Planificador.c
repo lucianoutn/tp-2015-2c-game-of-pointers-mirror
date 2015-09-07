@@ -8,90 +8,30 @@
  ============================================================================
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <pthread.h>
+#include "libreriaPlanificador.h"
 
-#define IP "127.0.0.1"
-#define PUERTO "8080"
+
 #define BACKLOG 10
 #define PACKAGESIZE 1024
 
-//struct para conexiones
-struct Conexiones {
-	int socket_escucha;
-	struct sockaddr_in direccion;
-	socklen_t tamanio_direccion;
-	int CPU[10];
-} conexiones;
-
-//Funcion encargada de acceptar nuevas peticiones de conexion
-void* escuchar (struct Conexiones* conexion){
-	int i =0;
-
-	while( i<=5 ) //limite temporal de 5 CPUS conectadas
-	{
-		//guarda las nuevas conexiones para acceder a ellas desde cualquier parte del codigo
-		conexion->CPU[i] = accept(conexion->socket_escucha, (struct sockaddr *) &conexion->direccion, &conexion->tamanio_direccion);
-		if(conexion->CPU[i]==-1)
-		{
-			return -1;
-		}
-		puts("NUEVO HILO ESCUCHA!\n");
-		i++;
-	}
-	
-	return NULL;
-	
-}
 
 
 int main() {
 	puts("!!!Planificador!!!"); /* prints !!!Planificador!!! */
 
-	//Configuracion del socket
-	struct addrinfo hints; //estructura que almacena los datos de conexion del Planificador
-	struct addrinfo *serverInfo; //estructura que almacena los datos de conexion de la CPU
-
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;		// No importa si uso IPv4 o IPv6
-	hints.ai_flags = AI_PASSIVE;// Asigna el address del localhost: 127.0.0.1
-	hints.ai_socktype = SOCK_STREAM;	// Indica que usaremos el protocolo TCP
-
-	getaddrinfo(NULL, PUERTO, &hints, &serverInfo); // Carga en serverInfo los datos de la conexion
-
-	//se crea un nuevo socket que se utilizara para la conexion con el CPU
-	int listenningSocket;
-	listenningSocket = socket(serverInfo->ai_family, serverInfo->ai_socktype,
-			serverInfo->ai_protocol);
-	//se comprueba que el socket se creo correctamente
-	if (listenningSocket == -1)
-		perror("SOCKET");
-
-	//se comprueba que la asociacion fue exitosa
-	int B = bind(listenningSocket, serverInfo->ai_addr, serverInfo->ai_addrlen);
-	if (B == -1)
-		perror("BIND");
-
-	freeaddrinfo(serverInfo);
-
+	int CPUSocket= crearSocket();
 
 	//funcion que permite al programa ponerse a la espera de nuevas conexiones
-	int L = listen(listenningSocket, BACKLOG);
+	int L = listen(CPUSocket, BACKLOG);
 	if (L == -1)
 		perror("LISTEN");
 
 
 	//Estructura que tendra los datos de la conexion del cliente
-	conexiones.socket_escucha = listenningSocket;
+	conexiones.socket_escucha = CPUSocket;
 	conexiones.tamanio_direccion = sizeof(conexiones.direccion);
 	pthread_t hilo_escuchas;
-	if(pthread_create(&hilo_escuchas,NULL,escuchar,&conexiones)<0)
+	if(pthread_create(&hilo_escuchas, NULL, escuchar,&conexiones)<0)
 		perror("Error HILO ESCUCHAS!");
 
 	puts("ESPERANDO CONEXIONES....\n");
@@ -143,7 +83,7 @@ int main() {
 	}
 
 		close(conexiones.socket_escucha);
-		close(listenningSocket);
+		close(CPUSocket);
 
 	return EXIT_SUCCESS;
 }
