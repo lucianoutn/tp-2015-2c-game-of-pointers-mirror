@@ -49,84 +49,84 @@ int main(void) {
 	puts("!!!Memoria!!!"); /* prints !!!Memoria!!! */
 
 	//Configuracion del socket
-		struct addrinfo hints; //estructura que almacena los datos de conexion de la Memoria
-		struct addrinfo *serverInfo; //estructura que almacena los datos de conexion del Swap
+	struct addrinfo hints; //estructura que almacena los datos de conexion de la Memoria
+	struct addrinfo *serverInfo; //estructura que almacena los datos de conexion del Swap
 
-		memset(&hints, 0, sizeof(hints));
-		hints.ai_family = AF_UNSPEC;		// Permite que la maquina se encargue de verificar si usamos IPv4 o IPv6
-		hints.ai_socktype = SOCK_STREAM;	// Indica que usaremos el protocolo TCP
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_UNSPEC;		// Permite que la maquina se encargue de verificar si usamos IPv4 o IPv6
+	hints.ai_socktype = SOCK_STREAM;	// Indica que usaremos el protocolo TCP
 
-		getaddrinfo(IP, PUERTOSWAP, &hints, &serverInfo);	// Carga en serverInfo los datos de la conexion
+	getaddrinfo(IP, PUERTOSWAP, &hints, &serverInfo);	// Carga en serverInfo los datos de la conexion
 
 	//se crea un nuevo socket que se utilizara para la conexion con el swap
-		int memSocket; //descriptor del socket de la memoria
-		memSocket = socket(serverInfo->ai_family, serverInfo->ai_socktype, serverInfo->ai_protocol);
+	int memSocket; //descriptor del socket de la memoria
+	memSocket = socket(serverInfo->ai_family, serverInfo->ai_socktype, serverInfo->ai_protocol);
 	//se comprueba que el socket se creo correctamente
-		if(memSocket==-1)
-			perror ("SOCKET");
+	if(memSocket==-1)
+		perror ("SOCKET");
 
 	//Conexion al servidor Swap
-		int C = connect(memSocket, serverInfo->ai_addr, serverInfo->ai_addrlen);
-		if (C==-1)
-			perror ("CONNECT");
-		else
-			printf ("Conexion con el Swap lograda\n");
+	int C = connect(memSocket, serverInfo->ai_addr, serverInfo->ai_addrlen);
+	if (C==-1)
+		perror ("CONNECT");
+	else
+		printf ("Conexion con el Swap lograda\n");
 
-		//freeaddrinfo(serverInfo);
+	//freeaddrinfo(serverInfo);
 
-		getaddrinfo(IP, PUERTOCPU, &hints, &serverInfo);
+	getaddrinfo(IP, PUERTOCPU, &hints, &serverInfo);
 
-		//inicio server
-			int listenningSocket;
-			listenningSocket = socket(serverInfo->ai_family, serverInfo->ai_socktype,
-					serverInfo->ai_protocol);
-			//se comprueba que el socket se creo correctamente
-			if (listenningSocket == -1)
-				perror("SOCKET");
+	//inicio server
+	int listenningSocket;
+	listenningSocket = socket(serverInfo->ai_family, serverInfo->ai_socktype,
+			serverInfo->ai_protocol);
+	//se comprueba que el socket se creo correctamente
+	if (listenningSocket == -1)
+		perror("SOCKET");
 
-			//se comprueba que la asociacion fue exitosa
-			int B = bind(listenningSocket, serverInfo->ai_addr, serverInfo->ai_addrlen);
+	//se comprueba que la asociacion fue exitosa
+	int B = bind(listenningSocket, serverInfo->ai_addr, serverInfo->ai_addrlen);
 			if (B == -1)
-				perror("BIND");
+			perror("BIND");
 
-			freeaddrinfo(serverInfo);
-
-
-			//funcion que permite al programa ponerse a la espera de nuevas conexiones
-				int L = listen(listenningSocket, BACKLOG);
-				if (L == -1)
-					perror("LISTEN");
-				puts("LISTEN EJECUTANDOSE");
+	freeaddrinfo(serverInfo);
 
 
-			//Estructura que tendra los datos de la conexion del cliente
-			conexiones.socket_escucha = listenningSocket;
-			conexiones.tamanio_direccion = sizeof(conexiones.direccion);
-			pthread_t hilo_escuchas;
-			if(pthread_create(&hilo_escuchas,NULL,escuchar,&conexiones)<0)
-				puts("Error HILO ESCUCHAS!");
+	//funcion que permite al programa ponerse a la espera de nuevas conexiones
+		int L = listen(listenningSocket, BACKLOG);
+		if (L==-1)
+			perror("LISTEN");
 
-			puts("ESPERANDO CPU....\n");
-			while(conexiones.CPUS[0]==0);
 
-		//fin server
+	//Estructura que tendra los datos de la conexion del cliente
+	conexiones.socket_escucha = listenningSocket;
+	conexiones.tamanio_direccion = sizeof(conexiones.direccion);
+	pthread_t hilo_escuchas;
+	if(pthread_create(&hilo_escuchas,NULL,escuchar,&conexiones)<0)
+		puts("Error HILO ESCUCHAS!");
 
-			char message[PACKAGESIZE] = "lalala";
-			int status;
-			printf("CPU conectada. Esperando instrucciones:\n");
+	puts("ESPERANDO CPU....\n");
+	while(conexiones.CPUS[0]==0);
+
+	//fin server
+
+	char message[PACKAGESIZE] = "lalala";
+	int status;
+	printf("CPU conectada. Esperando instrucciones:\n");
 	//Envio de instrucciones
-		while(strcmp(message,"salir\n") !=0)
-		{
-			status = recv(conexiones.CPUS[0], (void*) message, PACKAGESIZE, 0);
-			if (status != 0){
-				printf("RECIBIDO! =D\n%s", message);
-				send(memSocket, message, strlen(message) + 1, 0);
-			}else{
-				puts("conexion perdida! =(");
-				break;
-			}
+	while(strcmp(message,"salir\n") !=0)
+	{
+		status = recv(conexiones.CPUS[0], (void*) message, PACKAGESIZE, 0);
+		if (status != 0){
+			printf("RECIBIDO! =D\n%s", message);
+			send(memSocket, message, strlen(message) + 1, 0);
 		}
+		else{
+			puts("conexion perdida! =(");
+			break;
+		}
+	}
 
 
-		return EXIT_SUCCESS;
+	return EXIT_SUCCESS;
 }

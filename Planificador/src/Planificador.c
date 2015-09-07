@@ -76,10 +76,9 @@ int main() {
 
 
 	//funcion que permite al programa ponerse a la espera de nuevas conexiones
-		int L = listen(listenningSocket, BACKLOG);
-		if (L == -1)
-			perror("LISTEN");
-		puts("LISTEN EJECUTANDOSE");
+	int L = listen(listenningSocket, BACKLOG);
+	if (L == -1)
+		perror("LISTEN");
 
 
 	//Estructura que tendra los datos de la conexion del cliente
@@ -87,7 +86,7 @@ int main() {
 	conexiones.tamanio_direccion = sizeof(conexiones.direccion);
 	pthread_t hilo_escuchas;
 	if(pthread_create(&hilo_escuchas,NULL,escuchar,&conexiones)<0)
-		puts("Error HILO ESCUCHAS!");
+		perror("Error HILO ESCUCHAS!");
 
 	puts("ESPERANDO CONEXIONES....\n");
 	while(conexiones.CPUS[0] == 0){
@@ -108,17 +107,22 @@ int main() {
 		scanf("%d", &caracter);
 		enviar =1;
 		switch (caracter) {
-			case 1: socket_instrucciones = conexiones.CPUS[0];
+			case 1:
+				socket_instrucciones = conexiones.CPUS[0];
 				break;
-			case 2: socket_instrucciones = conexiones.CPUS[1];
+			case 2:
+				socket_instrucciones = conexiones.CPUS[1];
 				break;
 			case 3: socket_instrucciones = conexiones.CPUS[2];
 				break;
-			case 4: socket_instrucciones = conexiones.CPUS[3];
+			case 4:
+				socket_instrucciones = conexiones.CPUS[3];
 				break;
-			case 5: socket_instrucciones = conexiones.CPUS[4];
+			case 5:
+				socket_instrucciones = conexiones.CPUS[4];
 				break;
-			default: {puts("CPU NO VALIDA!"); enviar=0; caracter=0;};
+			default:
+				{puts("CPU NO VALIDA!"); enviar=0; caracter=0;};
 				break;
 		}
 

@@ -56,14 +56,16 @@ int main()
 	if (C==-1){
 		perror ("CONNECT");
 		return -1;
-	}else
+	}
+	else
 		printf ("Conexion con el Planificador lograda\n");
 
 	int C2 = connect(socketMemoria, serverInfo_memoria->ai_addr, serverInfo_memoria->ai_addrlen);
 	if (C2==-1){
 		perror ("CONNECT");
 		return -1;
-	}else
+	}
+	else
 		printf ("Conexion con la Memoria lograda\n");
 
 
@@ -82,7 +84,8 @@ int main()
 		if (status != 0){
 			printf("RECIBIDO! =D\n%s", package);
 			send(socketMemoria, package, strlen(package) + 1, 0);
-		}else{
+		}
+		else{
 			puts("conexion perdida! =(");
 			break;
 		}
