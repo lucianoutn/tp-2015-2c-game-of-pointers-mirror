@@ -27,21 +27,27 @@ struct Conexiones {
 	int socket_escucha;
 	struct sockaddr_in direccion;
 	socklen_t tamanio_direccion;
-	int CPUS[10];
+	int CPU[10];
 } conexiones;
 
 //Funcion encargada de acceptar nuevas peticiones de conexion
-void *escuchar (struct Conexiones *conexion){
+void* escuchar (struct Conexiones* conexion){
 	int i =0;
 
 	while( i<=5 ) //limite temporal de 5 CPUS conectadas
 	{
 		//guarda las nuevas conexiones para acceder a ellas desde cualquier parte del codigo
-		conexion->CPUS[i] = accept(conexion->socket_escucha, (struct sockaddr *) &conexion->direccion, &conexion->tamanio_direccion);
+		conexion->CPU[i] = accept(conexion->socket_escucha, (struct sockaddr *) &conexion->direccion, &conexion->tamanio_direccion);
+		if(conexion->CPU[i]==-1)
+		{
+			return -1;
+		}
 		puts("NUEVO HILO ESCUCHA!\n");
 		i++;
 	}
+	
 	return NULL;
+	
 }
 
 
@@ -89,7 +95,7 @@ int main() {
 		perror("Error HILO ESCUCHAS!");
 
 	puts("ESPERANDO CONEXIONES....\n");
-	while(conexiones.CPUS[0] == 0){
+	while(conexiones.CPU[0] == 0){
 	};
 
 
@@ -101,25 +107,25 @@ int main() {
 		puts("Elija CPU: ¡¡¡¡SOLO NUMEROS!!!\n");
 		int j = 1;
 		while ( j < 6) {
-			printf("CPU n°:%d, puerto: %d\n",j,conexiones.CPUS[j-1]);
+			printf("CPU n°:%d, puerto: %d\n",j,conexiones.CPU[j-1]);
 			j++;
 		}
 		scanf("%d", &caracter);
 		enviar =1;
 		switch (caracter) {
 			case 1:
-				socket_instrucciones = conexiones.CPUS[0];
+				socket_instrucciones = conexiones.CPU[0];
 				break;
 			case 2:
-				socket_instrucciones = conexiones.CPUS[1];
+				socket_instrucciones = conexiones.CPU[1];
 				break;
-			case 3: socket_instrucciones = conexiones.CPUS[2];
+			case 3: socket_instrucciones = conexiones.CPU[2];
 				break;
 			case 4:
-				socket_instrucciones = conexiones.CPUS[3];
+				socket_instrucciones = conexiones.CPU[3];
 				break;
 			case 5:
-				socket_instrucciones = conexiones.CPUS[4];
+				socket_instrucciones = conexiones.CPU[4];
 				break;
 			default:
 				{puts("CPU NO VALIDA!"); enviar=0; caracter=0;};
