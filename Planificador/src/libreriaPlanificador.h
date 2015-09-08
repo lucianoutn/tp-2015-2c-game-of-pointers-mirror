@@ -30,7 +30,7 @@ struct Conexiones {
 } conexiones;
 
 //Funcion encargada de acceptar nuevas peticiones de conexion
-void* escuchar (struct Conexiones* conexion);
+void *escuchar (struct Conexiones* conexion);
 
 int crearSocket ();
 
