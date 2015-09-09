@@ -14,16 +14,16 @@
 #define BACKLOG 10
 #define PACKAGESIZE 1024
 
-
+const char *IP= "127.0.0.1";
+const char *PUERTOPLANIFICADOR= "8080";
 
 int main() {
 	puts("!!!Planificador!!!"); /* prints !!!Planificador!!! */
 
-	const char *IP= "127.0.0.1";
-	const char *PUERTOPLANIFICADOR= "8080";
 
 
-	int CPUSocket= crearSocket(IP, PUERTOPLANIFICADOR);
+
+	int CPUSocket= crearServer(IP, PUERTOPLANIFICADOR);
 
 	//funcion que permite al programa ponerse a la espera de nuevas conexiones
 	int L = listen(CPUSocket, BACKLOG);

@@ -13,13 +13,14 @@
 #define BACKLOG 10
 #define PACKAGESIZE 1024
 
+const char *IP="127.0.0.1";
+const char *PUERTOSWAP="9000";
+const char *PUERTOMEM="8090";
 
 int main(void) {
 	puts("!!!Memoria!!!"); /* prints !!!Memoria!!! */
 
-	const char *IP="127.0.0.1";
-	const char *PUERTOSWAP="9000";
-	const char *PUERTOCPU="8090";
+
 
 	//Configuracion del socket
 	struct addrinfo hints; //estructura que almacena los datos de conexion de la Memoria
@@ -44,12 +45,9 @@ int main(void) {
 	else
 		printf ("Conexion con el Swap lograda\n");
 
-	//freeaddrinfo(serverInfo);
-
-	getaddrinfo(IP, PUERTOCPU, &hints, &serverInfo);
 
 	//inicio server
-	int CPUSocket= crearSocket(IP, PUERTOCPU);
+	int CPUSocket= crearServer(IP, PUERTOMEM);
 
 	//funcion que permite al programa ponerse a la espera de nuevas conexiones
 	int L = listen(CPUSocket, BACKLOG);

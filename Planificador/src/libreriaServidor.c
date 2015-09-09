@@ -28,7 +28,7 @@ void *escuchar (struct Conexiones* conexion){
 }
 
 //Funcion que permite configurar la conexion y crear el socket. Devuelve el descriptor del socket nuevo.
-int crearSocket (const char *IP, const char *PUERTO)
+int crearServer(const char *IP, const char *PUERTO)
 {
 	struct addrinfo hints; //estructura que almacena los datos de conexion del Planificador
 	struct addrinfo *serverInfo; //estructura que almacena los datos de conexion de la CPU
