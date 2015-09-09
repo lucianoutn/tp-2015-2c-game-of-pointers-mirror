@@ -8,7 +8,7 @@
  ============================================================================
  */
 
-#include "libreriaPlanificador.h"
+#include "libreriaServidor.h"
 
 
 #define BACKLOG 10
@@ -19,7 +19,11 @@
 int main() {
 	puts("!!!Planificador!!!"); /* prints !!!Planificador!!! */
 
-	int CPUSocket= crearSocket();
+	const char *IP= "127.0.0.1";
+	const char *PUERTOPLANIFICADOR= "8080";
+
+
+	int CPUSocket= crearSocket(IP, PUERTOPLANIFICADOR);
 
 	//funcion que permite al programa ponerse a la espera de nuevas conexiones
 	int L = listen(CPUSocket, BACKLOG);
