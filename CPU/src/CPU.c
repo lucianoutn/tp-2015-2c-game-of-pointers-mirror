@@ -8,29 +8,32 @@
  ============================================================================
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <pthread.h>
+#include "libreriaCliente.h"
 
+/*
 #define IP "127.0.0.1"
 #define PUERTOPLANIFICADOR "8080"
 #define PUERTOMEMORIA "8090"
+*/
 #define PACKAGESIZE 1024
+
+const char *IP = "127.0.0.1";
+const char *IP_MEMORIA = "127.0.0.1";  //agrego otra ip xq la mem esta en otra pc.Lucho
+const char *PUERTOPLANIFICADOR = "8080";
+const char *PUERTOMEMORIA = "8090";
+
 
 //Inicio de funcion principal
 int main()
 {
 	puts("!!!CPU!!"); /* prints !!!CPU!! */
 
+	/*
 	//Configuracion del socket
 	struct addrinfo hints_planificador, hints_memoria; //estructura que almacena los datos de conexion de la CPU
 	struct addrinfo *serverInfo_planificador, *serverInfo_memoria; //estructura que almacena los datos de conexion del Planificador
-
+*/
+/*
 	memset(&hints_planificador, 0, sizeof(hints_planificador));
 	hints_planificador.ai_family = AF_UNSPEC;		// Permite que la maquina se encargue de verificar si usamos IPv4 o IPv6
 	hints_planificador.ai_socktype = SOCK_STREAM;	// Indica que usaremos el protocolo TCP
@@ -45,13 +48,14 @@ int main()
 	if(socketPlanificador==-1)
 		perror ("SOCKET PLANIFICADOR!");
 
-	getaddrinfo(IP,PUERTOMEMORIA,&hints_memoria,&serverInfo_memoria);
+	getaddrinfo(IP_MEMORIA ,PUERTOMEMORIA,&hints_memoria,&serverInfo_memoria);
 
 	socketMemoria = socket(serverInfo_memoria->ai_family, serverInfo_memoria->ai_socktype, serverInfo_memoria->ai_protocol);
 	if(socketMemoria==-1)
 		perror("SOCKET MEMORIA!");
+	*/
 
-	//Conexion al servidor Planificador
+/*	//Conexion al servidor Planificador y a Memoria
 	int C = connect(socketPlanificador, serverInfo_planificador->ai_addr, serverInfo_planificador->ai_addrlen);
 	if (C==-1){
 		perror ("CONNECT");
@@ -71,6 +75,10 @@ int main()
 
 	freeaddrinfo(serverInfo_planificador);
 	freeaddrinfo(serverInfo_memoria);
+*/
+
+	int socketPlanificador = crearClientePlani(IP, PUERTOPLANIFICADOR);
+	int socketMemoria = crearClienteMem(IP_MEMORIA, PUERTOMEMORIA);
 
 //Recepcion de instrucciones
 
@@ -93,7 +101,7 @@ int main()
 	}
 
 	close(socketPlanificador);
-
+	close(socketMemoria);	// agrego el cierre del otro socket.lucho
 
 
 	return EXIT_SUCCESS;
