@@ -10,6 +10,7 @@
 
 #include "libreriaServidor.h"
 
+
 #define BACKLOG 10
 #define PACKAGESIZE 1024
 
@@ -59,7 +60,7 @@ int main(void) {
 	conexiones.socket_escucha = CPUSocket;
 	conexiones.tamanio_direccion = sizeof(conexiones.direccion);
 	pthread_t hilo_escuchas;
-	if(pthread_create(&hilo_escuchas, NULL, escuchar,&conexiones)<0)
+	if( pthread_create(&hilo_escuchas, NULL, escuchar,&conexiones) < 0)
 		puts("Error HILO ESCUCHAS!");
 
 	puts("ESPERANDO CPU....\n");
