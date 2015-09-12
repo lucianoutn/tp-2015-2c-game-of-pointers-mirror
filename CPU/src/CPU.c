@@ -24,8 +24,8 @@ int main()
 	puts("!!!CPU!!"); /* prints !!!CPU!! */
 
 
-	int socketPlanificador = crearClientePlani(IP, PUERTOPLANIFICADOR); //conecta con el planificador
-	int socketMemoria = crearClienteMem(IP_MEMORIA, PUERTOMEMORIA);//conecta con la memoria
+	int socketPlanificador = crearCliente(IP, PUERTOPLANIFICADOR); //conecta con el planificador
+	int socketMemoria = crearCliente(IP_MEMORIA, PUERTOMEMORIA);//conecta con la memoria
 
 //Recepcion de instrucciones
 

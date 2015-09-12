@@ -6,78 +6,37 @@
  */
 
 
-#include "libreriaCliente.h";
+#include "libreriaCliente.h"
 
-//Conexion al servidor Planificador
-int crearClientePlani(const char *IP, const char *PUERTOPLANIFICADOR){
-///////////////////////////////////////////////////////////////
+//Conexion al servidor
+int crearCliente(const char *IP, const char *PUERTO){
 
 	//configuraciones varias
-	memset(&hints_planificador, 0, sizeof(hints_planificador));
-	hints_planificador.ai_family = AF_UNSPEC;		// Permite que la maquina se encargue de verificar si usamos IPv4 o IPv6
-	hints_planificador.ai_socktype = SOCK_STREAM;	// Indica que usaremos el protocolo TCP
+	memset(&hints_server, 0, sizeof(hints_server));
+	hints_server.ai_family = AF_UNSPEC;		// Permite que la maquina se encargue de verificar si usamos IPv4 o IPv6
+	hints_server.ai_socktype = SOCK_STREAM;	// Indica que usaremos el protocolo TCP
 
-	getaddrinfo(IP, PUERTOPLANIFICADOR, &hints_planificador, &serverInfo_planificador);	// Carga en serverInfo los datos de la conexion
+	getaddrinfo(IP, PUERTO, &hints_server, &serverInfo_server);	// Carga en serverInfo los datos de la conexion
 
-	//se crea un nuevo socket que se utilizara para la conexion con el Planificador
+	//se crea un nuevo socket que se utilizara para la conexion con el servidor
 	//descriptor del socket servidor
-	int socketPlanificador = socket(serverInfo_planificador->ai_family, serverInfo_planificador->ai_socktype, serverInfo_planificador->ai_protocol);
+	int socketServer = socket(serverInfo_server->ai_family, serverInfo_server->ai_socktype, serverInfo_server->ai_protocol);
 	//se comprueba que el socket se creo correctamente
-	if(socketPlanificador==-1)
-		perror ("SOCKET PLANIFICADOR!");
+	if(socketServer==-1)
+		perror ("SOCKET con servidor no se pudo crear!");
 
 
-
-/////////////////////////////////////////////////////////
-
-	int C = connect(socketPlanificador, serverInfo_planificador->ai_addr, serverInfo_planificador->ai_addrlen);
+	//conecta
+	int C = connect(socketServer, serverInfo_server->ai_addr, serverInfo_server->ai_addrlen);
 	if (C==-1){
 		perror ("CONNECT");
 		return -1;
 		}
 	else
-		printf ("Conexion con el Planificador lograda\n");
+		printf ("Conexion con el Servidor en la ip: %s lograda\n", IP);
 
 
-	freeaddrinfo(serverInfo_planificador);
+	freeaddrinfo(serverInfo_server);
 
-	return socketPlanificador;
+	return socketServer;
 }
-
-
-//Conexion al servidor Memoria
-int crearClienteMem(const char *IP_MEMORIA, const char *PUERTOMEMORIA){
-
-	////////////////////////////////////////////////////////
-
-	//configuraciones varias
-	memset(&hints_memoria, 0, sizeof(hints_memoria));
-	hints_memoria.ai_family = AF_UNSPEC;		// Permite que la maquina se encargue de verificar si usamos IPv4 o IPv6
-	hints_memoria.ai_socktype = SOCK_STREAM;	// Indica que usaremos el protocolo TCP
-
-	getaddrinfo(IP_MEMORIA ,PUERTOMEMORIA,&hints_memoria,&serverInfo_memoria);
-
-	//se crea un nuevo socket que se utilizara para la conexion con la memoria
-	//descriptor del socket servidor
-	int socketMemoria = socket(serverInfo_memoria->ai_family, serverInfo_memoria->ai_socktype, serverInfo_memoria->ai_protocol);
-	//se comprueba que el socket se creo correctamente
-	if(socketMemoria==-1)
-		perror("SOCKET MEMORIA!");
-
-
-	/////////////////////////////////////////////////
-
-	int C2 = connect(socketMemoria, serverInfo_memoria->ai_addr, serverInfo_memoria->ai_addrlen);
-	if (C2==-1){
-		perror ("CONNECT");
-		return -1;
-		}
-	else
-		printf ("Conexion con la Memoria lograda\n");
-
-
-	freeaddrinfo(serverInfo_memoria);
-
-	return socketMemoria;
-}
-

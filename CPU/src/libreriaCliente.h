@@ -19,12 +19,13 @@
 #include <pthread.h>
 
 //Configuracion del socket
-	struct addrinfo hints_planificador, hints_memoria; //estructura que almacena los datos de conexion de la CPU
-	struct addrinfo *serverInfo_planificador, *serverInfo_memoria; //estructura que almacena los datos de conexion del Planificador
+	struct addrinfo hints_server; //estructura que almacena los datos de conexion ¿?. lucho
+	struct addrinfo *serverInfo_server; //estructura que almacena los datos de conexion ¿?. lucho
 
 //Funcion encargadar de conectar al cliente con los servidores
 
-	int crearClientePlani(const char *IP, const char *PUERTOPLANIFICADOR);
-	int crearClienteMem(const char *IP_MEMORIA, const char *PUERTOMEMORIA);
+
+	int crearCliente(const char *IP, const char *PUERTO);
+
 
 #endif /* LIBRERIACLIENTE_H_ */
