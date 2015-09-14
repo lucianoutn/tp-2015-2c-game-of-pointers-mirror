@@ -8,7 +8,8 @@
  ============================================================================
  */
 
-#include "libreriaCliente.h"
+#include "SharedLibs/libreriaCliente.h" //SharedLibs/Debug
+
 
 #define PACKAGESIZE 1024
 
