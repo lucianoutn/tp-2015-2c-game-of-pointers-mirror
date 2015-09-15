@@ -1,5 +1,5 @@
 /*
- * libreriaPlanificador.c
+ * libreriaServidor.c
  *
  *  Created on: 7/9/2015
  *      Author: utnso
@@ -17,7 +17,7 @@ void *escuchar (struct Conexiones* conexion){
 		conexion->CPU[i] = accept(conexion->socket_escucha, (struct sockaddr *) &conexion->direccion, &conexion->tamanio_direccion);
 		if(conexion->CPU[i]==-1)
 		{
-			perror("ACCEPT");
+			perror("ACCEPT");	//control error
 		}
 		puts("NUEVO HILO ESCUCHA!\n");
 		i++;
@@ -30,8 +30,8 @@ void *escuchar (struct Conexiones* conexion){
 //Funcion que permite configurar la conexion y crear el socket. Devuelve el descriptor del socket nuevo.
 int crearServer(const char *IP, const char *PUERTO)
 {
-	struct addrinfo hints; //estructura que almacena los datos de conexion del SWAP
-	struct addrinfo *serverInfo; //estructura que almacena los datos de conexion de la Memoria
+	struct addrinfo hints; //estructura que almacena los datos de conexion
+	struct addrinfo *serverInfo; //estructura que almacena los datos de conexion
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;		// No importa si uso IPv4 o IPv6
@@ -40,7 +40,7 @@ int crearServer(const char *IP, const char *PUERTO)
 
 	getaddrinfo(NULL, PUERTO, &hints, &serverInfo); // Carga en serverInfo los datos de la conexion
 
-	//se crea un nuevo socket que se utilizara para la conexion con el CPU
+	//se crea un nuevo socket que se utilizara para la conexion con el cliente
 	int listenningSocket;
 	listenningSocket = socket(serverInfo->ai_family, serverInfo->ai_socktype,
 			serverInfo->ai_protocol);
