@@ -3,6 +3,7 @@
 	<name>Swap</name>
 	<comment></comment>
 	<projects>
+		<project>SharedLibs</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

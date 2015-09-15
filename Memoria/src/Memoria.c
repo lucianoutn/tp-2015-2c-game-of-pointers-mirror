@@ -8,7 +8,7 @@
  ============================================================================
  */
 
-#include "libreriaServidor.h"
+#include "SharedLibs/libreriaServidor.h" //SharedLibs/Debug
 
 
 #define BACKLOG 10
