@@ -7,61 +7,49 @@
 
 #include "libreriaPlanificador.h"
 
-//Funcion encargada de acceptar nuevas peticiones de conexion
-void escuchar (){
-	int i =0;
 
-	while( i<=5 ) //limite temporal de 5 CPUS conectadas
+
+//A continuancion las funciones basicas para crear una nueva cola FIFO
+//Funcion que permite añadir elementos a la cola
+void encolar (t_pcb *cabecera, t_pcb *valor)
+{
+	t_pcb *nuevo = malloc(sizeof(t_pcb));
+	nuevo=valor;
+
+	if (cabecera==NULL)
 	{
-		//guarda las nuevas conexiones para acceder a ellas desde cualquier parte del codigo
-		conexiones.CPU[i] = accept(conexiones.socket_escucha, (struct sockaddr *) &conexiones.direccion, &conexiones.tamanio_direccion);
-		if(conexiones.CPU[i]==-1)
-		{
-			perror("ACCEPT"); //control error
-		}
-		puts("NUEVO HILO ESCUCHA!\n");
-		i++;
+		nuevo->sig=nuevo;
+	}
+	else
+	{
+		nuevo->sig= cabecera->sig;
+		cabecera->sig= nuevo;
 	}
 
-}
+	cabecera=nuevo;
+};
 
-//Funcion que permite configurar la conexion y crear el socket de escucha nuevo, lo agrega al a variable conexiones
-void crearSocket ()
+//Funcion que permite quitar elementos de la cola, devuelve el nodo que saca.
+t_pcb desencolar (t_pcb *cabecera)
 {
-	struct addrinfo hints; //estructura que almacena los datos de conexion del Planificador
-	struct addrinfo *serverInfo; //estructura que almacena los datos de conexion de la CPU
+	t_pcb *ret = malloc(sizeof(t_pcb));
+	ret= cabecera;
+	if(cabecera==cabecera->sig)
+	{
+		free (cabecera);
+	}
 
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;		// No importa si uso IPv4 o IPv6
-	hints.ai_flags = AI_PASSIVE;// Asigna el address del localhost: 127.0.0.1
-	hints.ai_socktype = SOCK_STREAM;	// Indica que usaremos el protocolo TCP
+	else
+	{
+		t_pcb *aux = malloc(sizeof(t_pcb));
+		aux= cabecera->sig;
+		cabecera->sig=aux->sig;
+		free(aux);
+	}
 
-	getaddrinfo(NULL, PUERTO, &hints, &serverInfo); // Carga en serverInfo los datos de la conexion
+	return *ret;
+};
 
-	//se crea un nuevo socket que se utilizara para la conexion con el CPU
-	conexiones.socket_escucha = socket(serverInfo->ai_family, serverInfo->ai_socktype,
-			serverInfo->ai_protocol);
-	//se comprueba que el socket se creo correctamente
-	if (conexiones.socket_escucha == -1)
-		perror("SOCKET");
-
-	//se comprueba que la asociacion fue exitosa
-	int B = bind(conexiones.socket_escucha, serverInfo->ai_addr, serverInfo->ai_addrlen);
-	if (B == -1)
-		perror("BIND");
-
-	//funcion que permite al programa ponerse a la espera de nuevas conexiones
-	int L = listen(conexiones.socket_escucha, BACKLOG);
-	if (L == -1)
-		perror("LISTEN");
-
-
-	//Se calcula el tamaño de la direccion del cliente
-	conexiones.tamanio_direccion = sizeof(conexiones.direccion);
-
-	freeaddrinfo(serverInfo); //se libera porque ya no se usa mas
-
-}
 
 //Funcion que muestra la consola por pantalla con las opciones a enviar a la CPU
 void consola ()
@@ -75,9 +63,9 @@ void consola ()
 	{
 		//Muestra las conexiones con las CPUS disponibles
 		puts("Elija CPU: ¡¡¡¡SOLO NUMEROS!!!\n");
-		int j = 1;
-		while ( j < 6) {
-			printf("CPU n°:%d, puerto: %d\n",j,conexiones.CPU[j-1]);
+		int j = 0, i;
+		while ( j < 5) {
+			printf("CPU n°:%d, puerto: %d\n",j+1,conexiones.CPU[j]);
 			j++;
 		}
 
@@ -110,7 +98,7 @@ void consola ()
 			fgets(message, PACKAGESIZE, stdin);			// Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
 			if (!strcmp(message,"cpu\n")) enviar = 0;			// Chequeo que el usuario no quiera salir
 			if (!strcmp(message,"correr programa\n")) send(socket_instrucciones, message, strlen(message) + 1, 0); 	// Solo envio si el usuario no quiere salir.
-			if (!strcmp(message,"salir\n")){ send(socket_instrucciones, message, strlen(message) + 1, 0); break;};
+			if (!strcmp(message,"salir\n")){ for(i=0;i<5;i++) {send(conexiones.CPU[i], message, strlen(message) + 1, 0);}; break;};
 		}
 
 	}

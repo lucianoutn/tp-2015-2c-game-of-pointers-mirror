@@ -8,11 +8,7 @@
 #ifndef SRC_LIBRERIAPLANIFICADOR_H_
 #define SRC_LIBRERIAPLANIFICADOR_H_
 
-#define IP "127.0.0.1"
-#define PUERTO "8080"
-#define BACKLOG 10
-#define PACKAGESIZE 1024
-
+#include "SharedLibs/libreriaServidor.h" //SharedLibs/Debug
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -22,19 +18,28 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#define BACKLOG 10
+#define PACKAGESIZE 1024
 
-//struct para conexiones
-struct Conexiones {
-	int socket_escucha; 				// Socket de conexiones entrantes
-	struct sockaddr_in direccion;		// Datos de la direccion del servidor
-	socklen_t tamanio_direccion;		// Tamaño de la direccion
-	int CPU[10];						// Sockets de conexiones ACEPTADAS
-} conexiones;
+//Estructura que almacenara los datos del PCB de cada proceso
+typedef struct PCB{
+	int PID;
+	//estado del proceso
+	unsigned int instructionPointer;
+	int prioridad;
+	int permisos;
+	struct PCB *sig;
+
+}t_pcb;
 
 //Funcion encargada de acceptar nuevas peticiones de conexion
-void escuchar ();
+//void escuchar ();
 
-void crearSocket ();
+//void crearSocket ();
+
+void encolar (t_pcb *cabecera, t_pcb *valor);
+
+t_pcb desencolar (t_pcb *cabecera);
 
 void consola ();
 

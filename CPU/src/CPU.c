@@ -74,21 +74,17 @@ int main()
 	//creando los hilos
 	int i, err;
 
-	for (i=1; i<=CANT_CPU; i++){
+	for (i=0; i<CANT_CPU; i++){
 		err= pthread_create(&(cpu[i]), NULL, (void*)iniciaCPU, NULL);
+		sleep(1);
 		if (err != 0)
 			printf("no se pudo crear el hilo de cpu :[%s]", strerror(err));
 	}
 
-	for (i=1; i<=CANT_CPU; i++){
-			pthread_join(&(cpu[i]), NULL);
-
-		}
-
-
-
-
-
+	while(1); //poner sincro
+/*	for (i=0; i<CANT_CPU; i++){
+		pthread_join(&(cpu[i]), NULL);
+	}*/
 
 	return EXIT_SUCCESS;
 }

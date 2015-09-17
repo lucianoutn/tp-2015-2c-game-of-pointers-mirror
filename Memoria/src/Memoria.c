@@ -53,16 +53,20 @@ int main(void) {
 	int status;
 	printf("CPU conectada. Esperando instrucciones:\n");
 	//Envio de instrucciones
+	int i;
 	while(strcmp(message,"salir\n") !=0)
 	{
-		status = recv(conexiones.CPU[0], (void*) message, PACKAGESIZE, 0);
-		if (status != 0){
-			printf("RECIBIDO! =D\n%s", message);
-			send(socketSwap, message, strlen(message) + 1, 0);
-		}
-		else{
-			puts("conexion perdida! =(");
-			break;
+		for(i=0;i<5;i++)
+		{
+			status = recv(conexiones.CPU[i], (void*) message, PACKAGESIZE, 0);
+			if (status != 0){
+				printf("RECIBIDO! =D\n%s", message);
+				send(socketSwap, message, strlen(message) + 1, 0);
+			}
+			else{
+				puts("conexion perdida! =(");
+				break;
+			}
 		}
 	}
 
