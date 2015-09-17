@@ -11,7 +11,7 @@
 void *escuchar (struct Conexiones* conexion){
 	int i =0;
 
-	while( i<=5 ) //limite temporal de 5 CPUS conectadas
+	while( i<MAX_CPUS ) //limite temporal de 5 CPUS conectadas
 	{
 		//guarda las nuevas conexiones para acceder a ellas desde cualquier parte del codigo
 		conexion->CPU[i] = accept(conexion->socket_escucha, (struct sockaddr *) &conexion->direccion, &conexion->tamanio_direccion);

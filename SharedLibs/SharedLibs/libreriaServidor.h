@@ -18,13 +18,14 @@
 #include <unistd.h>
 #include <pthread.h>
 
+#define MAX_CPUS 5
 
 //struct para conexiones
 struct Conexiones {
 	int socket_escucha;					// Socket de conexiones entrantes
 	struct sockaddr_in direccion;		// Datos de la direccion del servidor
 	socklen_t tamanio_direccion;		// Tamaño de la direccion
-	int CPU[10];						// Sockets de conexiones ACEPTADAS
+	int CPU[MAX_CPUS];						// Sockets de conexiones ACEPTADAS
 } conexiones;
 
 //Funcion encargada de acceptar nuevas peticiones de conexion
