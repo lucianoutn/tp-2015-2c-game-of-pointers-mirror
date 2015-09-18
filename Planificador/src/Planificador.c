@@ -9,7 +9,59 @@
  */
 
 #include "libreriaPlanificador.h"
+#include <commons/collections/list.h>
 
+//Estructura que almacenara los datos del PCB de cada proceso
+typedef struct PCB{
+	int PID;
+	//estado del proceso
+	unsigned int instructionPointer;
+	int prioridad;
+	int permisos;
+	struct PCB *sig;
+
+}t_pcb;
+
+//A continuancion las funciones basicas para crear una nueva cola FIFO
+//Funcion que permite añadir elementos a la cola
+void encolar (t_pcb *cabecera, t_pcb *valor)
+{
+	t_pcb *nuevo = malloc(sizeof(t_pcb));
+	nuevo=valor;
+
+	if (cabecera==NULL)
+	{
+		nuevo->sig=nuevo;
+	}
+	else
+	{
+		nuevo->sig= cabecera->sig;
+		cabecera->sig= nuevo;
+	}
+
+	cabecera=nuevo;
+};
+
+//Funcion que permite quitar elementos de la cola, devuelve el nodo que saca.
+t_pcb desencolar (t_pcb *cabecera)
+{
+	t_pcb *ret = malloc(sizeof(t_pcb));
+	ret= cabecera;
+	if(cabecera==cabecera->sig)
+	{
+		free (cabecera);
+	}
+
+	else
+	{
+		t_pcb *aux = malloc(sizeof(t_pcb));
+		aux= cabecera->sig;
+		cabecera->sig=aux->sig;
+		free(aux);
+	}
+
+	return *ret;
+};
 
 int main() {
 	puts("!!!Planificador!!!"); /* prints !!!Planificador!!! */
@@ -49,4 +101,5 @@ int main() {
 
 	return EXIT_SUCCESS;
 }
+
 
