@@ -14,7 +14,23 @@ const char *IP = "127.0.0.1";
 const char *PUERTO = "8080";
 
 int main() {
-	puts("!!!Planificador!!!"); /* prints !!!Planificador!!! */
+	puts("!!!!Planificador!!!!"); /* prints !!!Planificador!!! */
+
+	/* El planificador en alguna seccion especifica del programa cuando reciba el comando corre PATH
+	 * por consola debera abrir el archivo "mCod" en la ruta indicada, leerlo y enviar las instrucciones del
+	 * archivo a la CPU que este disponible en el momento. Esto se debe poder repetir indefinidas veces.
+	 */
+
+	/* Al abrir un archivo mCod, el planificador almacenara la informacion del nuevo proceso mProc en
+	 * un nuevo nodo de la cola PCB. Se agregara este nodo a la cola, la cual en un principio es una
+	 * cola de algoritmo FIFO
+	 */
+
+	/* El planificador debera seleccionar los elementos que esten primeros en la cola de ejecucion y
+	 * enviar las instrucciones a una de las CPU disponibles (ya veremos como la elige) para procesar
+	 */
+
+	// El planificador debe recibir los resultados de la CPU.
 
 	/*
 	 * Funcion que crea un socket nuevo y lo prepara para escuchar conexiones entrantes a travez del puerto PUERTO
