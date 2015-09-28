@@ -26,6 +26,7 @@ typedef struct PCB{
 	int PID;
 	//estado del proceso
 	unsigned int instructionPointer;
+	unsigned int numInstrucciones;
 	int prioridad;
 	int permisos;
 	struct PCB *sig;

@@ -75,6 +75,34 @@ int main() {
 		close(conexiones.CPU[i++]);
 	}
 
+	/* Cuando reciba el comando correr PATH se crea el PCB del proceso
+	t_pcb PCB;
+	PCB.PID=PID actual
+	PCB.instructionPointer=0
+	char **instrucciones= (char**)malloc(sizeof(char*));
+	instrucciones= leermCod(PATH, PCB.numInstrucciones);
+
+	(otra funcion)
+	while(rafaga de CPU se acabe) //primero que llega lo manda de una si llegan mas los encola
+	{
+		send(mensaje) donde mensaje es una estructura con el payload y el mensaje es el string al que
+		apunta el puntero instruccion[I]
+		actual++;
+	}
+	si llega uno y:
+	if(!rafaga de CPU se acabe)
+	{
+		encolar(PCB) el que llega
+		PCB.prioridad=1;
+
+	}
+
+	el proceso entra a rafaga de I/O
+	se guarda el numero de instruccion, luego se retomara la ejecucion enviando desde la instruccion actual
+
+
+	 */
+
 	return EXIT_SUCCESS;
 }
 
