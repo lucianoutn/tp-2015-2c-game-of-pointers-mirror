@@ -77,19 +77,22 @@ int main() {
 		close(conexiones.CPU[i++]);
 	}
 
-	/* Cuando reciba el comando correr PATH se crea el PCB del proceso
+	/* Cuando reciba el comando correr PATH, se creara un nuevo hilo en donde se crea el PCB del nuevo proceso. El
+	hilo debe ejecutar la siguiente rutina:
 	t_pcb PCB;
-	PCB.PID=PID actual
+	PCB.PID=PID_actual
 	PCB.instructionPointer=0
-	char **instrucciones= (char**)malloc(sizeof(char*));
-	instrucciones= leermCod(PATH, PCB.numInstrucciones);
-
+	char **instrucciones= (char**)malloc(sizeof(leermCod(PATH, PCB.numInstrucciones));
+	instrucciones = (leermCod(PATH, PCB.numInstrucciones);
+	
+	
 	(otra funcion)
-	while(rafaga de CPU se acabe) //primero que llega lo manda de una si llegan mas los encola
+	while(!strcmp(instruccion[num],"fin")) //envia hasta que llegue a la ultima instrucciones
 	{
-		send(mensaje) donde mensaje es una estructura con el payload y el mensaje es el string al que
-		apunta el puntero instruccion[I]
-		actual++;
+		send(payload) donde mensaje es una estructura con el payload y el mensaje es el string al que
+		send(instrucciones[I]); 
+		apunta el puntero instruccion[instructionPointer];
+		instructionPointer++;
 	}
 	si llega uno y:
 	if(!rafaga de CPU se acabe)
