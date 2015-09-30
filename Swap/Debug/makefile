@@ -26,14 +26,13 @@ endif
 all: Swap
 
 dependents:
-	-cd /home/utnso/workspace/tp-2015-2c-game-of-pointers/SharedLibs/Debug && $(MAKE) all
-	-cd /home/utnso/workspace/tp-2015-2c-game-of-pointers/commons/Debug && $(MAKE) all
+	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug && $(MAKE) clean all
 
 # Tool invocations
-Swap: $(OBJS) $(USER_OBJS) /home/utnso/workspace/tp-2015-2c-game-of-pointers/SharedLibs/Debug/libSharedLibs.so /home/utnso/workspace/tp-2015-2c-game-of-pointers/commons/Debug/libcommons.so
+Swap: $(OBJS) $(USER_OBJS) /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug/libSharedLibs.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/workspace/tp-2015-2c-game-of-pointers/commons/Debug" -L"/home/utnso/workspace/tp-2015-2c-game-of-pointers/SharedLibs/Debug" -o "Swap" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug" -o "Swap" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -44,7 +43,6 @@ clean:
 
 .PHONY: all clean dependents
 .SECONDARY:
-/home/utnso/workspace/tp-2015-2c-game-of-pointers/SharedLibs/Debug/libSharedLibs.so:
-/home/utnso/workspace/tp-2015-2c-game-of-pointers/commons/Debug/libcommons.so:
+/home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug/libSharedLibs.so:
 
 -include ../makefile.targets
