@@ -56,7 +56,7 @@ void reciboDelCpu(char * memoria_real, char * memoria_cache, t_list * TLB, t_lis
 {
  int listenningSocket;
  int socketCliente;
- t_header registro_prueba;
+	t_header package;
 
   conexionAlCliente(&listenningSocket, &socketCliente, miContexto.puertoServidor);
   printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
@@ -70,17 +70,17 @@ void reciboDelCpu(char * memoria_real, char * memoria_cache, t_list * TLB, t_lis
   while(status!=0)
   {
 	  //sem_wait(sem_1);
-	  status = recv(socketCliente, &registro_prueba, sizeof(t_header), 0);
-	  if(registro_prueba.tamanio_msj!=0)
+	  status = recv(socketCliente, &package, sizeof(t_header), 0);
+	  if(package.tamanio_msj!=0)
 	  {
-		  mensaje = malloc(registro_prueba.tamanio_msj);
-		  status = recv(socketCliente, mensaje, registro_prueba.tamanio_msj,0);
+		  mensaje = malloc(package.tamanio_msj);
+		  status = recv(socketCliente, mensaje, package.tamanio_msj,0);
 	  }
 
 	  if(status!= 0)
 	  {
-		  send(serverSocket, &registro_prueba, sizeof(t_header), 0);
-		  if(registro_prueba.tamanio_msj!=0)
+		  send(serverSocket, &package, sizeof(t_header), 0);
+		  if(package.tamanio_msj!=0)
 		  	  {
 			  send(serverSocket, mensaje, strlen(mensaje), 0);
 		  	  }
@@ -90,19 +90,19 @@ void reciboDelCpu(char * memoria_real, char * memoria_cache, t_list * TLB, t_lis
 
 
 
-  //meConectoAlSwap(registro_prueba,mensaje);
+  //meConectoAlSwap(package,mensaje);
 
 
 /*
   if (TLB != NULL)
   {
-  ejecutoInstruccionEnCache(registro_prueba, memoria_cache,TLB);
+  ejecutoInstruccionEnCache(package, memoria_cache,TLB);
  }else
  {
-  ejecutoInstruccionEnMem(registro_prueba, memoria_real, tablaMemReal);
+  ejecutoInstruccionEnMem(package, memoria_real, tablaMemReal);
  }
  */
- //meConectoAlSwap(registro_prueba,mensaje);
+ //meConectoAlSwap(package,mensaje);
  close(listenningSocket);
  close(socketCliente);
  close(serverSocket); //SWAP
