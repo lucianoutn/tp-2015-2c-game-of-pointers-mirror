@@ -61,59 +61,79 @@ char * crear_tlb()
 
 }
 
-void ejecutoInstruccionEnCache(t_header registro_prueba, char * memoria_cache, t_list * TLB)
+void ejecutoInstruccion(t_header registro_prueba, char * mensaje, char * memoria_cache,char *  memoria_real, t_list * TLB, t_list * tabla_mem_real)
 {
- switch (registro_prueba.type_ejecution)
-   {
-   case 0:
-   printf ("Se recibio orden de lectura\n");
-   meConectoAlSwap(registro_prueba,NULL);
-    break;
-   case 1:
-   printf ("Se recibio orden de escritura\n");
-    break;
-   case 2:
-    printf("Se recibio orden de inicializacion \n");
-    iniciarEnCache(registro_prueba, TLB,  memoria_cache);
-    break;
-   case 3:
-   printf ("Se recibio orden de finalizacion de proceso :) \n");
-   iniciarEnCache(registro_prueba, TLB, memoria_cache);
-   int cant_elem = TLB->elements_count;
-   printf ("LA TLB TIENE %d ELEMENTOS DESPUES DE INICIAR \n", cant_elem );
-   numero_de_pid = registro_prueba.PID;
-   //TLB->head
-   list_remove_by_condition(TLB, elNodoTienePidIgualA );
-   cant_elem = TLB->elements_count;
-   printf ("LA TLB TIENE %d ELEMENTOS DESPUES DE FINALIZAR \n", cant_elem );
-    break;
-   default:
-   printf ("El tipo de ejecucion recibido no es valido\n");
-    break;
-   }
-}
+	switch (registro_prueba.type_ejecution)
+	 	{
+	 	case 0:
+			printf ("Se recibio orden de lectura\n");
+			//meConectoAlSwap(registro_prueba);
+	 		break;
+	 	case 1:
+			printf ("Se recibio orden de escritura\n");
+			int PID = registro_prueba.PID;
+			numero_pagina = registro_prueba.pagina_proceso;
+			numero_de_pid = registro_prueba.PID;
+			/* VERIFICO QUE EL PID ESTE CARGADO EN LA TLB */
+			ttlb * registro_tlb = list_find(TLB, elNodoTienePidIgualA);
+			if (registro_tlb != NULL)
+			{
+				printf ("ENCONTRE EL REGISTRO CON PID %d \n ",registro_tlb->PID);
+				pag_proceso * pag = list_find(registro_tlb->direc_mem, numeroDePaginaIgualA);
+				/* VERIFICO QUE LA PAGINA A ESCRIBIR ESTE CARGADA EN LA CACHE */
+				if (pag != NULL)
+				{
+					printf("LA PAGINA ESTA EN CACHE \n");
+					memcpy (pag->direc_mem, mensaje, 5);
+					printf( "ESCRIBI : %s EN LA MEMORIA \n", pag->direc_mem);
+				}
+				else
+				{
+					printf("SEGUI PARTICIPANDO AMIGO \n");
+				}
+			}
+			else
+			{
+				printf ("NO ESTÁ EN CACHE");
+				/* ME FIJO SI ESTÁ EN MEMORIA REAL */
+			}
+			//printf("ACABO DE ESCRIBIR: %s", point_to_write);
 
-void ejecutoInstruccionEnMem(t_header registro_prueba, char * memoria_real, t_list * tabla_mem_real)
-{
- switch (registro_prueba.type_ejecution)
-   {
-   case 0:
-   printf ("Se recibio orden de lectura\n");
-    break;
-   case 1:
-   printf ("Se recibio orden de escritura\n");
-    break;
-   case 2:
-    printf("Se recibio orden de inicializacion \n");
-    iniciarEnMemReal(registro_prueba, tabla_mem_real,  memoria_real);
-    break;
-   case 3:
-   printf ("Se recibio orden de finalizacion de proceso :) \n");
-    break;
-   default:
-   printf ("El tipo de ejecucion recibido no es valido\n");
-    break;
-   }
+	 		break;
+	 	case 2:
+	 		printf("Se recibio orden de inicializacion \n");
+	 		if( !strcmp(miContexto.tlbHabilitada, "SI") && !tlbLlena(TLB))
+	 		{
+		 		iniciarEnCache(registro_prueba, TLB,  memoria_cache);
+		 		printf("LA TLB TIENE %d ELEMENTOS \n", TLB->elements_count);
+	 		}else{
+	 			printf("LA TABLA DE MEMORIA PRINCIPAL TIENE %d ELEMENTOS \n", tabla_mem_real->elements_count);
+	 			iniciarEnMemReal(registro_prueba, tabla_mem_real, memoria_real);
+	 		}
+	 		break;
+	 	case 3:
+			printf ("Se recibio orden de finalizacion de proceso :) \n");
+
+			numero_de_pid = registro_prueba.PID;
+			ttlb * reg_tlb = list_find(TLB, elNodoTienePidIgualA);
+
+			printf("La TLB TIENE %d ELEMENTOS ANTES DE DESTRUIR\n", TLB->elements_count);
+			/* DIRECCION TABLA PROCESO A ELIMINAR */
+			list_destroy(reg_tlb->direc_mem);
+		//	printf("LA DIRECCION DE LA TABLA DEL PROCESO A ELIMINAR ES %s \n", direccion_tabla_proc);
+
+			/* NO ME RECONOCE EL INPUT_DESTROY DEFINIDO EN MANEJOLISTAS */
+		//	list_remove_and_destroy_by_condition(TLB, elNodoTienePidIgualA, input_destroy);
+
+			list_remove_by_condition(TLB, elNodoTienePidIgualA);
+			printf("LA TLB TIENE %d ELEMENTOS DESPUES DE DESTRUIR\n", TLB->elements_count);
+			//list_remove_by_condition(TLB, elNodoTienePidIgualA);
+
+	 		break;
+	 	default:
+			printf ("El tipo de ejecucion recibido no es valido\n");
+	 		break;
+	 	}
 }
 
 void iniciarEnCache(t_header registro_prueba, char * TLB, char * memoria_cache)
@@ -189,5 +209,20 @@ void meConectoAlSwap(t_header registro_prueba, char * mensaje)
  //}
 
  close(serverSocket);
+}
+
+bool numeroDePaginaIgualA(int * pagina_number)
+{
+	return (*pagina_number == numero_pagina);
+}
+
+
+bool tlbLlena(t_list * TLB)
+{
+	int cant_elem = TLB->elements_count;
+	if (cant_elem == miContexto.entradasTlb)
+		return true;
+
+	return false;
 }
 
