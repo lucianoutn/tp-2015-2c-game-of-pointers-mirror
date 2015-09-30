@@ -7,53 +7,70 @@
  Description : Modulo - Swap
  ============================================================================
  */
-
-#include "SharedLibs/libreriaServidor.h" //SharedLibs/Debug
-
-#define BACKLOG 10
-#define PACKAGESIZE 1024
-
-const char *IP= "127.0.0.1";
-const char *PUERTOSWAP= "9000";
-
-int main(void) {
-	puts("!!!Swap!!!"); /* prints !!!Swap!!! */
-
-	int listenningSocket= crearServer (IP, PUERTOSWAP);
-
-	//Estructura que tendra los datos de la conexion del cliente MEMORIA
-	struct sockaddr_in addr;
-	socklen_t addrlen = sizeof(addr);
-
-	int L = listen(listenningSocket, BACKLOG);
-	if (L==-1)
-		perror("LISTEN");
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <SharedLibs/sockets.h>
+#include <commons/config.h>
+#include <commons/string.h>
+#include "funcSwap.h"
+#include <semaphore.h>
 
 
-	int memSocket = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen);
-		printf("Conexion aceptada Socket= %d \n",memSocket);
+void reciboDelAdminMem();
 
-	//Recepcion de instrucciones
-	char package[PACKAGESIZE];
-	int status;		// Estructura que manjea el status de los recieve.
-	printf("ADM de Memoria conectado. Esperando instrucciones:\n");
+int main()
+{
+	/*
+	int a;
+	a=sem_init(sem_2,1,1);
+	a=sem_init(sem_1,1,0);
+	*/
+	//-------Contexto--------------------------//
+	traigoContexto();
+	creoLogger();
+	//------Fin Contexto----------------------//
 
-	while(strcmp(package,"salir\n") !=0)
-	{
-		status = recv(memSocket, (void*) package, PACKAGESIZE, 0);
-		if (status != 0){
-			printf("RECIBIDO! =D\n%s", package);
-		}
-		else{
-			puts("conexion perdida! =(");
-			break;
-		};
-	}
+	//Creo particion y listas
+	archivo = crearParticion();
+	lista_paginas = crearListaPaginas();
+	lista_huecos = crearListaHuecos(contexto->cant_paginas);
+
+	reciboDelAdminMem();
+
+	//Cierro particion
+	cerrarParticion();
+	log_destroy(logger);
+}
+
+void reciboDelAdminMem()
+{
+  int listenningSocket,socketCliente;
+  t_header package;
+  int status = 2; // Estructura que maneja el status de los receive.
+
+  conexionAlCliente(&listenningSocket, &socketCliente,contexto->puerto);
+  printf("Cliente conectado. Esperando mensajes:\n");
+
+  while(status!=0)
+  //Una vez conectado el cliente..
+  {
+	  //sem_wait(sem_2);
+	  status = recv(socketCliente, &package, sizeof(t_header), 0);
+	  //Recibido el paquete lo proceso..
+	  if(status!= 0)
+	  analizoPaquete(package,socketCliente);
+	  sleep(contexto->retardo_swap);
+	  //sem_post(sem_1);
+  }
 
 
-	close(memSocket);
-	close(listenningSocket);
-
-
-	return EXIT_SUCCESS;
+  //Cierro conexiones
+  close(socketCliente);
+  close(listenningSocket);
+  status = 0;
 }

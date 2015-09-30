@@ -8,68 +8,103 @@
  ============================================================================
  */
 
-#include "SharedLibs/libreriaCliente.h" //SharedLibs/Debug
-#include "SharedLibs/libreriaServidor.h" //SharedLibs/Debug
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <unistd.h>
+#include <commons/config.h>
+#include <SharedLibs/sockets.h>
+#include "funcMemory.h"
+
+void reciboDelCpu(char *, char *, t_list *, t_list *);
 
 
-#define BACKLOG 10
-#define PACKAGESIZE 1024
+int main()
+{
+ traigoContexto();
 
-const char *IPMEM="127.0.0.1";
-const char *IPSWAP="127.0.0.1";
-const char *PUERTOSWAP="9000";
-const char *PUERTOMEM="8090";
+ char * memoria_cache = NULL;
+ t_list * TLB = NULL;
+ // CREO UNA LISTA PARA LA TABLA DE LA MEMORIA REAL /
+ t_list * listaTablaMemReal = crearListaTMemReal();
+ // CREO UNA LISTA PARA LA MEMORIA REAL /
+ t_list * listaMemR = crearListaMemReal();
+ // RESERVO ESPACIO PARA LA MEMORIA REAL /
+ int tamanio_memoria_real = miContexto.tamanioMarco * miContexto.cantidadMarcos;
+ char * memoria_real = reservarMemoria(tamanio_memoria_real);
 
-int main(void) {
-	puts("!!!Memoria!!!"); /* prints !!!Memoria!!! */
+ /* SI LA TLB NO ESTA HABILTIADA, VA A APUNTAR A NULL AL IGUAL QUE LA MEMORIA CACHE
+                  Y NO SE VA A RESERVAR ESPACIO PARA LA MISMA*/
+ if (!strcmp(miContexto.tlbHabilitada,"SI"))
+ {
+   TLB = crearListaTlb();
+   printf ("La TLB esta habilitada => Reservo espacio para la memoria cache \n");
+   int tamanio_memoria_cache = miContexto.tamanioMarco * 4;
+   memoria_cache = reservarMemoria (tamanio_memoria_cache);
+   t_list * TLB = crearListaTlb();
+  }
 
-
-	//inicio cliente con el swap
-	int socketSwap = crearCliente(IPSWAP, PUERTOSWAP);//conecta con el swap
-
-
-	//inicio server
-	int CPUSocket= crearServer(IPMEM, PUERTOMEM);
-
-	//funcion que permite al programa ponerse a la espera de nuevas conexiones
-	int L = listen(CPUSocket, BACKLOG);
-	if (L==-1)
-		perror("LISTEN");
-
-
-	//Estructura que tendra los datos de la conexion del cliente
-	conexiones.socket_escucha = CPUSocket;
-	conexiones.tamanio_direccion = sizeof(conexiones.direccion);
-	pthread_t hilo_escuchas;
-	if( pthread_create(&hilo_escuchas, NULL, (void*)escuchar,&conexiones) < 0)
-		puts("Error HILO ESCUCHAS!");
-
-	puts("ESPERANDO CPU....\n");
-	while(conexiones.CPU[0]==0);
-
-	//fin server
-
-	char message[PACKAGESIZE] = "lalala";
-	int status;
-	printf("CPU conectada. Esperando instrucciones:\n");
-	//Envio de instrucciones
-	int i;
-	while(strcmp(message,"salir\n") !=0)
-	{
-		for(i=0;i<5;i++)
-		{
-			status = recv(conexiones.CPU[i], (void*) message, PACKAGESIZE, 0);
-			if (status != 0){
-				printf("RECIBIDO! =D\n%s", message);
-				send(socketSwap, message, strlen(message) + 1, 0);
-			}
-			else{
-				puts("conexion perdida! =(");
-				break;
-			}
-		}
-	}
-
-
-	return EXIT_SUCCESS;
+  reciboDelCpu(&memoria_real, &memoria_cache, TLB, listaTablaMemReal);
+  return 0;
 }
+
+void reciboDelCpu(char * memoria_real, char * memoria_cache, t_list * TLB, t_list * tablaMemReal)
+
+{
+ int listenningSocket;
+ int socketCliente;
+ t_header registro_prueba;
+
+  conexionAlCliente(&listenningSocket, &socketCliente, miContexto.puertoServidor);
+  printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
+
+  int status = 1;
+  char * mensaje;
+  //SWAP
+  int serverSocket;
+  conexionAlServer(&serverSocket, miContexto.puertoCliente);
+   //FIN SWAP
+  while(status!=0)
+  {
+	  //sem_wait(sem_1);
+	  status = recv(socketCliente, &registro_prueba, sizeof(t_header), 0);
+	  if(registro_prueba.tamanio_msj!=0)
+	  {
+		  mensaje = malloc(registro_prueba.tamanio_msj);
+		  status = recv(socketCliente, mensaje, registro_prueba.tamanio_msj,0);
+	  }
+
+	  if(status!= 0)
+	  {
+		  send(serverSocket, &registro_prueba, sizeof(t_header), 0);
+		  if(registro_prueba.tamanio_msj!=0)
+		  	  {
+			  send(serverSocket, mensaje, strlen(mensaje), 0);
+		  	  }
+	  }
+	  //sem_post(sem_2);
+  }
+
+
+
+  //meConectoAlSwap(registro_prueba,mensaje);
+
+
+/*
+  if (TLB != NULL)
+  {
+  ejecutoInstruccionEnCache(registro_prueba, memoria_cache,TLB);
+ }else
+ {
+  ejecutoInstruccionEnMem(registro_prueba, memoria_real, tablaMemReal);
+ }
+ */
+ //meConectoAlSwap(registro_prueba,mensaje);
+ close(listenningSocket);
+ close(socketCliente);
+ close(serverSocket); //SWAP
+
+ }
