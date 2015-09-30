@@ -85,5 +85,27 @@ int main()
 		pthread_join(&(cpu[i]), NULL);
 	}*/
 
+	/*
+	 * La cpu recibe el PCB del planificador (luego de que este halla recibido la instruccion correr PATH
+	 * 	PCB=recv(puntero a la estructura del PCB que creo el plani)
+	 * 	PCB.PID=PID_actual
+		PCB.instructionPointer=0
+		char **instrucciones= (char**)malloc(sizeof(leermCod(PATH, PCB.numInstrucciones));
+		instrucciones = (leermCod(PATH, PCB.numInstrucciones);
+
+		hace el switch y segun el caso envia el playload y dps la instruccion (afuera del switch).
+		while(!strcmp(instruccion[num],"fin")) //envia hasta que llegue a la ultima instrucciones
+		{
+			switch(tipo de instruccion)
+			{
+				case n:
+					send(payload) que corresponda segun el caso a la memoria
+			}
+			send(instrucciones[instructionPointer]);
+			instructionPointer++;
+			y espera a lo que tenga que hacer la instruccion o a algun valor que devuelva la memoria
+		}
+	 */
+
 	return EXIT_SUCCESS;
 }

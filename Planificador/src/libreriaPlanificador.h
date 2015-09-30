@@ -44,6 +44,7 @@ typedef struct PCB{
 	unsigned int numInstrucciones;
 	int prioridad;
 	int permisos;
+	const char *ruta;
 	struct PCB *sig;
 
 }t_pcb;

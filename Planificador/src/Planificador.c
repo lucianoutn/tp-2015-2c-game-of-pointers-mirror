@@ -16,20 +16,6 @@
 int main() {
 	puts("!!!!Planificador!!!!"); /* prints !!!Planificador!!! */
 
-	/* El planificador en alguna seccion especifica del programa cuando reciba el comando corre PATH
-	 * por consola debera abrir el archivo "mCod" en la ruta indicada, leerlo y enviar las instrucciones del
-	 * archivo a la CPU que este disponible en el momento. Esto se debe poder repetir indefinidas veces.
-	 */
-
-	/* Al abrir un archivo mCod, el planificador almacenara la informacion del nuevo proceso mProc en
-	 * un nuevo nodo de la cola PCB. Se agregara este nodo a la cola, la cual en un principio es una
-	 * cola de algoritmo FIFO
-	 */
-
-	/* El planificador debera seleccionar los elementos que esten primeros en la cola de ejecucion y
-	 * enviar las instrucciones a una de las CPU disponibles (ya veremos como la elige) para procesar
-	 */
-
 	// El planificador debe recibir los resultados de la CPU.
 
 	/*
@@ -78,33 +64,26 @@ int main() {
 	}
 
 	/* Cuando reciba el comando correr PATH, se creara un nuevo hilo en donde se crea el PCB del nuevo proceso. El
-	hilo debe ejecutar la siguiente rutina:
-	t_pcb PCB;
-	PCB.PID=PID_actual
-	PCB.instructionPointer=0
-	char **instrucciones= (char**)malloc(sizeof(leermCod(PATH, PCB.numInstrucciones));
-	instrucciones = (leermCod(PATH, PCB.numInstrucciones);
-	
+		hilo debe ejecutar la siguiente rutina:
+		t_pcb PCB;
+		PCB.ruta=path;
+		envia ruta del PCB a la CPU, la cual termina de completar el PCB y empieza a ejecutar la rafaga
+		de CPU.
 	
 	(otra funcion)
-	while(!strcmp(instruccion[num],"fin")) //envia hasta que llegue a la ultima instrucciones
+	
+	si llega uno y pregunta si ya termino de ejecutar el hilo (pq en este caso no hay cuanto de tiempo
+	por lo que cnd se le manda el archivo a la CPU ejecutar hasta que termina)
+	if(no termino hilo)
 	{
-		send(payload) donde mensaje es una estructura con el payload y el mensaje es el string al que
-		send(instrucciones[I]); 
-		apunta el puntero instruccion[instructionPointer];
-		instructionPointer++;
-	}
-	si llega uno y:
-	if(!rafaga de CPU se acabe)
-	{
-		encolar(PCB) el que llega
-		PCB.prioridad=1;
-
+		t_pcb PCB;
+		PCB.ruta=path;
+		encolar(inicio, PCB) el que llega
 	}
 
-	el proceso entra a rafaga de I/O
-	se guarda el numero de instruccion, luego se retomara la ejecucion enviando desde la instruccion actual
-
+	cuando se libera la CPU
+	desencolar(inicio);
+	envia ruta del PCB a la CPU.
 
 	 */
 
