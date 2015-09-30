@@ -10,8 +10,8 @@
 
 #include "planificador.h"
 
-const char *IP = "127.0.0.1";
-const char *PUERTO = "8080";
+
+
 
 int main() {
 	puts("!!!!Planificador!!!!"); /* prints !!!Planificador!!! */
@@ -36,7 +36,9 @@ int main() {
 	 * Funcion que crea un socket nuevo y lo prepara para escuchar conexiones entrantes a travez del puerto PUERTO
 	 * y lo almacena en la variable conexiones del tipo struct Conexiones
 	 */
-	conexiones.socket_escucha=crearServer(IP,PUERTO);
+	traigoContexto();
+
+	conexiones.socket_escucha=crearServer(miContexto.puertoEscucha);
 
 	//funcion que permite al programa ponerse a la espera de nuevas conexiones
 		int L = listen(conexiones.socket_escucha, BACKLOG);
@@ -60,7 +62,7 @@ int main() {
 	 * REEMPLAZAR MAS ADELANTE (SINCRONIZACION)
 	 */
 	puts("ESPERANDO CONEXIONES....\n");
-	while(conexiones.CPU[4] <= 0){
+	while(conexiones.CPU[0] <= 0){
 	}
 
 	//Crea un hilo para la consola y espera a que termine para finalizar el programa

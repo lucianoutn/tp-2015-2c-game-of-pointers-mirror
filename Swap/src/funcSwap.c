@@ -29,9 +29,9 @@ FILE* crearParticion() {
 	FILE *archivo;
 	char * comando = malloc(200);
 
-	strcpy(comando,"dd if=/home/utnso/workspace/tp-2015-2c-game-of-pointers/Swap/");
+	strcpy(comando,"dd if=/home/utnso/git/tp-2015-2c-game-of-pointers/Swap/");
 	strcat(comando, contexto->nombre);
-	strcpy(comando," of=/home/utnso/workspace/tp-2015-2c-game-of-pointers/Swap/");
+	strcpy(comando," of=/home/utnso/git/tp-2015-2c-game-of-pointers/Swap/");
 	strcat(comando, contexto->nombre);
 	//strcat(comando, " bs=512");
 	//strcat(comando,  string_itoa(contexto->tam_pagina));

@@ -31,6 +31,6 @@ struct Conexiones {
 //Funcion encargada de acceptar nuevas peticiones de conexion
 void *escuchar (struct Conexiones* conexion);
 
-int crearServer (const char *IP, const char *PUERTO);
+int crearServer ( const char *PUERTO);
 
 #endif /* SRC_LIBRERIASERVIDOR_H_ */

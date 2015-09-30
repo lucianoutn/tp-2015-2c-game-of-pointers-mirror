@@ -8,6 +8,23 @@
 #include "libreriaPlanificador.h"
 
 
+void traigoContexto()
+{
+ // LEVANTO EL ARCHIVO CONFIG Y VERIFICO QUE LO HAYA HECHO CORRECTAMENTE /
+ t_config * config_planificador = config_create("resources/config.cfg");
+
+ if( config_planificador == NULL )
+ {
+  puts("Final felize");
+  abort();
+ }
+
+ // OBTENGO CONFIGURACION DEL CONFIG /
+ miContexto.puertoEscucha = config_get_string_value(config_planificador, "PUERTO_ESCUCHA" );
+ miContexto.algoritmoPlanificacion = config_get_string_value(config_planificador, "ALGORITMO_PLANIFICACION" );
+}
+
+
 
 //A continuancion las funciones basicas para crear una nueva cola FIFO
 //Funcion que permite añadir elementos a la cola

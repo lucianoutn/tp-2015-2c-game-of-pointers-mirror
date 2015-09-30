@@ -8,15 +8,9 @@
  ============================================================================
  */
 
-#include "SharedLibs/libreriaCliente.h" //SharedLibs/Debug
+#include "CPU.h"
 
 #define PACKAGESIZE 1024
-#define CANT_CPU 5 //define la cantidad de hilos q se van a crear.lucho
-
-const char *IP = "127.0.0.1";
-const char *IP_MEMORIA = "127.0.0.1";  //agrego otra ip xq la mem esta en otra pc.Lucho
-const char *PUERTOPLANIFICADOR = "8080";
-const char *PUERTOMEMORIA = "8090";
 
 //preparo semaforos.lucho
 pthread_mutex_t mutex;
@@ -24,14 +18,17 @@ pthread_mutex_t mutex;
 //ptrhead_mutex_unlock(&mutex);
 //fin semaforos
 
-pthread_t cpu[CANT_CPU];
+pthread_t cpu[1];
+
+
+
+
 
 void iniciaCPU(){
 
 
-
-	int socketPlanificador = crearCliente(IP, PUERTOPLANIFICADOR); //conecta con el planificador
-	int socketMemoria = crearCliente(IP_MEMORIA, PUERTOMEMORIA);//conecta con la memoria
+	int socketPlanificador = crearCliente(miContexto.ipPlanificador, miContexto.puertoPlanificador); //conecta con el planificador
+	int socketMemoria = crearCliente(miContexto.ipMemoria, miContexto.puertoMemoria);//conecta con la memoria
 
 	pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
 	printf("CPU ID: %d conectado\n", (int)id);
@@ -69,17 +66,19 @@ int main()
 {
 	puts("!!!CPU!!"); /* prints !!!CPU!! */
 
+	traigoContexto();
+
 	pthread_mutex_init(&mutex, NULL); //inicializo semaforo.lucho
 
 	//creando los hilos
 	int i, err;
 
-	for (i=0; i<CANT_CPU; i++){
-		err= pthread_create(&(cpu[i]), NULL, (void*)iniciaCPU, NULL);
+//	for (i=0; i<CANT_CPU; i++){
+		err= pthread_create(&(cpu[0]), NULL, (void*)iniciaCPU, NULL);
 		sleep(1);
 		if (err != 0)
 			printf("no se pudo crear el hilo de cpu :[%s]", strerror(err));
-	}
+//	}
 
 	while(1); //poner sincro
 /*	for (i=0; i<CANT_CPU; i++){

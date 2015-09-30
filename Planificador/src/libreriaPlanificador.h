@@ -17,9 +17,24 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <SharedLibs/manejoListas.h>
+#include <commons/config.h>
 
 #define BACKLOG 10
 #define PACKAGESIZE 1024
+
+
+typedef struct{
+	char * puertoEscucha;
+	char * algoritmoPlanificacion;
+} contexto;
+
+contexto miContexto;
+int numero_de_pid;
+
+void traigoContexto();
+
+
 
 //Estructura que almacenara los datos del PCB de cada proceso
 typedef struct PCB{
