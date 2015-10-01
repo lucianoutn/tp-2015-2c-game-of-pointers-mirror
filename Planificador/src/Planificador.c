@@ -18,11 +18,13 @@ int main() {
 
 	// El planificador debe recibir los resultados de la CPU.
 
+
+	traigoContexto(); //levanta el archivo de configuracion
+
 	/*
 	 * Funcion que crea un socket nuevo y lo prepara para escuchar conexiones entrantes a travez del puerto PUERTO
 	 * y lo almacena en la variable conexiones del tipo struct Conexiones
 	 */
-	traigoContexto();
 
 	conexiones.socket_escucha=crearServer(miContexto.puertoEscucha);
 

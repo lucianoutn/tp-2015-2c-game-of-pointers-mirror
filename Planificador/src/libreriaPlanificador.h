@@ -19,9 +19,11 @@
 #include <pthread.h>
 #include <SharedLibs/manejoListas.h>
 #include <commons/config.h>
+#include <unistd.h>
 
 #define BACKLOG 10
 #define PACKAGESIZE 1024
+#define WORD_SIZE 35
 
 
 typedef struct{
@@ -58,6 +60,14 @@ void encolar (t_pcb *cabecera, t_pcb *valor);
 
 t_pcb desencolar (t_pcb *cabecera);
 
+//inicio consola
+
+
+
+
+
 void consola ();
+//fin consola
+
 
 #endif /* SRC_LIBRERIAPLANIFICADOR_H_ */
