@@ -31,13 +31,13 @@ void iniciaCPU(){
 	int socketMemoria = crearCliente(miContexto.ipMemoria, miContexto.puertoMemoria);//conecta con la memoria
 
 	pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
-	printf("CPU ID: %d conectado\n", (int)id);
+	printf("CPU ID: %d conectado\n", (pthread_t)id);
 
 	//Recepcion de instrucciones
 
 	char package[PACKAGESIZE];
 	int status;		// Estructura que manjea el status de los recieve.
-	printf("CPU ID: %d conectada. Esperando instrucciones:\n", (int)id);
+	printf("CPU ID: %d conectada. Esperando instrucciones:\n", (pthread_t)id);
 
 	while(strcmp(package,"salir\n") !=0)
 	{
