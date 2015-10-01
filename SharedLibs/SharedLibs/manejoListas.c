@@ -97,4 +97,3 @@ t_list * crearListaMemReal()
  t_list * lista_mem_real = list_create();
  return lista_mem_real;
 }
-

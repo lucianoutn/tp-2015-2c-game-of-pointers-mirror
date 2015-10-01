@@ -56,7 +56,7 @@ void reciboDelCpu(char * memoria_real, char * memoria_cache, t_list * TLB, t_lis
 {
  int listenningSocket;
  int socketCliente;
-	t_header package;
+ t_header package;
 
   conexionAlCliente(&listenningSocket, &socketCliente, miContexto.puertoServidor);
   printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
@@ -88,21 +88,8 @@ void reciboDelCpu(char * memoria_real, char * memoria_cache, t_list * TLB, t_lis
 	  //sem_post(sem_2);
   }
 
-
-
   //meConectoAlSwap(package,mensaje);
 
-
-/*
-  if (TLB != NULL)
-  {
-  ejecutoInstruccionEnCache(package, memoria_cache,TLB);
- }else
- {
-  ejecutoInstruccionEnMem(package, memoria_real, tablaMemReal);
- }
- */
- //meConectoAlSwap(package,mensaje);
  close(listenningSocket);
  close(socketCliente);
  close(serverSocket); //SWAP

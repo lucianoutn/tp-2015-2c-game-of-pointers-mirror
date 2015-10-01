@@ -8,7 +8,6 @@
 #ifndef SHAREDLIBS_MANEJOLISTAS_H_
 #define SHAREDLIBS_MANEJOLISTAS_H_
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -65,6 +64,13 @@ typedef struct
 } t_tabla_mr;
 /* -------------------*/
 
+/* STRUCT TABLA PARA CADA PROCESO QUE LLEGA
+typedef struct
+{
+	int pag; // Contiene el numero de pagina del proceso
+	char * direc_mem; //Contiene la direccion de memoria de la pagina que se esta referenciando
+} pag_proceso;
+ ------------------------------------*/
 
 t_pag * pag_create(int,int, int);
 
@@ -81,7 +87,11 @@ static void input_destroy(ttlb * self);
 t_tabla_mr * in_create(int,int, char*);
 
 static void in_destroy(t_tabla_mr *);
+/*
+pag_proceso * pag__proc_create(int,int, int);
 
+void pag__proc_destroy(pag_proceso *);
+*/
 t_list * crearListaPaginas();
 
 t_list * crearListaHuecos(int);
@@ -93,6 +103,5 @@ t_list * crearListaCache();
 t_list * crearListaTMemReal();
 
 t_list * crearListaMemReal();
-
 
 #endif /* SHAREDLIBS_MANEJOLISTAS_H_ */
