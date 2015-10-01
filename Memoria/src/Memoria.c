@@ -19,39 +19,37 @@
 #include <SharedLibs/sockets.h>
 #include "funcMemory.h"
 
-void reciboDelCpu(char *, char *, t_list *, t_list *);
+void reciboDelCpu(char *, t_list *, t_list *);
 
 
 int main()
 {
  traigoContexto();
 
- char * memoria_cache = NULL;
  t_list * TLB = NULL;
- // CREO UNA LISTA PARA LA TABLA DE LA MEMORIA REAL /
- t_list * listaTablaMemReal = crearListaTMemReal();
- // CREO UNA LISTA PARA LA MEMORIA REAL /
- t_list * listaMemR = crearListaMemReal();
+ // CREO UNA LISTA PARA REFERENCIAR A LAS LISTAS DE PROCESOS //
+ t_list * listaTablasProcesos = crearListaAdm();
+ // CREO LISTAS PARA LOS FRAMES LLENOS Y VACIOS DE MEMORIA REAL
+ t_list * listaFramesMemR = crearListaFrames();
+ t_list * listaFramesHuecosMemR = crearListaHuecosFrames();
  // RESERVO ESPACIO PARA LA MEMORIA REAL /
  int tamanio_memoria_real = miContexto.tamanioMarco * miContexto.cantidadMarcos;
  char * memoria_real = reservarMemoria(tamanio_memoria_real);
 
- /* SI LA TLB NO ESTA HABILTIADA, VA A APUNTAR A NULL AL IGUAL QUE LA MEMORIA CACHE
-                  Y NO SE VA A RESERVAR ESPACIO PARA LA MISMA*/
+ /* SI LA TLB NO ESTA HABILTIADA, VA A APUNTAR A NULL */
  if (!strcmp(miContexto.tlbHabilitada,"SI"))
  {
    TLB = crearListaTlb();
-   printf ("La TLB esta habilitada => Reservo espacio para la memoria cache \n");
+   printf ("La TLB esta habilitada \n");
    int tamanio_memoria_cache = miContexto.tamanioMarco * 4;
-   memoria_cache = reservarMemoria (tamanio_memoria_cache);
    t_list * TLB = crearListaTlb();
   }
 
-  reciboDelCpu(&memoria_real, &memoria_cache, TLB, listaTablaMemReal);
+  reciboDelCpu(&memoria_real, TLB, listaTablasProcesos);
   return 0;
 }
 
-void reciboDelCpu(char * memoria_real, char * memoria_cache, t_list * TLB, t_list * tablaMemReal)
+void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 
 {
  int listenningSocket;
@@ -60,9 +58,11 @@ void reciboDelCpu(char * memoria_real, char * memoria_cache, t_list * TLB, t_lis
 
   conexionAlCliente(&listenningSocket, &socketCliente, miContexto.puertoServidor);
   printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
+  printf("El socket de conexión con el CPU es %d\n", socketCliente);
 
   int status = 1;
   char * mensaje;
+  status = recv(socketCliente, mensaje, package.tamanio_msj,0);
   //SWAP
   int serverSocket;
   conexionAlServer(&serverSocket, miContexto.puertoCliente);

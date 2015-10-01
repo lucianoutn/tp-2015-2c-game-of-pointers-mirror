@@ -35,38 +35,66 @@ void hueco_destroy(t_hueco * self)
  free(self);
 }
 
+/* --------- MARCOS OCUPADOS Y MARCOS HUECOS --------------------*/
+t_marco * marco_create (char * direccion_inicio, int num_marco)
+{
+ t_marco * frame = malloc(sizeof(t_marco));
+ frame->numero_marco = num_marco;
+ frame->direccion_inicio = direccion_inicio;
+ return frame;
+}
+
+static void marco_destroy(t_marco * self)
+{
+ free(self);
+}
+
+t_marco_hueco * marco_hueco_create (char * direccion_inicio, int num_marco)
+{
+ t_marco_hueco * frame = malloc(sizeof(t_marco));
+ frame->numero_marco = num_marco;
+ frame->direccion_inicio = direccion_inicio;
+ return frame;
+}
+
+static void marco_hueco_destroy(t_marco_hueco * self)
+{
+ free(self);
+}
+/* ---------------------------------------------------------*/
+
+/* -------------- TABLA DE TABLAS DE PROCESOS --------------*/
+t_tabla_adm * tabla_adm_create (int pid, t_list * lista_proceso)
+{
+ t_tabla_adm * adm_proc = malloc(sizeof(t_tabla_adm));
+ adm_proc->direc_tabla_proc = lista_proceso;
+ adm_proc->pid = pid;
+ return adm_proc;
+}
+
+static void tabla_adm_destroy(t_tabla_adm * self)
+{
+ free(self);
+}
+/* ---------------------------------------------------------*/
+
 /* ---------------------- MANEJO TLB ----------------------*/
-ttlb * input_create (int pid, int marco, char * direc_mem)
+t_tlb * reg_tlb_create (int pid, int pagina, char * direccion_fisica)
 {
- ttlb * prueba = malloc(sizeof(ttlb));
- prueba->PID = pid;
- prueba->marco = marco;
- prueba->direc_mem = direc_mem;
+ t_tlb * prueba = malloc(sizeof(t_tlb));
+ prueba->pid = pid;
+ prueba->pagina = pagina;
+ prueba->direccion_fisica = direccion_fisica;
  return prueba;
 }
 
-static void input_destroy(ttlb * self)
+static void reg_tlb_destroy(t_tlb * self)
 {
  free(self);
 }
 /* ---------------------------------------------------------*/
 
-/* ---------------------- MANEJO TABLA MEMORIA REAL ----------------------*/
-t_tabla_mr * in_create (int pid, int marco, char * direc_mem)
-{
- ttlb * prueba = malloc(sizeof(ttlb));
- prueba->PID = pid;
- prueba->marco = marco;
- prueba->direc_mem = direc_mem;
- return prueba;
-}
-
-static void in_destroy(t_tabla_mr * self)
-{
- free(self);
-}
-/* ---------------------------------------------------------*/
-
+/* ---------------- SWAP ---------------------*/
 t_list * crearListaPaginas()
 {
  t_list * lista_paginas= list_create();
@@ -79,6 +107,20 @@ t_list * crearListaHuecos(int cant)
  int a = list_add(lista_huecos, hueco_create(0,cant));
  return lista_huecos;
 }
+/* ---------------------------------------------*/
+
+/* ----------------------MEMORIA -----------------*/
+t_list * crearListaFrames()
+{
+	 t_list * lista_frames = list_create();
+	 return lista_frames;
+}
+
+t_list * crearListaHuecosFrames()
+{
+	 t_list * lista_huecos_frames = list_create();
+	 return lista_huecos_frames;
+}
 
 t_list * crearListaTlb()
 {
@@ -86,14 +128,8 @@ t_list * crearListaTlb()
  return lista_tlb;
 }
 
-t_list * crearListaTMemReal()
+t_list * crearListaAdm()
 {
- t_list * lista_tmem_real = list_create();
- return lista_tmem_real;
-}
-
-t_list * crearListaMemReal()
-{
- t_list * lista_mem_real = list_create();
- return lista_mem_real;
+	 t_list * lista_administracion = list_create();
+	 return lista_administracion;
 }

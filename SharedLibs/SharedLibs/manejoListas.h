@@ -16,6 +16,7 @@
 #include <unistd.h>
 #include <commons/collections/list.h>
 
+/* ------MANEJO EN SWAP----- */
 typedef struct {
  int pid;
  int inicio;
@@ -26,8 +27,9 @@ typedef struct {
  int inicio;
  int paginas;
 } t_hueco;
+/* ---------------------------*/
 
-// STRUCT CPU -> MEMORY -> SWAP /
+// MANEJO DESDE CPU -> MEMORY -> SWAP /
 typedef struct
 {
  int type_ejecution;
@@ -37,32 +39,34 @@ typedef struct
 } t_header;
 /* -------------------------------*/
 
-// STRUCT TLB /
+/* MANEJO DE FRAMES EN MEMORIA */
+typedef struct {
+ char * direccion_inicio;
+ int numero_marco;
+} t_marco;
+
+typedef struct {
+ char* direccion_inicio;
+ int numero_marco;
+} t_marco_hueco;
+/* -----------------------------*/
+
+ /* ENTRADAS A LA TLB */
 typedef struct
 {
- int PID;
- int marco;
- char * direc_mem;
-} ttlb;
+ int pid;
+ int pagina;
+ char * direccion_fisica;
+} t_tlb;
 /* -------------------*/
 
-// STRUCT CACHE /
+ /* STRUCT TABLA DE TABLAS DE PROCESOS */
 typedef struct
 {
- int PID;
- int marco;
- char * direc_mem;
-} t_cache;
-/* -------------------*/
-
-// STRUCT TABLA MEMORIA REAL /
-typedef struct
-{
- int PID;
- int marco;
- char * direc_mem;
-} t_tabla_mr;
-/* -------------------*/
+ int pid;
+ t_list * direc_tabla_proc;
+} t_tabla_adm;
+/* ----------------------------*/
 
 /* STRUCT TABLA PARA CADA PROCESO QUE LLEGA
 typedef struct
@@ -72,6 +76,7 @@ typedef struct
 } pag_proceso;
  ------------------------------------*/
 
+/* ---------- SWAP ----------------*/
 t_pag * pag_create(int,int, int);
 
 void pag_destroy(t_pag *);
@@ -79,29 +84,46 @@ void pag_destroy(t_pag *);
 t_hueco * hueco_create(int, int);
 
 void hueco_destroy(t_hueco *);
+/* .................................*/
 
-ttlb * input_create (int pid, int marco, char * direc_mem);
+/* -------- MEMORIA ------------------*/
+t_marco * marco_create (char *, int);
 
-static void input_destroy(ttlb * self);
+static void marco_destroy(t_marco *);
 
-t_tabla_mr * in_create(int,int, char*);
+t_marco_hueco * marco_hueco_create (char * direc_mem, int);
 
-static void in_destroy(t_tabla_mr *);
+static void marco_hueco_destroy(t_marco_hueco * self);
+
+t_tlb * reg_tlb_create (int pid, int marco, char * direc_mem);
+
+static void reg_tlb_destroy(t_tlb * self);
+
+t_tabla_adm * tabla_adm_create(int, t_list*);
+
+static void tabla_adm_destroy(t_tabla_adm *);
 /*
 pag_proceso * pag__proc_create(int,int, int);
 
 void pag__proc_destroy(pag_proceso *);
-*/
+/* ----------------------------------*/
+
+
+/*------------ SWAP --------------- */
 t_list * crearListaPaginas();
 
 t_list * crearListaHuecos(int);
+/* ------------------------------- */
+
+/* ----------- MEMORIA ----------------*/
+t_list * crearListaFrames();
+
+t_list * crearListaHuecosFrames();
 
 t_list * crearListaTlb();
 
-t_list * crearListaCache();
+t_list * crearListaAdm();
 
-t_list * crearListaTMemReal();
-
-t_list * crearListaMemReal();
+/* -------------------------------------- */
 
 #endif /* SHAREDLIBS_MANEJOLISTAS_H_ */
