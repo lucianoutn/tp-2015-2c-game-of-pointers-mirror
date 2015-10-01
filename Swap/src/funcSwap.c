@@ -12,19 +12,6 @@
 #include <string.h>
 #include <sys/mman.h>
 
-void creoLogger()
-{
-    logger = log_create("log.txt", "TEST",true, LOG_LEVEL_INFO);
-
-    /*
-    log_trace(logger, "LOG A NIVEL %s", "TRACE");
-    log_debug(logger, "LOG A NIVEL %s", "DEBUG");
-    log_info(logger, "LOG A NIVEL %s", "INFO");
-    log_warning(logger, "LOG A NIVEL %s", "WARNING");
-    log_error(logger, "LOG A NIVEL %s", "ERROR");
-	*/
-
-}
 FILE* crearParticion() {
 	FILE *archivo;
 	char * comando = malloc(200);
