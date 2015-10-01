@@ -17,7 +17,7 @@
 #include <netdb.h>
 #include <SharedLibs/manejoListas.h>
 #include <unistd.h>
-#include <commons/log.h>
+#include <SharedLibs/comun.h>
 
 typedef struct{
 	char * puerto;
@@ -34,7 +34,7 @@ FILE* archivo;
 t_list * lista_paginas;
 t_list * lista_huecos;
 t_header * global;
-t_log* logger;
+
 
 FILE* crearParticion();
 
