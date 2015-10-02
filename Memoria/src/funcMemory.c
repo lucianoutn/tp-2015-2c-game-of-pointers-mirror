@@ -1,4 +1,6 @@
 /*
+
+/*
  * funcMemory.c
  *
  *  Created on: 29/9/2015
@@ -16,7 +18,7 @@ void traigoContexto()
 
  if( config_memory == NULL )
  {
-  puts("Final felize");
+  puts("Final feliz");
   abort();
  }
 
@@ -62,26 +64,29 @@ char * crear_tlb()
 
 }
 
-void ejecutoInstruccion(t_header registro_prueba, char * mensaje, char * memoria_cache,char *  memoria_real, t_list * TLB, t_list * tabla_mem_real)
+void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memoria_real, t_list * TLB, t_list * tabla_adm)
 {
-	switch (registro_prueba.type_ejecution)
+	switch (registro_prueba->type_ejecution)
 	 	{
 	 	case 0:
 			printf ("Se recibio orden de lectura\n");
-			//meConectoAlSwap(registro_prueba);
+
+
+			meConectoAlSwap(registro_prueba, NULL);
 	 		break;
 	 	case 1:
 			printf ("Se recibio orden de escritura\n");
+		/*
 			int PID = registro_prueba.PID;
 			numero_pagina = registro_prueba.pagina_proceso;
 			numero_de_pid = registro_prueba.PID;
-			/* VERIFICO QUE EL PID ESTE CARGADO EN LA TLB */
+			/* VERIFICO QUE EL PID ESTE CARGADO EN LA TLB
 			t_tlb * registro_tlb = list_find(TLB, elNodoTienePidIgualA);
 			if (registro_tlb != NULL)
 			{
 				printf ("ENCONTRE EL REGISTRO CON PID %d \n ",registro_tlb->pid);
 				pag_proceso * pag = list_find(registro_tlb->direccion_fisica, numeroDePaginaIgualA);
-				/* VERIFICO QUE LA PAGINA A ESCRIBIR ESTE CARGADA EN LA CACHE */
+				/* VERIFICO QUE LA PAGINA A ESCRIBIR ESTE CARGADA EN LA CACHE
 				if (pag != NULL)
 				{
 					printf("LA PAGINA ESTA EN CACHE \n");
@@ -96,26 +101,27 @@ void ejecutoInstruccion(t_header registro_prueba, char * mensaje, char * memoria
 			else
 			{
 				printf ("NO ESTÁ EN CACHE");
-				/* ME FIJO SI ESTÁ EN MEMORIA REAL */
+				/* ME FIJO SI ESTÁ EN MEMORIA REAL
 			}
 			//printf("ACABO DE ESCRIBIR: %s", point_to_write);
-
+	*/
 	 		break;
 	 	case 2:
 	 		printf("Se recibio orden de inicializacion \n");
-	 		if( !strcmp(miContexto.tlbHabilitada, "SI") && !tlbLlena(TLB))
+	 	/*	if( !strcmp(miContexto.tlbHabilitada, "SI") && !tlbLlena(TLB))
 	 		{
-		 		iniciarEnCache(registro_prueba, TLB,  memoria_cache);
+		 		//iniciarEnCache(registro_prueba, TLB,  memoria_cache);
 		 		printf("LA TLB TIENE %d ELEMENTOS \n", TLB->elements_count);
 	 		}else{
-	 			printf("LA TABLA DE MEMORIA PRINCIPAL TIENE %d ELEMENTOS \n", tabla_mem_real->elements_count);
-	 			iniciarEnMemReal(registro_prueba, tabla_mem_real, memoria_real);
-	 		}
+	 	*/
+	 			//printf("LA TABLA DE MEMORIA PRINCIPAL TIENE %d ELEMENTOS \n", tabla_mem_real->elements_count);
+	 			iniciarEnMemReal(registro_prueba, tabla_adm, memoria_real);
+	 	//	}
 	 		break;
 	 	case 3:
 			printf ("Se recibio orden de finalizacion de proceso :) \n");
 
-			numero_de_pid = registro_prueba.PID;
+			numero_de_pid = registro_prueba->PID;
 			t_tlb * reg_tlb = list_find(TLB, elNodoTienePidIgualA);
 
 			printf("La TLB TIENE %d ELEMENTOS ANTES DE DESTRUIR\n", TLB->elements_count);
@@ -157,30 +163,43 @@ void iniciarEnCache(t_header registro_prueba, char * TLB, char * memoria_cache)
  }
 }
 
-void iniciarEnMemReal(t_header registro_prueba, char * tabla_mem_real, char * memoria_real)
+void iniciarEnMemReal(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_real)
 {
- int cant_paginas = registro_prueba.pagina_proceso;
- int x = 0, bytes = 0, a = 0;
+ int cant_paginas = proceso_entrante->pagina_proceso;
+ int x = 0, a = 0;
  printf ("CANTIDAD DE PAGINAS: %d \n", cant_paginas);
+ t_list * lista_proceso = crearListaProceso();
  // MIENTRAS HAYA PAGINAS DEL PROCESO PARA INICIAR /
  while (x != cant_paginas)
  {
-  printf("Entre %d veces + 1 \n", x);
-  //t_tabla_mr * reg_input = malloc(sizeof(ttlb));
-  //reg_input->PID = registro_prueba.PID;
-  //reg_input->marco = x+1;
-  //reg_input->direc_mem = memoria_real + bytes;
-  bytes = bytes + miContexto.tamanioMarco;
-  //printf ("LA DIRECCION DE MEMORIA DEL PROCESO ES: %p \n", reg_input->direc_mem);
-  //a=list_add(TLB,reg_input);
+	printf ( "ENTRE A CREAR UNA PAGINA \n");
+   /* TRAIGO EL PRIMER MARCO VACIO DE MI MEMORIA */
+	printf ("LA LISTA DE FRAMES HUECOS TIENE %d ELEMENTOS \n", listaFramesHuecosMemR->elements_count);
+   t_marco_hueco * marco_vacio = listaFramesHuecosMemR->head;
+   printf("LA DIRECCION DE MI MARCO VACIO ES %p \n", marco_vacio->direccion_inicio);
+
+   /* CREO LA ENTRADA DE UNA PAGINA A LA TABLA DE PROCESO */
+   process_pag * pagina_proceso = malloc(sizeof(process_pag));
+   pagina_proceso->pag = proceso_entrante->pagina_proceso;
+   pagina_proceso->direccion_fisica = marco_vacio->direccion_inicio;
+   a=list_add(lista_proceso,pagina_proceso);
+   printf("LA CANTIDAD DE PAGINAS EN MI TABLA DE PAGINAS ES %d \n", lista_proceso->elements_count);
+
+   /* PASO EL MARCO LIBRE A LA LISTA DE OCUPADOS Y LO ELIMINO */
+   t_marco * marco_ocupado = marco_create(marco_vacio->direccion_inicio, marco_vacio->numero_marco);
+   a = list_add(listaFramesMemR, marco_ocupado);
+   printf ("LA CANTIDAD DE NODOS EN MI LISTA DE FRAMES OCUPADOS ES %d \n", listaFramesMemR->elements_count);
+
+   /* LE HAGO FREE Y NO USO LA FUNCION DESTROY PORQUE NO LA ENCUENTRA -.- */
+   list_remove(listaFramesHuecosMemR, 0);
+   //free (marco_vacio);
+   //marco_hueco_destroy(marco_vacio);
   x++;
  }
+ /* AGREGO UNA ENTRADA A LA TABLA DE TABLAS DE PROCESOS */
+   a = list_add(tabla_adm,tabla_adm_create(proceso_entrante->PID, lista_proceso) );
+   printf ("LA LISTA DE LSITAS DE PROCESOS TIENE %d ELEMENTOS \n", tabla_adm->elements_count);
 }
-
-void finalizarProceso(t_header reg)
-{
-}
-
 
 bool elNodoTienePidIgualA(int * pid_number)
 {
@@ -188,7 +207,7 @@ bool elNodoTienePidIgualA(int * pid_number)
 
 }
 
-void meConectoAlSwap(t_header registro_prueba, char * mensaje)
+void meConectoAlSwap(t_header * registro_prueba, char * mensaje)
 {
  int serverSocket;
 
@@ -205,10 +224,9 @@ void meConectoAlSwap(t_header registro_prueba, char * mensaje)
   //if (!strcmp(message,"exit\n")) enviar = 0;   // Chequeo que el usuario no quiera salir
   //if (enviar) send(serverSocket, package, strlen(package) + 1, 0);  // Solo envio si el usuario no quiere salir.
   send(serverSocket, &registro_prueba, sizeof(t_header), 0);
-  send(serverSocket, mensaje, strlen(mensaje), 0);
+  //send(serverSocket, mensaje, strlen(mensaje), 0);
   //enviar = 0;
  //}
-
  close(serverSocket);
 }
 
@@ -227,4 +245,17 @@ bool tlbLlena(t_list * TLB)
 	return false;
 }
 
+/* --------------ENTRADAS A LA TABLA DE PROCESO ------------ */
+process_pag * pag_proc_create (int pagina, char * direccion_fisica)
+{
+ process_pag * reg_pagina = malloc(sizeof(process_pag));
+ reg_pagina->pag = pagina;
+ reg_pagina->direccion_fisica = direccion_fisica;
+ return reg_pagina;
+}
 
+static void pag_proc_destroy(process_pag * self)
+{
+ free(self);
+}
+/* --------------------------------------------------------*/

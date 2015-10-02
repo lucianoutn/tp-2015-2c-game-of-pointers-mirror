@@ -1,4 +1,5 @@
 /*
+ /*
  * manejoListas.c
  *
  *  Created on: 29/9/2015
@@ -94,6 +95,21 @@ static void reg_tlb_destroy(t_tlb * self)
 }
 /* ---------------------------------------------------------*/
 
+/* --------------ENTRADAS A LA TABLA DE PROCESO ------------
+pag_proceso * pag_proc_create (int pagina, char * direccion_fisica)
+{
+ pag_proceso * reg_pagina = malloc(sizeof(pag_proceso));
+ reg_pagina->pag = pagina;
+ reg_pagina->direccion_fisica = direccion_fisica;
+ return reg_pagina;
+}
+
+static void pag_proc_destroy(pag_proceso * self)
+{
+ free(self);
+}
+/* --------------------------------------------------------*/
+
 /* ---------------- SWAP ---------------------*/
 t_list * crearListaPaginas()
 {
@@ -116,10 +132,18 @@ t_list * crearListaFrames()
 	 return lista_frames;
 }
 
-t_list * crearListaHuecosFrames()
+t_list * crearListaHuecosFrames(int cantidad_marcos, int tamanio_marco, char* memoria_real)
 {
-	 t_list * lista_huecos_frames = list_create();
-	 return lista_huecos_frames;
+	int x = 0;
+	int desplazamiento = 0;
+	t_list * lista_huecos_frames = list_create();
+	while ( x != cantidad_marcos)
+	{
+	  desplazamiento = x * tamanio_marco;
+	  int a = list_add(lista_huecos_frames, marco_hueco_create(memoria_real + desplazamiento, x));
+	  x ++;
+	}
+	return lista_huecos_frames;
 }
 
 t_list * crearListaTlb()
@@ -127,6 +151,13 @@ t_list * crearListaTlb()
  t_list * lista_tlb = list_create();
  return lista_tlb;
 }
+
+t_list * crearListaProceso()
+{
+	 t_list * lista_proceso = list_create();
+	 return lista_proceso;
+}
+
 
 t_list * crearListaAdm()
 {

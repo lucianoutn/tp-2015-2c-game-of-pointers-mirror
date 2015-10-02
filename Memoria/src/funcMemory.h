@@ -1,4 +1,5 @@
 /*
+ /*
  * funcMemory.h
  *
  *  Created on: 29/9/2015
@@ -35,26 +36,35 @@ typedef struct{
 /* STRUCT TABLA PARA CADA PROCESO QUE LLEGA */
 typedef struct
 {
-	int pag; // Contiene el numero de pagina del proceso
-	char * direc_mem; //Contiene la direccion de memoria de la pagina que se esta referenciando
-} pag_proceso;
+   int pag; // Contiene el numero de pagina del proceso
+   char * direccion_fisica; //Contiene la direccion de memoria de la pagina que se esta referenciando
+}process_pag;
 /* ------------------------------------*/
 
-contexto miContexto;
+
+
 int numero_de_pid;
 int numero_pagina;
+
+contexto miContexto;
+t_list * listaFramesMemR; // LISTA DE FRAMES OCUPADOS
+t_list * listaFramesHuecosMemR; // LISTA DE FRAMES VACIOS
 void traigoContexto();
 char * reservarMemoria(int);
 void liberarMemoria(char *);
 char* crear_tlb();
-void ejecutoInstruccion(t_header, char*, char*,char*, t_list*, t_list*);
-void finalizarProceso(t_header);
+void ejecutoInstruccion(t_header *, char*,char*, t_list*, t_list*);
 bool elNodoTienePidIgualA(int *);
 bool numeroDePaginaIgualA(int *);
 void iniciarEnCache(t_header, char*, char*); // INICIAR PROCESO EN TABLA TLB CON DIRECCION DE CACHE
-void iniciarEnMemReal(t_header, char*, char*);
-void meConectoAlSwap(t_header, char*);
+void iniciarEnMemReal(t_header *, t_list*, char*);
+void meConectoAlSwap(t_header *, char*);
 bool tlbLlena(t_list *);
 
+/* PASAR A MANEJOLISTAS */
+process_pag * pag_proc_create(int, char*);
+
+static void pag_proc_destroy(process_pag *);
+/* ---------------------*/
 
 #endif /* SRC_FUNCMEMORY_H_ */

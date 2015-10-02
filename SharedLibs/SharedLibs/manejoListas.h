@@ -68,6 +68,14 @@ typedef struct
 } t_tabla_adm;
 /* ----------------------------*/
 
+/* STRUCT TABLA PARA CADA PROCESO QUE LLEGA */
+typedef struct
+{
+   int pag; // Contiene el numero de pagina del proceso
+   char * direccion_fisica; //Contiene la direccion de memoria de la pagina que se esta referenciando
+} pag_proceso;
+/* ------------------------------------*/
+
 /* STRUCT TABLA PARA CADA PROCESO QUE LLEGA
 typedef struct
 {
@@ -102,10 +110,10 @@ static void reg_tlb_destroy(t_tlb * self);
 t_tabla_adm * tabla_adm_create(int, t_list*);
 
 static void tabla_adm_destroy(t_tabla_adm *);
-/*
-pag_proceso * pag__proc_create(int,int, int);
+/* VER SI SE PUEDE PASAR ACA
+pag_proceso * pag_proc_create(int, char*);
 
-void pag__proc_destroy(pag_proceso *);
+static void pag_proc_destroy(pag_proceso *);
 /* ----------------------------------*/
 
 
@@ -118,9 +126,11 @@ t_list * crearListaHuecos(int);
 /* ----------- MEMORIA ----------------*/
 t_list * crearListaFrames();
 
-t_list * crearListaHuecosFrames();
+t_list * crearListaHuecosFrames(int, int, char*);
 
 t_list * crearListaTlb();
+
+t_list * crearListaProceso();
 
 t_list * crearListaAdm();
 
