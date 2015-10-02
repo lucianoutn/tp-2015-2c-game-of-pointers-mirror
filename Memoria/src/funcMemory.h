@@ -17,8 +17,8 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <SharedLibs/manejoListas.h>
 #include <commons/config.h>
+#include <SharedLibs/manejoListas.h>
 
 typedef struct{
  char * puertoServidor;

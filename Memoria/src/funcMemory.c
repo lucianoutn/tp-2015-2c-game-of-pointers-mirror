@@ -6,6 +6,7 @@
  */
 
 
+#include <SharedLibs/manejoListas.h>
 #include "funcMemory.h"
 
 void traigoContexto()
@@ -75,11 +76,11 @@ void ejecutoInstruccion(t_header registro_prueba, char * mensaje, char * memoria
 			numero_pagina = registro_prueba.pagina_proceso;
 			numero_de_pid = registro_prueba.PID;
 			/* VERIFICO QUE EL PID ESTE CARGADO EN LA TLB */
-			ttlb * registro_tlb = list_find(TLB, elNodoTienePidIgualA);
+			t_tlb * registro_tlb = list_find(TLB, elNodoTienePidIgualA);
 			if (registro_tlb != NULL)
 			{
-				printf ("ENCONTRE EL REGISTRO CON PID %d \n ",registro_tlb->PID);
-				pag_proceso * pag = list_find(registro_tlb->direc_mem, numeroDePaginaIgualA);
+				printf ("ENCONTRE EL REGISTRO CON PID %d \n ",registro_tlb->pid);
+				pag_proceso * pag = list_find(registro_tlb->direccion_fisica, numeroDePaginaIgualA);
 				/* VERIFICO QUE LA PAGINA A ESCRIBIR ESTE CARGADA EN LA CACHE */
 				if (pag != NULL)
 				{
@@ -115,11 +116,11 @@ void ejecutoInstruccion(t_header registro_prueba, char * mensaje, char * memoria
 			printf ("Se recibio orden de finalizacion de proceso :) \n");
 
 			numero_de_pid = registro_prueba.PID;
-			ttlb * reg_tlb = list_find(TLB, elNodoTienePidIgualA);
+			t_tlb * reg_tlb = list_find(TLB, elNodoTienePidIgualA);
 
 			printf("La TLB TIENE %d ELEMENTOS ANTES DE DESTRUIR\n", TLB->elements_count);
 			/* DIRECCION TABLA PROCESO A ELIMINAR */
-			list_destroy(reg_tlb->direc_mem);
+			list_destroy(reg_tlb->direccion_fisica);
 		//	printf("LA DIRECCION DE LA TABLA DEL PROCESO A ELIMINAR ES %s \n", direccion_tabla_proc);
 
 			/* NO ME RECONOCE EL INPUT_DESTROY DEFINIDO EN MANEJOLISTAS */
@@ -145,12 +146,12 @@ void iniciarEnCache(t_header registro_prueba, char * TLB, char * memoria_cache)
  while (x != cant_paginas)
  {
   printf("Entre %d veces + 1 \n", x);
-  ttlb * reg_input = malloc(sizeof(ttlb));
-  reg_input->PID = registro_prueba.PID;
-  reg_input->marco = x+1;
-  reg_input->direc_mem = memoria_cache + bytes;
+  t_tlb * reg_input = malloc(sizeof(t_tlb));
+  reg_input->pid = registro_prueba.PID;
+  reg_input->pagina = x+1;
+  reg_input->direccion_fisica = memoria_cache + bytes;
   bytes = bytes + miContexto.tamanioMarco;
-  printf ("LA DIRECCION DE MEMORIA DEL PROCESO ES: %p \n", reg_input->direc_mem);
+  printf ("LA DIRECCION DE MEMORIA DEL PROCESO ES: %p \n", reg_input->direccion_fisica);
   a=list_add(TLB,reg_input);
   x++;
  }
