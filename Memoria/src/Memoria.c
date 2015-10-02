@@ -18,6 +18,7 @@
 #include <commons/config.h>
 #include <SharedLibs/sockets.h>
 #include "funcMemory.h"
+#include <errno.h>
 
 void reciboDelCpu(char *, t_list *, t_list *);
 
@@ -52,18 +53,47 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 
 {
 	printf("RECIBO DEL CPU \n");
-/*
- *
- int listenningSocket;
- int socketCliente;
- t_header package;
+
+ int listenningSocket, socketCliente, resultadoSelect;
+ fd_set readset;
+ //t_header package;
+ t_header * package;
+ char * mensaje;
+ int status = 1;
 
   conexionAlCliente(&listenningSocket, &socketCliente, miContexto.puertoServidor);
   printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
   printf("El socket de conexión con el CPU es %d\n", socketCliente);
-*/
-  int status = 1;
-  char * mensaje;
+
+ /* SELECT */
+  do {
+     FD_ZERO(&readset); 	//esto abre y limpia la estructura cada vez q se reinicia el select luego de un error
+     FD_SET(socketCliente, &readset);
+     resultadoSelect = select(socketCliente + 1, &readset, NULL, NULL, NULL); //el 1ºparametro es el socket +1, 2º el conjunto de lecutra, 3º el de escritura, 4º no se, 5º el time out
+  } while (resultadoSelect == -1 && errno == EINTR); //captura el error
+
+  if (resultadoSelect > 0) {	//>0 implica el nº de sockets disponibles para la lectura
+     if (FD_ISSET(socketCliente, &readset)) {
+        /* si estoy aca es que hay info para leer*/
+        resultadoSelect = recv(socketCliente, mensaje, package->tamanio_msj,0);;
+        if (resultadoSelect == 0) {
+           /* si estoy aca es xq se cerro la conexion desde el otro lado */
+           close(socketCliente);
+        }
+        else {
+
+        }
+     }
+  }
+  else if (resultadoSelect < 0) {
+     /* error, lo muestro */
+     printf("Error con el select(): %s\n ", strerror(errno));
+  }
+  /* FIN SELECT */
+
+
+
+
   //status = recv(socketCliente, mensaje, package.tamanio_msj,0);
   /*SWAP
   int serverSocket;
@@ -79,7 +109,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 		  status = recv(socketCliente, mensaje, package.tamanio_msj,0);
 	  }
 */
-  t_header * package;
+
   package->PID = 1;
   package->pagina_proceso = 4;
   package->tamanio_msj = 0;
