@@ -8,7 +8,6 @@
 #ifndef SRC_LIBRERIASERVIDOR_H_
 #define SRC_LIBRERIASERVIDOR_H_
 
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -18,7 +17,7 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#define MAX_CPUS 5
+#define MAX_CPUS 1
 
 //struct para conexiones
 struct Conexiones {
@@ -27,6 +26,7 @@ struct Conexiones {
 	socklen_t tamanio_direccion;		// Tamaño de la direccion
 	int CPU[MAX_CPUS];						// Sockets de conexiones ACEPTADAS
 } conexiones;
+
 
 //Funcion encargada de acceptar nuevas peticiones de conexion
 void *escuchar (struct Conexiones* conexion);

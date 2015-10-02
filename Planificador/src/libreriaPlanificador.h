@@ -31,7 +31,11 @@ typedef struct{
 	char * algoritmoPlanificacion;
 } contexto;
 
+typedef bool flag;
+
 contexto miContexto;
+
+flag CPUenUso;
 int numero_de_pid;
 
 void traigoContexto();
@@ -64,10 +68,9 @@ t_pcb desencolar (t_pcb *cabecera);
 
 
 
+void *procesarPCB (t_pcb *PCB);
 
-
-void consola ();
+void consola (t_pcb *inicio);
 //fin consola
-
 
 #endif /* SRC_LIBRERIAPLANIFICADOR_H_ */

@@ -25,7 +25,5 @@
 
 #define BACKLOG 10
 #define PACKAGESIZE 1024
-#define MAX_CPUS 5
-
 
 #endif /* SRC_PLANIFICADOR_H_ */
