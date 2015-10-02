@@ -20,6 +20,11 @@
 #include "funcMemory.h"
 #include <errno.h>
 
+#define N 50
+
+int descriptoresVec[N], maxDescriptor, j;
+fd_set readset;
+
 void reciboDelCpu(char *, t_list *, t_list *);
 
 int main()
@@ -65,29 +70,63 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
   printf("El socket de conexión con el CPU es %d\n", socketCliente);
 
   /* SELECT */
-  do {
-     FD_ZERO(&readset); 	//esto abre y limpia la estructura cada vez q se reinicia el select luego de un error
-     FD_SET(socketCliente, &readset);
-     resultadoSelect = select(socketCliente + 1, &readset, NULL, NULL, NULL); //el 1ºparametro es el socket +1, 2º el conjunto de lecutra, 3º el de escritura, 4º no se, 5º el time out
-  } while (resultadoSelect == -1 && errno == EINTR); //captura el error
+  /* primera version no borrar */
 
-  if (resultadoSelect > 0) {	//>0 implica el nº de sockets disponibles para la lectura
-     if (FD_ISSET(socketCliente, &readset)) {
-        /* si estoy aca es que hay info para leer */
-        resultadoSelect = recv(socketCliente, mensaje, package->tamanio_msj,0);
-        if (resultadoSelect == 0) {
-           /* si estoy aca es xq se cerro la conexion desde el otro lado */
-           close(socketCliente);
-        }
-        else {
+//  do {
+//     FD_ZERO(&readset); 	//esto abre y limpia la estructura cada vez q se reinicia el select luego de un error
+//     FD_SET(socketCliente, &readset);
+//     resultadoSelect = select(socketCliente + 1, &readset, NULL, NULL, NULL); //el 1ºparametro es el socket +1, 2º el conjunto de lecutra, 3º el de escritura, 4º no se, 5º el time out
+//  } while (resultadoSelect == -1 && errno == EINTR); //captura el error
+//
+//  if (resultadoSelect > 0) {	//>0 implica el nº de sockets disponibles para la lectura
+//     if (FD_ISSET(socketCliente, &readset)) {
+//        /* si estoy aca es que hay info para leer */
+//        resultadoSelect = recv(socketCliente, mensaje, package->tamanio_msj,0);
+//        if (resultadoSelect == 0) {
+//           /* si estoy aca es xq se cerro la conexion desde el otro lado */
+//           close(socketCliente);
+//        }
+//        else {
+//
+//       }
+//     }
+//  }
+//  else if (resultadoSelect < 0) {
+//     /* error, lo muestro */
+//     printf("Error con el select(): %s\n ", strerror(errno));
+//  }
+ /* fin primera version */
+
+  /* tercera version */
+
+
+  // inicializar el conjunto
+  FD_ZERO(&readset); //esto abre y limpia la estructura cada vez q se reinicia el select luego de un error
+  maxDescriptor = 0;
+  for (j=0; j<N; j++) {
+     FD_SET(descriptoresVec[j], &readset);
+     //maxDescriptores = (maxDescriptores>descriptoresVec[j])?maxDescriptores:descriptoresVec[j];
+     if (descriptoresVec[j] > maxDescriptor )
+       	 maxDescriptor = descriptoresVec[j];
+  }
+
+  // se fija si hay algo para leer
+  resultadoSelect = select(maxDescriptor + 1, &readset, NULL, NULL, NULL);  //el 1ºparametro es el socket +1, 2º el conjunto de lecutra, 3º el de escritura, 4º no se, 5º el time out
+  if (resultadoSelect < 0) {
+	  /* error, lo muestro */
+	 printf("Error con el select()");
+  }
+  else { 								//>0 implica el nº de sockets disponibles para la lectura
+     for (j=0; j<N; j++) {
+        if (FD_ISSET(descriptoresVec[j], &readset)) {
+        	 /* si estoy aca es que hay info para leer */
 
         }
      }
   }
-  else if (resultadoSelect < 0) {
-     /* error, lo muestro */
-     printf("Error con el select(): %s\n ", strerror(errno));
-  }
+
+
+  /* fin tercera version */
   /* FIN SELECT */
 
   //status = recv(socketCliente, mensaje, package.tamanio_msj,0);
