@@ -42,7 +42,7 @@ int main() {
 	 * Se crea un hilo nuevo que se queda a la espera de nuevas conexiones del CPU
 	 * y almacena los sockets de las nuevas conexiones en la variable conexiones.CPU[]
 	 */
-	pthread_t hilo_conexiones, hilo_consola;
+	pthread_t hilo_conexiones;
 	if(pthread_create(&hilo_conexiones, NULL, (void*)escuchar,&conexiones)<0)
 		perror("Error HILO ESCUCHAS!");
 
@@ -53,9 +53,20 @@ int main() {
 	while(conexiones.CPU[0] <= 0){
 	}
 
-	//Crea un hilo para la consola y espera a que termine para finalizar el programa
-	pthread_create(&hilo_consola, NULL, (void*)consola, NULL);
-	pthread_join(hilo_consola, NULL);
+
+	//Se crea la cola de ready
+	t_pcb *inicio=(t_pcb*)malloc(sizeof(t_pcb));
+	//llamo a la funcion consola para activar la consola y se le envia el principio de la cola
+
+	consola(inicio);
+
+	/*
+		pthread_create(&hilo_consola, NULL, (void*)consola, NULL);
+
+		pthread_join(hilo_consola, NULL);
+	*/
+
+
 
 	//cierra los sockets
 	close(conexiones.socket_escucha);
@@ -64,7 +75,6 @@ int main() {
 	{
 		close(conexiones.CPU[i++]);
 	}
-
 	/* Cuando reciba el comando correr PATH, se creara un nuevo hilo en donde se crea el PCB del nuevo proceso. El
 		hilo debe ejecutar la siguiente rutina:
 		t_pcb PCB;

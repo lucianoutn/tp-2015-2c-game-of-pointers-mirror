@@ -11,7 +11,7 @@
 void *escuchar (struct Conexiones* conexion){
 	int i =0;
 
-	while( i<MAX_CPUS ) //limite temporal de 5 CPUS conectadas
+	while( i<MAX_CPUS ) //limite temporal de 1 CPUS conectada
 	{
 		//guarda las nuevas conexiones para acceder a ellas desde cualquier parte del codigo
 		conexion->CPU[i] = accept(conexion->socket_escucha, (struct sockaddr *) &conexion->direccion, &conexion->tamanio_direccion);
@@ -24,8 +24,8 @@ void *escuchar (struct Conexiones* conexion){
 	}
 
 	return NULL;
-
 }
+
 
 //Funcion que permite configurar la conexion y crear el socket. Devuelve el descriptor del socket nuevo.
 int crearServer(const char *PUERTO)
