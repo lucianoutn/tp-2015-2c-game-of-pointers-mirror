@@ -94,7 +94,13 @@ t_hueco * hueco_create(int, int);
 void hueco_destroy(t_hueco *);
 /* .................................*/
 
-/* -------- MEMORIA ------------------*/
+/* ------MANEJO DESDE CPU -> MEMORY -> SWAP----*/
+t_header * package_create (int, int, int, int);
+
+static void package_destroy(t_header *);
+/* */
+
+/* -------- MEMORIA --------------------------*/
 t_marco * marco_create (char *, int);
 
 static void marco_destroy(t_marco *);

@@ -7,7 +7,6 @@
  *      Author: utnso
  */
 
-
 #include <SharedLibs/manejoListas.h>
 #include "funcMemory.h"
 
@@ -120,21 +119,24 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 		break;
 	 	case 3:
 			printf ("Se recibio orden de finalizacion de proceso :) \n");
+			matarProceso(registro_prueba, tabla_adm);
 
+			/*
 			numero_de_pid = registro_prueba->PID;
 			t_tlb * reg_tlb = list_find(TLB, elNodoTienePidIgualA);
 
 			printf("La TLB TIENE %d ELEMENTOS ANTES DE DESTRUIR\n", TLB->elements_count);
-			/* DIRECCION TABLA PROCESO A ELIMINAR */
+			/* DIRECCION TABLA PROCESO A ELIMINAR
 			list_destroy(reg_tlb->direccion_fisica);
 		//	printf("LA DIRECCION DE LA TABLA DEL PROCESO A ELIMINAR ES %s \n", direccion_tabla_proc);
 
-			/* NO ME RECONOCE EL INPUT_DESTROY DEFINIDO EN MANEJOLISTAS */
+			/* NO ME RECONOCE EL INPUT_DESTROY DEFINIDO EN MANEJOLISTAS
 		//	list_remove_and_destroy_by_condition(TLB, elNodoTienePidIgualA, input_destroy);
 
 			list_remove_by_condition(TLB, elNodoTienePidIgualA);
 			printf("LA TLB TIENE %d ELEMENTOS DESPUES DE DESTRUIR\n", TLB->elements_count);
 			//list_remove_by_condition(TLB, elNodoTienePidIgualA);
+			 */
 
 	 		break;
 	 	default:
@@ -243,6 +245,39 @@ bool tlbLlena(t_list * TLB)
 		return true;
 
 	return false;
+}
+
+void matarProceso(t_header * proceso_entrante, t_list * tabla_adm)
+{
+ int x = 0, a = 0;
+ numero_de_pid = proceso_entrante->PID;
+ t_tabla_adm * registro_tabla_proc = list_find(tabla_adm, elNodoTienePidIgualA);
+
+ if (registro_tabla_proc != NULL)
+ {
+	 printf("ENCONTRE UN PROCESO PARA MATAR\n");
+
+	 printf ("LA TABLA DE TABLAS DE PROCESOS TIENE %d ELEMENTOS ANTES DE MATAR \n", tabla_adm->elements_count);
+	 t_list * tabla_proceso = registro_tabla_proc->direc_tabla_proc;
+
+	 if (tabla_proceso != NULL)
+	 {
+		 printf("ENCONTRE LA TABLA DEL PROCESO A MATAR \n");
+
+		 list_destroy_and_destroy_elements(tabla_proceso, pag_destroy);
+
+		 list_remove_by_condition(tabla_adm, elNodoTienePidIgualA);
+
+		 printf ("LA TABLA DE TABLAS DE PROCESOS TIENE %d ELEMENTOS DESPUES DE MATAR \n", tabla_adm->elements_count);
+
+	 }else{
+		 printf("NO SE ENCONTRO LA TABLA DEL PROCESO \n");
+	 }
+
+ }else{
+	 printf("ESTAS QUERIENDO MATAR UN PROCESO QUE NO ESTA NI INICIADO \n");
+ }
+
 }
 
 /* --------------ENTRADAS A LA TABLA DE PROCESO ------------ */

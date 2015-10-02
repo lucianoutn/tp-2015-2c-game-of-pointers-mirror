@@ -60,6 +60,7 @@ void iniciarEnCache(t_header, char*, char*); // INICIAR PROCESO EN TABLA TLB CON
 void iniciarEnMemReal(t_header *, t_list*, char*);
 void meConectoAlSwap(t_header *, char*);
 bool tlbLlena(t_list *);
+void matarProceso(t_header *, t_list*);
 
 /* PASAR A MANEJOLISTAS */
 process_pag * pag_proc_create(int, char*);
