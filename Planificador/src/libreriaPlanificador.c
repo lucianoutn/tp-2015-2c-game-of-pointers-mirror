@@ -285,9 +285,9 @@ void consola (t_pcb *inicio)
 			// de algo (generalmente un enter que es lo ultimo que leemos) por teclado, por lo que el autómata interpretaría
 			// que se terminó de ingresar un comando y trataría de entenderlo. Para evitar eso al final de cada lectura
 			// vaciamos el contenido en el flujo stdin
+		}
 			fflush(stdin);
 			printf("\nIngrese el comando deseado o ayuda para conocer los comandos posibles\n");
 			command = leeComando(); // read lee la palabra y me devuelve un comando del enum
-		}
 	}
 }
