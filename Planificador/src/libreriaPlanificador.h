@@ -20,8 +20,10 @@
 #include <SharedLibs/manejoListas.h>
 #include <SharedLibs/comun.h>
 #include <commons/config.h>
+#include <commons/string.h>
 #include <unistd.h>
 #include <semaphore.h>
+#include <commons/collections/queue.h>
 
 #define BACKLOG 10
 #define PACKAGESIZE 1024
@@ -35,7 +37,6 @@ typedef struct PCB {
 	int prioridad;
 	int permisos;
 	const char *ruta;
-	struct PCB *sig;
 }t_pcb;
 
 
@@ -48,7 +49,7 @@ typedef struct{
 
 typedef struct MSJ {
 	t_headcpu headMSJ;
-	struct PCB PCBMSJ;
+	t_pcb * pcbMSJ;
 }t_msj;
 
 typedef struct{
@@ -63,14 +64,16 @@ sem_t semSalir;
 contexto miContexto;
 
 flag CPUenUso;
+
 int numero_de_pid;
+
+int max_PID;
 
 void traigoContexto();
 
 
 
 //Estructura que almacenara los datos del PCB de cada proceso
-
 
 //Funcion encargada de acceptar nuevas peticiones de conexion
 //void escuchar ();
@@ -83,9 +86,11 @@ t_pcb desencolar (t_pcb *cabecera);
 
 //inicio consola
 
-void *procesarPCB (t_pcb *PCB);
+void procesarPCB (t_queue *, char *, int);
 
-int consola (t_pcb *inicio);
+int consola (t_queue *);
+
+void iniciarPlanificador();
 //fin consola
 
 #endif /* SRC_LIBRERIAPLANIFICADOR_H_ */

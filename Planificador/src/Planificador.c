@@ -8,13 +8,11 @@
  ============================================================================
  */
 
-#include "planificador.h"
-
-
-
+#include "libreriaPlanificador.h"
 
 int main() {
 	semSalir.__align =0;
+	max_PID=0;      //inicializo numero de pid
 	puts("!!!!Planificador!!!!"); /* prints !!!Planificador!!! */
 
 	// El planificador debe recibir los resultados de la CPU.
@@ -30,14 +28,12 @@ int main() {
 	conexiones.socket_escucha=crearServer(miContexto.puertoEscucha);
 
 	//funcion que permite al programa ponerse a la espera de nuevas conexiones
-		int L = listen(conexiones.socket_escucha, BACKLOG);
-		if (L == -1)
-			perror("LISTEN");
+	int L = listen(conexiones.socket_escucha, BACKLOG);
+	if (L == -1)
+		perror("LISTEN");
 
-
-		//Se calcula el tamaño de la direccion del cliente
-		conexiones.tamanio_direccion = sizeof(conexiones.direccion);
-
+	//Se calcula el tamaño de la direccion del cliente
+	conexiones.tamanio_direccion = sizeof(conexiones.direccion);
 
 	/*
 	 * Se crea un hilo nuevo que se queda a la espera de nuevas conexiones del CPU
@@ -51,14 +47,14 @@ int main() {
 	 * REEMPLAZAR MAS ADELANTE (SINCRONIZACION)
 	 */
 	puts("ESPERANDO CONEXIONES....\n");
-	sem_wait(&semEsperaCPU); //semaforo espera conexiones
+	//sem_wait(&semEsperaCPU); //semaforo espera conexiones
 
 
-	//Se crea la cola de ready
-	t_pcb *inicio=(t_pcb*)malloc(sizeof(t_pcb));
+	//Se crea la cola de readys
+	t_queue *  cola_ready = queue_create();
 	//llamo a la funcion consola para activar la consola y se le envia el principio de la cola
 
-	consola(inicio);
+	consola(cola_ready);
 
 	/*
 		pthread_create(&hilo_consola, NULL, (void*)consola, NULL);

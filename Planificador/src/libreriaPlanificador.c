@@ -13,7 +13,7 @@ const char* allCommands[] =
 	// lo que el usuario ingrese va a ser comparado con esto
 	// TODOS LOS COMANDOS deben estar en minúscula para que lo reconozca bien sin importar como lo ingrese el usuario
 	"ayuda",
-	"correr path",
+	"iniciar",
 	"finalizar PID",
 	"ps",
 	"cpu",
@@ -27,7 +27,7 @@ enum Commands
 	// si se ingresa un nuevo comando o se modifica, se debe modificar también su representación
 	// del lado del usuario, en la lista de arriba.
 	ayuda = 0,
-	correr,
+	iniciar,
 	finalizar,
 	ps,
 	cpu,
@@ -107,72 +107,51 @@ void traigoContexto()
  miContexto.algoritmoPlanificacion = config_get_string_value(config_planificador, "ALGORITMO_PLANIFICACION" );
 }
 
-
-
-//A continuancion las funciones basicas para crear una nueva cola FIFO
-//Funcion que permite añadir elementos a la cola
-void encolar (t_pcb *cabecera, t_pcb *valor)
-{
-	t_pcb *nuevo = malloc(sizeof(t_pcb));
-	nuevo=valor;
-
-	if (cabecera==NULL)
-	{
-		nuevo->sig=nuevo;
-	}
-	else
-	{
-		nuevo->sig= cabecera->sig;
-		cabecera->sig= nuevo;
-	}
-
-	cabecera=nuevo;
-};
-
-//Funcion que permite quitar elementos de la cola, devuelve el nodo que saca.
-t_pcb desencolar (t_pcb *cabecera)
-{
-	t_pcb *ret = malloc(sizeof(t_pcb));
-	ret= cabecera;
-	if(cabecera==cabecera->sig)
-	{
-		free (cabecera);
-	}
-
-	else
-	{
-		t_pcb *aux = malloc(sizeof(t_pcb));
-		aux= cabecera->sig;
-		cabecera->sig=aux->sig;
-		free(aux);
-	}
-
-	return *ret;
-};
-
-void *procesarPCB(t_pcb *inicio)
+void procesarPCB(t_queue * cola_ready, char * path, int socketCPU)
 {
 	CPUenUso=true;
-	//enviar(PCB) a la CPU
-	//esperar a que la CPU termine de procesar
-	//recibe respuesta de la CPU loguea y termina
-	t_pcb PCB= desencolar(inicio);
+	/*enviar(PCB) a la CPU
+	 *esperar a que la CPU termine de procesar
+	 *recibe respuesta de la CPU loguea y termina
+	 */
+
+	t_pcb * pcb;
+	//armo pcb
+	pcb->PID = max_PID +1;
+	pcb->instructionPointer = 0;
+	pcb->numInstrucciones = 0;
+	pcb->prioridad=0;
+	pcb->permisos=0;
+	pcb->ruta = path;
+	max_PID = pcb->PID;
+
 	CPUenUso=false;
+
+	//encolo a la cola de ready
+	queue_push(cola_ready, pcb);
+	//le envio a la CPU el t_headcpu y el PCB
+
+	t_msj msj;
+	msj.headMSJ.tipo_ejecucion = 1;
+	msj.headMSJ.tamanio_msj = sizeof(t_pcb);
+	msj.pcbMSJ = pcb;
+	send(socketCPU, &msj,sizeof(t_msj),0);
+	puts("Mensaje enviado\n");
+
 }
 
 
 //Funcion que muestra la consola por pantalla con las opciones a enviar a la CPU
-int consola (t_pcb *inicio)
+int consola (t_queue * cola_ready)
 {
 	//variables auxiliares para el uso de la consola
-	int socket_instrucciones, caracter, enviar;
-	char message[PACKAGESIZE]; //tamaño maximo de los paquetes
 	char *buffer;
 	int command;
 	int i,m;
 	t_msj msj;
 	CPUenUso=false;
 	pthread_t hCPU1;
+
 	//muestra cartel de consola
 	system("clear");
 	printf("_____________________________________________________________________________________________\n");
@@ -195,94 +174,9 @@ int consola (t_pcb *inicio)
 				}
 				break;
 			}
-			case correr:
+			case iniciar:
 			{
-				int primeraVez = 1;
-				socket_instrucciones = conexiones.CPU[0];
-				t_pcb *PCB=(t_pcb*)malloc(sizeof(t_pcb));
-				 //PCB->ruta=path;
-				 encolar(inicio, PCB);
-				//controla que el usuario no quiera salir
-				  while(strcmp(message,"menu\n") !=0)
-				{
-					if(!primeraVez){
-					  //Muestra las conexiones con las CPUS disponibles
-						puts("Elija CPU: ¡¡¡¡SOLO NUMEROS!!!\n");
-						int j = 0, i;
-						while ( j < 5) {
-							printf("CPU n°:%d, puerto: %d\n",j+1,conexiones.CPU[j]);
-							j++;
-						}
-						//Permite elegir la conexion con el CPU deseado
-						scanf("%d", &caracter);
-						enviar =1;
-						switch (caracter) {
-							case 1:
-								socket_instrucciones = conexiones.CPU[0];
-								break;
-							case 2:
-								socket_instrucciones = conexiones.CPU[1];
-								break;
-							case 3:
-								socket_instrucciones = conexiones.CPU[2];
-								break;
-							case 4:
-								socket_instrucciones = conexiones.CPU[3];
-								break;
-							case 5:
-								socket_instrucciones = conexiones.CPU[4];
-								break;
-							default:
-								{puts("CPU NO VALIDA!"); enviar=0; caracter=0;};
-								break;
-						}
-					}
-					//Permite el envio de paquetes, dependiendo si la opcion elegida es valida
-					printf("Escriba 'ok' para enviar el path al CPU (por defecto la primera)\n'cpu' para cambiar de CPU\n'menu' para volver al menu principal\n");
-					while(enviar){
-						fflush(stdin);
-						fgets(message, PACKAGESIZE, stdin);			// Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
-						if (!strcmp(message,"cpu\n"))
-						{
-							primeraVez = 0;
-							enviar = 0;			// Chequeo que el usuario no quiera salir
-						}
-						//en esta seccion se crea el PCB y se crea el hilo para enviar datos a la consola
-						if(CPUenUso)
-						{
-						//creo el hilo con la funcion procesarPCB (PCB);
-							if(pthread_create(&hCPU1,NULL,procesarPCB,&PCB)<0)
-									perror("Error HILO CPU!");
-						}
-
-						/*
-						 * Protocolo de mensajes Planificador -CPU
-						 * Para poder entender los distintos tipos de mensajes que se envia, mandamos primero
-						 * un header t_headcpu.
-						 * tipo_ejecucion: 0 - salir
-						 * 				   1 - correr programa
-						 * 				   	   envia PCB
-						 * tamanio_mensaje: tamanio del char * o del PCB
-						 */
-						if (!strcmp(message,"ok\n"))
-						{
-							//PROCESO EL PCB
-							//t_msj msj;
-							//t_pcb *PCB=(t_pcb*)malloc(sizeof(t_pcb));
-							msj.headMSJ.tipo_ejecucion = 1;
-							msj.headMSJ.tamanio_msj = sizeof(t_pcb);
-							msj.PCBMSJ = *PCB;
-							send(socket_instrucciones, &msj,sizeof(t_msj),0);
-							puts("Mensaje enviado\n");
-							strcpy(message,"menu\n");
-							//send(socket_instrucciones, PCB, sizeof(PCB), 0); 	// Solo envio si el usuario no quiere salir.
-						}
-						if (!strcmp(message,"menu\n"))
-						{
-							break;
-						}
-					}
-				}
+				iniciarPlanificador(cola_ready);
 				break;
 			}
 
@@ -337,4 +231,83 @@ int consola (t_pcb *inicio)
 			command = leeComando(); // read lee la palabra y me devuelve un comando del enum
 	}
 	return 0;
+}
+
+
+void iniciarPlanificador(t_queue* cola_ready)
+{
+	int primeraVez = 1;
+	int enviar =1 ;
+	int cpuElegida;
+	int socketCPU = conexiones.CPU[0];
+	char * message=malloc(150);
+	//t_pcb *PCB=(t_pcb*)malloc(sizeof(t_pcb));
+	//PCB->ruta=path;
+	// encolar(inicio, PCB);
+	//controla que el usuario no quiera salir
+	while(strcmp(message,"menu\n") !=0)
+	{
+		if(!primeraVez)
+		{
+			//Muestra las conexiones con las CPUS disponibles
+			puts("Elija CPU: ¡¡¡¡SOLO NUMEROS!!!\n");
+			int j = 0;
+			while ( j < 1)
+			{
+				printf("CPU n°:%d, puerto: %d\n",j+1,conexiones.CPU[j]);
+				j++;
+			}
+			//Permite elegir la conexion con el CPU deseado
+			scanf("%d", &cpuElegida);
+			socketCPU = conexiones.CPU[cpuElegida];
+		}
+
+		//Permite el envio de paquetes, dependiendo si la opcion elegida es valida
+		printf("Escriba 'correr PATH' para correr un proceso en el CPU (por defecto la primera)\n'cpu' para cambiar de CPU\n'menu' para volver al menu principal\n");
+		while(enviar)
+		{
+			fflush(stdin);
+			fgets(message, 150, stdin);			// Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
+			if (!strcmp(message,"cpu\n"))
+			{
+				primeraVez = 0;
+				enviar = 0;			// Chequeo que el usuario no quiera salir
+				printf("Comando no implementado");
+			}
+			//MODIFICAR QUE PASA SI LA CPU ESTA EN USO
+			/*
+			if(CPUenUso)
+			{
+				//creo el hilo con la funcion procesarPCB (PCB);
+				if(pthread_create(&hCPU1,NULL,procesarPCB,&PCB)<0)
+					perror("Error HILO CPU!");
+			}
+			*/
+
+			/*
+			 * Protocolo de mensajes Planificador -CPU
+			 * Para poder entender los distintos tipos de mensajes que se envia, mandamos primero
+			 * un header t_headcpu.
+			 * tipo_ejecucion: 0 - salir
+			 * 				   1 - correr programa
+			 * 				   	   envia PCB
+			 * tamanio_mensaje: tamanio del char * o del PCB
+			 */
+			if (!strcmp(string_substring(message,0,7),"correr "))
+			{
+				char * path= malloc(143);
+				//Tomo el path
+				path = string_substring_from(message, 7); //inclye el \n
+				//PROCESO EL PCB
+				procesarPCB(cola_ready, path,socketCPU);
+
+				free(path);
+			}
+			if (!strcmp(message,"menu\n"))
+			{
+				//Salgo
+				break;
+			}
+		}
+	}
 }
