@@ -202,49 +202,54 @@ int consola (t_pcb *inicio)
 			}
 			case correr:
 			{
-				 t_pcb *PCB=(t_pcb*)malloc(sizeof(t_pcb));
+				int primeraVez = 1;
+				socket_instrucciones = conexiones.CPU[0];
+				t_pcb *PCB=(t_pcb*)malloc(sizeof(t_pcb));
 				 //PCB->ruta=path;
 				 encolar(inicio, PCB);
 				//controla que el usuario no quiera salir
-				 fflush(stdin);
-				 while(strcmp(message,"menu\n") !=0)
+				  while(strcmp(message,"menu\n") !=0)
 				{
-					//Muestra las conexiones con las CPUS disponibles
-					puts("Elija CPU: ¡¡¡¡SOLO NUMEROS!!!\n");
-					int j = 0, i;
-					while ( j < 5) {
-						printf("CPU n°:%d, puerto: %d\n",j+1,conexiones.CPU[j]);
-						j++;
-					}
-					//Permite elegir la conexion con el CPU deseado
-					scanf("%d", &caracter);
-					enviar =1;
-					switch (caracter) {
-						case 1:
-							socket_instrucciones = conexiones.CPU[0];
-							break;
-						case 2:
-							socket_instrucciones = conexiones.CPU[1];
-							break;
-						case 3:
-							socket_instrucciones = conexiones.CPU[2];
-							break;
-						case 4:
-							socket_instrucciones = conexiones.CPU[3];
-							break;
-						case 5:
-							socket_instrucciones = conexiones.CPU[4];
-							break;
-						default:
-							{puts("CPU NO VALIDA!"); enviar=0; caracter=0;};
-							break;
+					if(!primeraVez){
+					  //Muestra las conexiones con las CPUS disponibles
+						puts("Elija CPU: ¡¡¡¡SOLO NUMEROS!!!\n");
+						int j = 0, i;
+						while ( j < 5) {
+							printf("CPU n°:%d, puerto: %d\n",j+1,conexiones.CPU[j]);
+							j++;
+						}
+						//Permite elegir la conexion con el CPU deseado
+						scanf("%d", &caracter);
+						enviar =1;
+						switch (caracter) {
+							case 1:
+								socket_instrucciones = conexiones.CPU[0];
+								break;
+							case 2:
+								socket_instrucciones = conexiones.CPU[1];
+								break;
+							case 3:
+								socket_instrucciones = conexiones.CPU[2];
+								break;
+							case 4:
+								socket_instrucciones = conexiones.CPU[3];
+								break;
+							case 5:
+								socket_instrucciones = conexiones.CPU[4];
+								break;
+							default:
+								{puts("CPU NO VALIDA!"); enviar=0; caracter=0;};
+								break;
+						}
 					}
 					//Permite el envio de paquetes, dependiendo si la opcion elegida es valida
-					printf("Escriba 'ok' para enviar el path al CPU\n'cpu' para cambiar de CPU\n'menu' para volver al menu principal\n");
+					printf("Escriba 'ok' para enviar el path al CPU (por defecto la primera)\n'cpu' para cambiar de CPU\n'menu' para volver al menu principal\n");
 					while(enviar){
+						fflush(stdin);
 						fgets(message, PACKAGESIZE, stdin);			// Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
 						if (!strcmp(message,"cpu\n"))
 						{
+							primeraVez = 0;
 							enviar = 0;			// Chequeo que el usuario no quiera salir
 						}
 						//en esta seccion se crea el PCB y se crea el hilo para enviar datos a la consola
