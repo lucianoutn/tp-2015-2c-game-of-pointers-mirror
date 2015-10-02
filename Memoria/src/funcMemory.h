@@ -54,7 +54,7 @@ void traigoContexto();
 char * reservarMemoria(int);
 void liberarMemoria(char *);
 char* crear_tlb();
-void ejecutoInstruccion(t_header *, char*,char*, t_list*, t_list*);
+void ejecutoInstruccion(t_header *, char*,char*, t_list*, t_list*, char*);
 bool elNodoTienePidIgualA(int *);
 bool numeroDePaginaIgualA(int *);
 void iniciarEnCache(t_header, char*, char*); // INICIAR PROCESO EN TABLA TLB CON DIRECCION DE CACHE

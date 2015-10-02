@@ -69,9 +69,13 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
  char * mensaje;
  int status = 1;
 
+
+ /* COMENTADO PARA PROBAR TRANSFERENCIAS CORRECTAS CON EL SWAP
   conexionAlCliente(&listenningSocket, &socketCliente, miContexto.puertoServidor);
   printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
   printf("El socket de conexión con el CPU es %d\n", socketCliente);
+    FIN COMENTADO DE PRUEBAS */
+
 
   /* SELECT */
   /* primera version no borrar */
@@ -104,6 +108,8 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
   /* tercera version */
 
 
+ /* iDEM ARRIBA, SE COMENTA PARA PRUEBAS
+
   // inicializar el conjunto
   FD_ZERO(&readset); //esto abre y limpia la estructura cada vez q se reinicia el select luego de un error
   maxDescriptor = 0;
@@ -117,19 +123,18 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
   // se fija si hay algo para leer
   resultadoSelect = select(maxDescriptor + 1, &readset, NULL, NULL, NULL);  //el 1ºparametro es el socket +1, 2º el conjunto de lecutra, 3º el de escritura, 4º no se, 5º el time out
   if (resultadoSelect < 0) {
-	  /* error, lo muestro */
+	  /* error, lo muestro
 	 printf("Error con el select()");
   }
   else { 								//>0 implica el nº de sockets disponibles para la lectura
      for (j=0; j<N; j++) {
         if (FD_ISSET(descriptoresVec[j], &readset)) {
-        	 /* si estoy aca es que hay info para leer */
+        	 /* si estoy aca es que hay info para leer
 
         }
      }
   }
-
-
+             FIN COMENTARIO DE PRUEBAS */
   /* fin tercera version */
   /* FIN SELECT */
 
@@ -153,7 +158,8 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 
  t_header * package2 = package_create(1,4,0,2);
 
- ejecutoInstruccion(package2, mensaje, memoria_real, TLB, tablaAdm);
+ ejecutoInstruccion(package2, mensaje, memoria_real, TLB, tablaAdm, socketCliente);
+ sleep(miContexto.retardoMemoria);
 
   if(status!= 0)
   {

@@ -62,7 +62,7 @@ char * crear_tlb()
 
 }
 
-void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memoria_real, t_list * TLB, t_list * tabla_adm)
+void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memoria_real, t_list * TLB, t_list * tabla_adm, char * socketCliente)
 {
 	int flag;
 	switch (registro_prueba->type_ejecution)
@@ -73,11 +73,16 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			flag= meConectoAlSwap(registro_prueba, contenido);
 			if(flag)
 			{
-				//esta todo bien
+ 				puts ("FLAG OK");
+				log_info(logger, "Se hizo conexion con swap, se envio paquete a leer y este fue recibido correctamente");
+				/* Como la transferencia con el swap fue exitosa, le envio la pagina al CPU
+				send(socketCliente,contenido,sizeof(miContexto.tamanioMarco),0);
+				*/
 			}
 			else
 			{
-				//error
+ 				puts ("FLAG NO OK");
+				log_error(logger, "Hubo un problema con la conexion/envio al swap");
 			}
 	 		break;
 	 	case 1:
@@ -121,17 +126,23 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 		}else{
 	 	*/
 	 			//printf("LA TABLA DE MEMORIA PRINCIPAL TIENE %d ELEMENTOS \n", tabla_mem_real->elements_count);
+	 		/* SI LA MEMORIA TIENE MARCOD, SE MANDA A INICIAR A MEMORIA, SINO SE MANDA DIRECO AL SWAP (CHECKPOINT)*/
+	 		if ( miContexto.cantidadMarcos != 0)
 	 			iniciarEnMemReal(registro_prueba, tabla_adm, memoria_real);
+	 		else
+	 		{
 	 			flag= meConectoAlSwap(registro_prueba, NULL);
 	 			if(flag)
 	 			{
-	 				//esta todo bien
+	 				puts ("FLAG OK");
+	 				log_info(logger, "Se hizo conexion con swap, se envio proceso a iniciar y este fue recibido correctamente");
 	 			}
 	 			else
 	 			{
-	 				//error
+	 				puts ("FLAG NO OK");
+					log_error(logger, "Hubo un problema con la conexion/envio al swap");
 	 			}
-	 	//	}
+	 		}
 	 		break;
 	 	case 3:
 			printf ("Se recibio orden de finalizacion de proceso :) \n");
@@ -139,11 +150,13 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			flag= meConectoAlSwap(registro_prueba, NULL);
 			if(flag)
 			{
-				//esta todo bien
+ 				puts ("FLAG OK");
+				log_info(logger, "Se hizo conexion con swap, se envio proceso a matar y este fue recibido correctamente");
 			}
 			else
 			{
-				//error
+ 				puts ("FLAG NO OK");
+				log_error(logger, "Hubo un problema con la conexion/envio al swap");
 			}
 			/*
 			numero_de_pid = registro_prueba->PID;
