@@ -56,7 +56,6 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 
  int listenningSocket, socketCliente, resultadoSelect;
  fd_set readset;
- //t_header package;
  t_header * package;
  char * mensaje;
  int status = 1;
@@ -65,7 +64,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
   printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
   printf("El socket de conexión con el CPU es %d\n", socketCliente);
 
- /* SELECT */
+  /* SELECT */
   do {
      FD_ZERO(&readset); 	//esto abre y limpia la estructura cada vez q se reinicia el select luego de un error
      FD_SET(socketCliente, &readset);
@@ -74,8 +73,8 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 
   if (resultadoSelect > 0) {	//>0 implica el nº de sockets disponibles para la lectura
      if (FD_ISSET(socketCliente, &readset)) {
-        /* si estoy aca es que hay info para leer*/
-        resultadoSelect = recv(socketCliente, mensaje, package->tamanio_msj,0);;
+        /* si estoy aca es que hay info para leer */
+        resultadoSelect = recv(socketCliente, mensaje, package->tamanio_msj,0);
         if (resultadoSelect == 0) {
            /* si estoy aca es xq se cerro la conexion desde el otro lado */
            close(socketCliente);
@@ -90,9 +89,6 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
      printf("Error con el select(): %s\n ", strerror(errno));
   }
   /* FIN SELECT */
-
-
-
 
   //status = recv(socketCliente, mensaje, package.tamanio_msj,0);
   /*SWAP
@@ -110,21 +106,23 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	  }
 */
 
-  package->PID = 1;
-  package->pagina_proceso = 4;
-  package->tamanio_msj = 0;
-  package->type_ejecution = 2;
+
+
+
+ t_header * package2 = package_create(1,4,0,2);
+
+  ejecutoInstruccion(package2, mensaje, memoria_real, TLB, tablaAdm);
 
   if(status!= 0)
   {
-	ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm);
+
+
 		  //send(serverSocket, &package, sizeof(t_header), 0);
 /*
 		  if(package.tamanio_msj!=0)
 		  {
 			  //send(serverSocket, mensaje, strlen(mensaje), 0);
 		  }
-
 	  }
 	*/
 	  //sem_post(sem_2);

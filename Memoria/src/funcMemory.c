@@ -225,7 +225,7 @@ void meConectoAlSwap(t_header * registro_prueba, char * mensaje)
   //fgets(message, PACKAGESIZE, stdin);   // Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
   //if (!strcmp(message,"exit\n")) enviar = 0;   // Chequeo que el usuario no quiera salir
   //if (enviar) send(serverSocket, package, strlen(package) + 1, 0);  // Solo envio si el usuario no quiere salir.
-  send(serverSocket, &registro_prueba, sizeof(t_header), 0);
+  send(serverSocket, registro_prueba, sizeof(t_header), 0);
   //send(serverSocket, mensaje, strlen(mensaje), 0);
   //enviar = 0;
  //}
