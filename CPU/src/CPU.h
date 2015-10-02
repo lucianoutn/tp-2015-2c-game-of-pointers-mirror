@@ -19,6 +19,6 @@
 #include <unistd.h>
 #include <SharedLibs/manejoListas.h>
 #include <commons/config.h>
-
+#include <semaphore.h>
 
 #endif /* CPU_H_ */

@@ -10,11 +10,13 @@
 //Funcion encargada de acceptar nuevas peticiones de conexion
 void *escuchar (struct Conexiones* conexion){
 	int i =0;
+	semEsperaCPU.__align =0; // inicializa semaforo
 
 	while( i<MAX_CPUS ) //limite temporal de 1 CPUS conectada
 	{
 		//guarda las nuevas conexiones para acceder a ellas desde cualquier parte del codigo
 		conexion->CPU[i] = accept(conexion->socket_escucha, (struct sockaddr *) &conexion->direccion, &conexion->tamanio_direccion);
+		sem_post(&semEsperaCPU); //avisa que hay 1 CPU disponible
 		if(conexion->CPU[i]==-1)
 		{
 			perror("ACCEPT");	//control error
@@ -50,8 +52,7 @@ int crearServer(const char *PUERTO)
 
 	//se comprueba que la asociacion fue exitosa
 	int B = bind(listenningSocket, serverInfo->ai_addr, serverInfo->ai_addrlen);
-	if (B == -1)
-		perror("BIND");
+	if (B == -1) perror("BIND");
 
 	freeaddrinfo(serverInfo);
 

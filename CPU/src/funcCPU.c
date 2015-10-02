@@ -33,6 +33,9 @@ void traigoContexto()
 void creoHeader(t_pcb * pcb, t_header* header)
 {
 	//LEO INSTRUCCION DEL ARCHIVO
-
+	header->PID = pcb->PID;
+	//header->pagina_proceso = ??
+	//header->tamanio_msj = sizeof();
+	header->type_ejecution = 1; //prueba
 	//ARMO HEADER SEGUN PROTOCOLO
 }

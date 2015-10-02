@@ -16,6 +16,7 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <semaphore.h>
 
 #define MAX_CPUS 1
 
@@ -27,6 +28,7 @@ struct Conexiones {
 	int CPU[MAX_CPUS];						// Sockets de conexiones ACEPTADAS
 } conexiones;
 
+sem_t semEsperaCPU;
 
 //Funcion encargada de acceptar nuevas peticiones de conexion
 void *escuchar (struct Conexiones* conexion);

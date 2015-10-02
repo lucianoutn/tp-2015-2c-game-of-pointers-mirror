@@ -14,6 +14,7 @@
 
 
 int main() {
+	semSalir.__align =0;
 	puts("!!!!Planificador!!!!"); /* prints !!!Planificador!!! */
 
 	// El planificador debe recibir los resultados de la CPU.
@@ -50,8 +51,7 @@ int main() {
 	 * REEMPLAZAR MAS ADELANTE (SINCRONIZACION)
 	 */
 	puts("ESPERANDO CONEXIONES....\n");
-	while(conexiones.CPU[0] <= 0){
-	}
+	sem_wait(&semEsperaCPU); //semaforo espera conexiones
 
 
 	//Se crea la cola de ready
@@ -69,6 +69,8 @@ int main() {
 
 
 	//cierra los sockets
+	puts("FINALIZANDO PROGRAMA\n");
+	sem_wait(&semSalir);
 	close(conexiones.socket_escucha);
 	int i=0;
 	while(i<5)

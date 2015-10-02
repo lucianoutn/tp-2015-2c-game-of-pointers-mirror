@@ -12,6 +12,8 @@
 
 #define PACKAGESIZE 1024
 
+sem_t semSalir;
+
 //preparo semaforos.lucho
 pthread_mutex_t mutex;
 //ptrhead_mutex_lock(&mutex);
@@ -29,18 +31,18 @@ int main()
 	traigoContexto();
 
 	pthread_mutex_init(&mutex, NULL); //inicializo semaforo.lucho
-
+	semSalir.__align =0;
 	//creando los hilos
 	int i, err;
 
 //	for (i=0; i<CANT_CPU; i++){
 		err= pthread_create(&(cpu[0]), NULL, (void*)iniciaCPU, NULL);
-		sleep(1);
+		//sleep(1);
 		if (err != 0)
 			printf("no se pudo crear el hilo de cpu :[%s]", strerror(err));
 //	}
 
-	while(1); //poner sincro
+	sem_wait(&semSalir); //poner sincro
 /*	for (i=0; i<CANT_CPU; i++){
 		pthread_join(&(cpu[i]), NULL);
 	}*/
@@ -97,22 +99,26 @@ void iniciaCPU(){
 			{
 			case 0:
 				//FINALIZO CONEXIONES
-				printf("Recibi salir, cierro conexiones");
+				puts("Recibi salir, cierro conexiones");
+				status=0;
+				sem_post(&semSalir);
 				break;
 			case 1:
 				status = recv(socketPlanificador, pcb, headcpu->tamanio_msj, 0);
 				if (status != 0)
 				{
-					printf("Recibi PCB");
+					puts("Recibi PCB\n");
 					creoHeader(pcb,header);
 					send(socketMemoria, header, sizeof(t_header), 0);
-				}
+				}break;
+			default:
+				break;
 			}
-
 		}
 		else
 		{
 			puts("Conexion perdida!");
+			sem_post(&semSalir);
 			break;
 		}
 

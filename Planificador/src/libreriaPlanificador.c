@@ -167,14 +167,17 @@ void *procesarPCB(t_pcb *inicio)
 
 
 //Funcion que muestra la consola por pantalla con las opciones a enviar a la CPU
-void consola (t_pcb *inicio)
+int consola (t_pcb *inicio)
 {
 	//variables auxiliares para el uso de la consola
 	int socket_instrucciones, caracter, enviar;
 	char message[PACKAGESIZE]; //tamaño maximo de los paquetes
 	char *buffer;
 	int command;
-	int i;
+	int i,m;
+	t_msj msj;
+	CPUenUso=false;
+	pthread_t hCPU1;
 	//muestra cartel de consola
 	system("clear");
 	printf("_____________________________________________________________________________________________\n");
@@ -184,7 +187,7 @@ void consola (t_pcb *inicio)
 	printf("\nIngrese el comando deseado o ayuda para conocer los comandos posibles\n");
 
 	command = leeComando(); // read lee la palabra y me devuelve un comando del enum
-	while(command != salir) // Itero por siempre
+	while(command != -2) // Itero por siempre
 	{
 		switch (command)
 		{
@@ -203,7 +206,8 @@ void consola (t_pcb *inicio)
 				 //PCB->ruta=path;
 				 encolar(inicio, PCB);
 				//controla que el usuario no quiera salir
-				while(strcmp(message,"salir\n") !=0)
+				 fflush(stdin);
+				 while(strcmp(message,"menu\n") !=0)
 				{
 					//Muestra las conexiones con las CPUS disponibles
 					puts("Elija CPU: ¡¡¡¡SOLO NUMEROS!!!\n");
@@ -236,7 +240,7 @@ void consola (t_pcb *inicio)
 							break;
 					}
 					//Permite el envio de paquetes, dependiendo si la opcion elegida es valida
-					printf("Ya puede enviar instrucciones.\nEscriba 'correr programa' para enviar una señal al CPU\n'cpu' para cambiar de CPU\n'salir' para cerrar los procesos\n");
+					printf("Escriba 'ok' para enviar el path al CPU\n'cpu' para cambiar de CPU\n'menu' para volver al menu principal\n");
 					while(enviar){
 						fgets(message, PACKAGESIZE, stdin);			// Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
 						if (!strcmp(message,"cpu\n"))
@@ -244,9 +248,11 @@ void consola (t_pcb *inicio)
 							enviar = 0;			// Chequeo que el usuario no quiera salir
 						}
 						//en esta seccion se crea el PCB y se crea el hilo para enviar datos a la consola
-						if(!CPUenUso)
+						if(CPUenUso)
 						{
 						//creo el hilo con la funcion procesarPCB (PCB);
+							if(pthread_create(&hCPU1,NULL,procesarPCB,&PCB)<0)
+									perror("Error HILO CPU!");
 						}
 
 						/*
@@ -258,24 +264,21 @@ void consola (t_pcb *inicio)
 						 * 				   	   envia PCB
 						 * tamanio_mensaje: tamanio del char * o del PCB
 						 */
-						if (!strcmp(message,"correr programa\n"))
+						if (!strcmp(message,"ok\n"))
 						{
 							//PROCESO EL PCB
-							t_headcpu header;
-							header.tipo_ejecucion = 1;
-							header.tamanio_msj = sizeof(t_pcb);
-							send(socket_instrucciones, &header,sizeof(t_headcpu),0);
-							send(socket_instrucciones, PCB, sizeof(PCB), 0); 	// Solo envio si el usuario no quiere salir.
+							//t_msj msj;
+							//t_pcb *PCB=(t_pcb*)malloc(sizeof(t_pcb));
+							msj.headMSJ.tipo_ejecucion = 1;
+							msj.headMSJ.tamanio_msj = sizeof(t_pcb);
+							msj.PCBMSJ = *PCB;
+							send(socket_instrucciones, &msj,sizeof(t_msj),0);
+							puts("Mensaje enviado\n");
+							strcpy(message,"menu\n");
+							//send(socket_instrucciones, PCB, sizeof(PCB), 0); 	// Solo envio si el usuario no quiere salir.
 						}
-						if (!strcmp(message,"salir\n"))
+						if (!strcmp(message,"menu\n"))
 						{
-							for(i=0;i<5;i++)
-							{
-								t_headcpu header;
-								header.tipo_ejecucion = 0;
-								header.tamanio_msj = 0;
-								send(conexiones.CPU[i], &header,sizeof(t_headcpu),0);
-							}
 							break;
 						}
 					}
@@ -299,6 +302,19 @@ void consola (t_pcb *inicio)
 				printf("Este comando todavia no ha sido implemenado\n");
 				break;
 			}
+			case salir:
+			{
+				for(m=0;m<5;m++)
+				{
+					msj.headMSJ.tipo_ejecucion = 0;
+					msj.headMSJ.tamanio_msj = 0;
+					send(conexiones.CPU[m], &msj,sizeof(t_msj),0);
+				}
+				//command=-2;
+				sem_post(&semSalir);
+				return -1;
+				break;
+			}
 			case enter:
 			{
 				// no haga nada, que se refleje el enter en la consola
@@ -320,4 +336,5 @@ void consola (t_pcb *inicio)
 			printf("\nIngrese el comando deseado o ayuda para conocer los comandos posibles\n");
 			command = leeComando(); // read lee la palabra y me devuelve un comando del enum
 	}
+	return 0;
 }

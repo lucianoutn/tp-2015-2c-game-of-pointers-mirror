@@ -21,6 +21,7 @@
 #include <SharedLibs/comun.h>
 #include <commons/config.h>
 #include <unistd.h>
+#include <semaphore.h>
 
 #define BACKLOG 10
 #define PACKAGESIZE 1024
@@ -45,12 +46,19 @@ typedef struct{
 	int tamanio_msj;
 }t_headcpu;
 
+typedef struct MSJ {
+	t_headcpu headMSJ;
+	struct PCB PCBMSJ;
+}t_msj;
+
 typedef struct{
 	char * puertoEscucha;
 	char * algoritmoPlanificacion;
 } contexto;
 
 typedef bool flag;
+
+sem_t semSalir;
 
 contexto miContexto;
 
@@ -77,7 +85,7 @@ t_pcb desencolar (t_pcb *cabecera);
 
 void *procesarPCB (t_pcb *PCB);
 
-void consola (t_pcb *inicio);
+int consola (t_pcb *inicio);
 //fin consola
 
 #endif /* SRC_LIBRERIAPLANIFICADOR_H_ */
