@@ -16,7 +16,10 @@
  * Al igual que los semaforos que vamos a utilizar para sincronizacion
  * A.
  */
+
 t_log* logger;
+
+
 
 void creoLogger();
 #endif /* SHAREDLIBS_COMUN_H_ */

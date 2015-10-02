@@ -239,15 +239,45 @@ void consola (t_pcb *inicio)
 					printf("Ya puede enviar instrucciones.\nEscriba 'correr programa' para enviar una señal al CPU\n'cpu' para cambiar de CPU\n'salir' para cerrar los procesos\n");
 					while(enviar){
 						fgets(message, PACKAGESIZE, stdin);			// Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
-						if (!strcmp(message,"cpu\n")) enviar = 0;			// Chequeo que el usuario no quiera salir
+						if (!strcmp(message,"cpu\n"))
+						{
+							enviar = 0;			// Chequeo que el usuario no quiera salir
+						}
 						//en esta seccion se crea el PCB y se crea el hilo para enviar datos a la consola
 						if(!CPUenUso)
 						{
 						//creo el hilo con la funcion procesarPCB (PCB);
 						}
 
-						if (!strcmp(message,"correr programa\n")) send(socket_instrucciones, message, strlen(message) + 1, 0); 	// Solo envio si el usuario no quiere salir.
-						if (!strcmp(message,"salir\n")){ for(i=0;i<5;i++) {send(conexiones.CPU[i], message, strlen(message) + 1, 0);}; break;};
+						/*
+						 * Protocolo de mensajes Planificador -CPU
+						 * Para poder entender los distintos tipos de mensajes que se envia, mandamos primero
+						 * un header t_headcpu.
+						 * tipo_ejecucion: 0 - salir
+						 * 				   1 - correr programa
+						 * 				   	   envia PCB
+						 * tamanio_mensaje: tamanio del char * o del PCB
+						 */
+						if (!strcmp(message,"correr programa\n"))
+						{
+							//PROCESO EL PCB
+							t_headcpu header;
+							header.tipo_ejecucion = 1;
+							header.tamanio_msj = sizeof(t_pcb);
+							send(socket_instrucciones, &header,sizeof(t_headcpu),0);
+							send(socket_instrucciones, PCB, sizeof(PCB), 0); 	// Solo envio si el usuario no quiere salir.
+						}
+						if (!strcmp(message,"salir\n"))
+						{
+							for(i=0;i<5;i++)
+							{
+								t_headcpu header;
+								header.tipo_ejecucion = 0;
+								header.tamanio_msj = 0;
+								send(conexiones.CPU[i], &header,sizeof(t_headcpu),0);
+							}
+							break;
+						}
 					}
 				}
 				break;

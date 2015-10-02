@@ -21,46 +21,6 @@ pthread_mutex_t mutex;
 pthread_t cpu[1];
 
 
-
-
-
-void iniciaCPU(){
-
-
-	int socketPlanificador = crearCliente(miContexto.ipPlanificador, miContexto.puertoPlanificador); //conecta con el planificador
-	int socketMemoria = crearCliente(miContexto.ipMemoria, miContexto.puertoMemoria);//conecta con la memoria
-
-	pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
-	printf("CPU ID: %d conectado\n", (pthread_t)id);
-
-	//Recepcion de instrucciones
-
-	char package[PACKAGESIZE];
-	int status;		// Estructura que manjea el status de los recieve.
-	printf("CPU ID: %d conectada. Esperando instrucciones:\n", (pthread_t)id);
-
-	while(strcmp(package,"salir\n") !=0)
-	{
-		    status = recv(socketPlanificador, (void*) package, PACKAGESIZE, 0);
-			if (status != 0){
-				printf("RECIBIDO! =D\n%s", package);
-				send(socketMemoria, package, strlen(package) + 1, 0);
-			}
-			else{
-				puts("conexion perdida! =(");
-				break;
-			}
-
-		}
-
-
-	close(socketPlanificador);
-	close(socketMemoria);	// agrego el cierre del otro socket.lucho
-
-}
-
-
-
 //Inicio de funcion principal
 int main()
 {
@@ -108,4 +68,58 @@ int main()
 	 */
 
 	return EXIT_SUCCESS;
+}
+
+void iniciaCPU(){
+
+
+	int socketPlanificador = crearCliente(miContexto.ipPlanificador, miContexto.puertoPlanificador); //conecta con el planificador
+	int socketMemoria = crearCliente(miContexto.ipMemoria, miContexto.puertoMemoria);//conecta con la memoria
+
+	pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
+	printf("CPU ID: %d conectado\n", (pthread_t)id);
+
+	//Recepcion de instrucciones
+
+	t_pcb * pcb=malloc(sizeof(t_pcb));
+	int status=1;		// Estructura que manjea el status de los recieve.
+	printf("CPU ID: %d conectada. Esperando instrucciones:\n", (pthread_t)id);
+
+	t_header *header = malloc(sizeof(t_header));
+	t_headcpu *headcpu = malloc(sizeof(t_headcpu));
+
+	while(status!=0)
+	{
+		status = recv(socketPlanificador, headcpu, sizeof(t_headcpu),0);
+		if(status!=0)
+		{
+			switch (headcpu->tipo_ejecucion)
+			{
+			case 0:
+				//FINALIZO CONEXIONES
+				printf("Recibi salir, cierro conexiones");
+				break;
+			case 1:
+				status = recv(socketPlanificador, pcb, headcpu->tamanio_msj, 0);
+				if (status != 0)
+				{
+					printf("Recibi PCB");
+					creoHeader(pcb,header);
+					send(socketMemoria, header, sizeof(t_header), 0);
+				}
+			}
+
+		}
+		else
+		{
+			puts("Conexion perdida!");
+			break;
+		}
+
+	}
+	free(header);
+	free(headcpu);
+	close(socketPlanificador);
+	close(socketMemoria);	// agrego el cierre del otro socket.lucho
+
 }

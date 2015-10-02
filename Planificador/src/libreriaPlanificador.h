@@ -18,6 +18,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <SharedLibs/manejoListas.h>
+#include <SharedLibs/comun.h>
 #include <commons/config.h>
 #include <unistd.h>
 
@@ -25,6 +26,24 @@
 #define PACKAGESIZE 1024
 #define WORD_SIZE 35
 
+typedef struct PCB {
+	int PID;
+	//estado del proceso
+	unsigned int instructionPointer;
+	unsigned int numInstrucciones;
+	int prioridad;
+	int permisos;
+	const char *ruta;
+	struct PCB *sig;
+}t_pcb;
+
+
+//Protocolo de envio Planificador -> CPU
+
+typedef struct{
+	int tipo_ejecucion;
+	int tamanio_msj;
+}t_headcpu;
 
 typedef struct{
 	char * puertoEscucha;
@@ -43,17 +62,7 @@ void traigoContexto();
 
 
 //Estructura que almacenara los datos del PCB de cada proceso
-typedef struct PCB{
-	int PID;
-	//estado del proceso
-	unsigned int instructionPointer;
-	unsigned int numInstrucciones;
-	int prioridad;
-	int permisos;
-	const char *ruta;
-	struct PCB *sig;
 
-}t_pcb;
 
 //Funcion encargada de acceptar nuevas peticiones de conexion
 //void escuchar ();
@@ -65,8 +74,6 @@ void encolar (t_pcb *cabecera, t_pcb *valor);
 t_pcb desencolar (t_pcb *cabecera);
 
 //inicio consola
-
-
 
 void *procesarPCB (t_pcb *PCB);
 

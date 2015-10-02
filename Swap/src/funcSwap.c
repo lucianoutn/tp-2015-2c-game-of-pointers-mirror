@@ -16,19 +16,31 @@ FILE* crearParticion() {
 	FILE *archivo;
 	char * comando = malloc(200);
 
-	strcpy(comando,"dd if=/home/utnso/git/tp-2015-2c-game-of-pointers/Swap/");
+	strcpy(comando,"dd if=/home/utnso/workspace/tp-2015-2c-game-of-pointers/Swap/");
 	strcat(comando, contexto->nombre);
-	strcpy(comando," of=/home/utnso/git/tp-2015-2c-game-of-pointers/Swap/");
-	strcat(comando, contexto->nombre);
-	//strcat(comando, " bs=512");
-	//strcat(comando,  string_itoa(contexto->tam_pagina));
-
+	strcat(comando," of=/home/utnso/workspace/tp-2015-2c-game-of-pointers/Swap/aux.txt");
+	strcat(comando, " bs=");
+	strcat(comando,  string_itoa(contexto->tam_pagina));
+	strcat(comando, " count=");
+	strcat(comando,  string_itoa(contexto->cant_paginas));
 	system(comando);
 
+	strcpy(comando,"dd if=/home/utnso/workspace/tp-2015-2c-game-of-pointers/Swap/aux.txt");
+	strcat(comando," of=/home/utnso/workspace/tp-2015-2c-game-of-pointers/Swap/");
+	strcat(comando, contexto->nombre);
+	strcat(comando, " bs=");
+	strcat(comando,  string_itoa(contexto->tam_pagina));
+	strcat(comando, " count=");
+	strcat(comando,  string_itoa(contexto->cant_paginas));
+	system(comando);
 
-	archivo = fopen(contexto->nombre, "wb+");
+	system("rm /home/utnso/workspace/tp-2015-2c-game-of-pointers/Swap/aux.txt");
+
+	archivo = fopen(contexto->nombre, "rb+");
 	if (archivo)
+	{
 		printf("Particion creada y abierta\n");
+	}
 	else {
 		printf("Error, no se pudo crear\n");
 		return NULL;
@@ -62,6 +74,7 @@ void traigoContexto() {
 	contexto->retardo_swap = config_get_int_value(config_swap, "RETARDO_SWAP");
 	contexto->retardo_compac = config_get_int_value(config_swap,
 			"RETARDO_COMPACTACION");
+	free(config_swap);
 }
 
 void analizoPaquete(t_header package, int socketCliente) {
@@ -96,15 +109,14 @@ void analizoPaquete(t_header package, int socketCliente) {
 
 void leerSwap(t_header package, char * contenido)
 {
-	int status;
-	t_pag * pag = list_find(lista_paginas, numeroDePid);
+	t_pag * pag = list_find(lista_paginas, (void *)numeroDePid);
 
 	if(pag!=NULL)
 	{
-		status = fseek(archivo,pag->inicio + (package.pagina_proceso * contexto->tam_pagina),SEEK_SET);
-		status = fread(contenido, contexto->tam_pagina, 1, archivo);
+		fseek(archivo,pag->inicio + (package.pagina_proceso * contexto->tam_pagina),SEEK_SET);
+		fread(contenido, contexto->tam_pagina, 1, archivo);
 		log_info(logger, "Se recibio orden de lectura: PID: %d Byte Inicial: %d Contenido: %s"
-								,package.PID, pag->inicio,contenido);
+								,package.PID, pag->inicio+(package.pagina_proceso * contexto->tam_pagina),contenido);
 	}
 	else
 	{
@@ -114,15 +126,25 @@ void leerSwap(t_header package, char * contenido)
 }
 void escribirSwap(t_header package, int socketCliente)
 {
-	int status;
 	char * mensaje = malloc(package.tamanio_msj);
-	status = recv(socketCliente, mensaje, package.tamanio_msj, 0);
-	t_pag * pag = list_find(lista_paginas, numeroDePid);
+	strcpy(mensaje,"hola\0");
+	//status = recv(socketCliente, mensaje, package.tamanio_msj, 0);
+	t_pag * pag = list_find(lista_paginas, (void *)numeroDePid);
 
 	if(pag!= NULL)
 	{
-		status = fseek(archivo,pag->inicio + ((package.pagina_proceso) * contexto->tam_pagina),SEEK_SET);
-		status = fwrite(mensaje, strlen(mensaje) + 1, 1, archivo);
+		fseek(archivo,pag->inicio + ((package.pagina_proceso) * contexto->tam_pagina),SEEK_SET);
+		fwrite(mensaje, strlen(mensaje) + 1, 1, archivo);
+
+		//Relleno pagina
+		int relleno= pag->inicio + strlen(mensaje) + 1;
+		int final_pagina= pag->inicio+((package.pagina_proceso + 1) * contexto->tam_pagina);
+
+		for(;relleno<=final_pagina;relleno++)
+		{
+			fseek(archivo,relleno,SEEK_SET);
+			fwrite("0", strlen("0") + 1, 1, archivo);
+		}
 	}
 	else
 	{
@@ -155,7 +177,7 @@ void inicializarProc(t_header package) {
 void finalizarProc(t_header package)
 {
 	//Actualizo lista huecos
-	t_pag * pag = list_find(lista_paginas, numeroDePid);
+	t_pag * pag = list_find(lista_paginas, (void*)numeroDePid);
 
 	if(pag!= NULL)
 	{
@@ -163,7 +185,7 @@ void finalizarProc(t_header package)
 		log_info(logger, "Se recibio orden de finalizacion: PID: %d Inicio: %d Bytes: %d"
 						,package.PID, pag->inicio,pag->paginas * contexto->tam_pagina);
 		//Actualizo lista paginas
-		list_remove_and_destroy_by_condition(lista_paginas, numeroDePid,pag_destroy);
+		list_remove_and_destroy_by_condition(lista_paginas, (void *)numeroDePid, (void *)pag_destroy);
 	}
 	else
 	{

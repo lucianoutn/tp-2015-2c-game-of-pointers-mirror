@@ -45,6 +45,7 @@ int main()
 	//Cierro particion
 	cerrarParticion();
 	log_destroy(logger);
+	free(contexto);
 }
 
 void reciboDelAdminMem()
@@ -55,6 +56,7 @@ void reciboDelAdminMem()
 
   conexionAlCliente(&listenningSocket, &socketCliente,contexto->puerto);
   printf("Cliente conectado. Esperando mensajes:\n");
+
 
   while(status!=0)
   //Una vez conectado el cliente..
@@ -73,4 +75,5 @@ void reciboDelAdminMem()
   close(socketCliente);
   close(listenningSocket);
   status = 0;
+
 }

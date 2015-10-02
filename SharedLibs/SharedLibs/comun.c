@@ -8,6 +8,8 @@
 
 #include "comun.h"
 
+
+
 void creoLogger()
 {
     logger = log_create("log.txt", "Cache13",true, LOG_LEVEL_INFO);
@@ -22,3 +24,4 @@ void creoLogger()
 	*/
 
 }
+

@@ -28,3 +28,11 @@ void traigoContexto()
  miContexto.cantHilos = config_get_int_value(config_cpu, "CANTIDAD_HILOS");
  miContexto.retardo = config_get_int_value(config_cpu, "RETARDO");
 }
+
+
+void creoHeader(t_pcb * pcb, t_header* header)
+{
+	//LEO INSTRUCCION DEL ARCHIVO
+
+	//ARMO HEADER SEGUN PROTOCOLO
+}
