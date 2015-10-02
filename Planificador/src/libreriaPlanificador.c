@@ -8,93 +8,88 @@
 #include "libreriaPlanificador.h"
 
 const char* allCommands[] =
-	{
-		// esto define las palabras de los comandos aceptados
-		// lo que el usuario ingrese va a ser comparado con esto
-		// TODOS LOS COMANDOS deben estar en minúscula para que lo reconozca bien sin importar como lo ingrese el usuario
-		"ayuda",
-		"correr path",
-		"finalizar PID",
-		"ps",
-		"cpu",
-		"salir"
-	};
-	enum Commands
-	{
-		// esto define los comandos en la forma en que los vamos a manipular internamente
-		// son enteros que representan a un estado, que no sean solo números ayuda a la lectura
-		// pero es solo de uso interno
-		// si se ingresa un nuevo comando o se modifica, se debe modificar también su representación
-		// del lado del usuario, en la lista de arriba.
-		ayuda = 0,
-		correr,
-		finalizar,
-		ps,
-		cpu,
-		salir,
-		enter
-	};
+{
+	// esto define las palabras de los comandos aceptados
+	// lo que el usuario ingrese va a ser comparado con esto
+	// TODOS LOS COMANDOS deben estar en minúscula para que lo reconozca bien sin importar como lo ingrese el usuario
+	"ayuda",
+	"correr path",
+	"finalizar PID",
+	"ps",
+	"cpu",
+	"salir"
+};
+enum Commands
+{
+	// esto define los comandos en la forma en que los vamos a manipular internamente
+	// son enteros que representan a un estado, que no sean solo números ayuda a la lectura
+	// pero es solo de uso interno
+	// si se ingresa un nuevo comando o se modifica, se debe modificar también su representación
+	// del lado del usuario, en la lista de arriba.
+	ayuda = 0,
+	correr,
+	finalizar,
+	ps,
+	cpu,
+	salir,
+	enter
+};
 
 
 /****************************************************************
-				Lee el comando y lo busca entre los reconocidos
+Lee el comando y lo busca entre los reconocidos
 ****************************************************************/
-		int leeComando(void)
+int leeComando(void)
+{
+	int c, i = 0;
+	char palabra[WORD_SIZE] = { NULL };
+	while ((c = getchar()) != '\n') //leo hasta identificar enter
+	{
+		if (i > WORD_SIZE)
 		{
-			int c, i = 0;
-			char palabra[WORD_SIZE] = { NULL };
-
-			while ((c = getchar()) != '\n') //leo hasta identificar enter
-			{
-				if (i > WORD_SIZE)
-				{
-					// si me pasé del largo de comando permitido devuelvo -1 para que el autómata
-					// identifique que no se ha ingresado un comando permitdo
-					printf("No se pudo encontrar el comando especificado\n");
-					printf("Ingrese el comando deseado o help para conocer los comandos posibles\n");
-					return -1;
-				}
-				else
-				{
-					// si sigo dentro de rango guardo el caracter en la palabra a comparar con comandos
-					palabra[i] = tolower(c); //guardo el caracter ingresado para concatenar la palabra
-					// si es mayuscula lo paso a minuscula para no tener que comparar todos los casos
-				}
-				i++;
-			}
-
-			if (!i)
-			{
-				// si estoy acá el tipo apretó enter sin entrar nada, reflejo el enter y no hago nada para
-				// mantener el parecido del comportamiento de una consola
-				return enter;
-			}
-
-			//si estoy aca es porque detecte un enter! Entonces mi palabra deberia estar lista para comparar
-			i = 0; // reutilizo i porque el primer while ya no la necesita
-
-			// comparo la palabra con cada uno de los comandos permitidos, hasta salir que es el ultimo
-			while (i <= salir && strcmp(allCommands[i], palabra))
-			{
-				// si no hay match, comparo con el próximo
-				i++;
-			}
-			// tengo dos posibles causas de haber salido del while, diferencio ambas
-			if (i > salir)
-			{
-				// si esoy aca es porque lo ingresado no coincide con alguno de los comandos -> devuelvo error
-				// no informo que no entendí el comando porque de eso se encarga el autómata cuando sale por default
-				return -1;
-			}
-			else
-			{
-				// si estoy aca es porque ¡hay match!
-				// devuelvo el id del comando encontrado!
-				return i;
-			}
+			// si me pasé del largo de comando permitido devuelvo -1 para que el autómata
+			// identifique que no se ha ingresado un comando permitdo
+			printf("No se pudo encontrar el comando especificado\n");
+			printf("Ingrese el comando deseado o help para conocer los comandos posibles\n");
+			return -1;
 		}
+		else
+		{
+			// si sigo dentro de rango guardo el caracter en la palabra a comparar con comandos
+			palabra[i] = tolower(c); //guardo el caracter ingresado para concatenar la palabra
+			// si es mayuscula lo paso a minuscula para no tener que comparar todos los casos
+		}
+		i++;
+	}
+	if (!i)
+	{
+		// si estoy acá el tipo apretó enter sin entrar nada, reflejo el enter y no hago nada para
+		// mantener el parecido del comportamiento de una consola
+		return enter;
+	}
 
-
+	//si estoy aca es porque detecte un enter! Entonces mi palabra deberia estar lista para comparar
+	i = 0; // reutilizo i porque el primer while ya no la necesita
+	// comparo la palabra con cada uno de los comandos permitidos, hasta salir que es el ultimo
+	while (i <= salir && strcmp(allCommands[i], palabra))
+	{
+		// si no hay match, comparo con el próximo
+		i++;
+	}
+	// tengo dos posibles causas de haber salido del while, diferencio ambas
+	if (i > salir)
+	{
+		// si esoy aca es porque lo ingresado no coincide con alguno de los comandos -> devuelvo error
+		// no informo que no entendí el comando porque de eso se encarga el autómata cuando sale por default
+		return -1;
+	}
+	else
+	{
+		// si estoy aca es porque ¡hay match!
+		// devuelvo el id del comando encontrado!
+		return i;
+	}
+}
 
 void traigoContexto()
 {
