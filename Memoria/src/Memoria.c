@@ -30,6 +30,8 @@ void reciboDelCpu(char *, t_list *, t_list *);
 int main()
 {
  traigoContexto();
+ creoLogger();
+
  // RESERVO ESPACIO PARA LA MEMORIA REAL /
  int tamanio_memoria_real = miContexto.tamanioMarco * miContexto.cantidadMarcos;
  char * memoria_real = reservarMemoria(tamanio_memoria_real);
@@ -51,6 +53,8 @@ int main()
   }
 
   reciboDelCpu(&memoria_real, TLB, tablaAdm);
+
+  log_destroy(logger);
   return 0;
 }
 

@@ -20,6 +20,7 @@
 #include <unistd.h>
 #include <commons/config.h>
 #include <SharedLibs/manejoListas.h>
+#include <SharedLibs/comun.h>
 
 typedef struct{
  char * puertoServidor;
