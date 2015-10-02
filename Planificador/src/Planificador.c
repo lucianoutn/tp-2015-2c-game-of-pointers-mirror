@@ -47,7 +47,7 @@ int main() {
 	 * REEMPLAZAR MAS ADELANTE (SINCRONIZACION)
 	 */
 	puts("ESPERANDO CONEXIONES....\n");
-	//sem_wait(&semEsperaCPU); //semaforo espera conexiones
+	sem_wait(&semEsperaCPU); //semaforo espera conexiones
 
 
 	//Se crea la cola de readys

@@ -250,7 +250,7 @@ void iniciarPlanificador(t_queue* cola_ready)
 		if(!primeraVez)
 		{
 			//Muestra las conexiones con las CPUS disponibles
-			puts("Elija CPU: ¡¡¡¡SOLO NUMEROS!!!\n");
+			puts("Elija CPU: ¡¡¡SOLO NUMEROS!!!\n");
 			int j = 0;
 			while ( j < 1)
 			{
@@ -263,7 +263,10 @@ void iniciarPlanificador(t_queue* cola_ready)
 		}
 
 		//Permite el envio de paquetes, dependiendo si la opcion elegida es valida
-		printf("Escriba 'correr PATH' para correr un proceso en el CPU (por defecto la primera)\n'cpu' para cambiar de CPU\n'menu' para volver al menu principal\n");
+		printf("COMANDOS VALIDOS:\n"
+			   "'correr PATH':      Para correr un proceso en el CPU (la primera por defecto)\n"
+			   "'cpu':              Para cambiar de CPU\n"
+			   "'menu':             Para volver al menu principal\n");
 		while(enviar)
 		{
 			fflush(stdin);
@@ -271,7 +274,8 @@ void iniciarPlanificador(t_queue* cola_ready)
 			if (!strcmp(message,"cpu\n"))
 			{
 				primeraVez = 0;
-				enviar = 0;			// Chequeo que el usuario no quiera salir
+				//enviar = 0;			// Chequeo que el usuario no quiera salir
+				break;
 				printf("Comando no implementado");
 			}
 			//MODIFICAR QUE PASA SI LA CPU ESTA EN USO
@@ -295,6 +299,7 @@ void iniciarPlanificador(t_queue* cola_ready)
 			 */
 			if (!strcmp(string_substring(message,0,7),"correr "))
 			{
+				primeraVez=1;
 				char * path= malloc(143);
 				//Tomo el path
 				path = string_substring_from(message, 7); //inclye el \n
@@ -302,6 +307,7 @@ void iniciarPlanificador(t_queue* cola_ready)
 				procesarPCB(cola_ready, path,socketCPU);
 
 				free(path);
+				break;
 			}
 			if (!strcmp(message,"menu\n"))
 			{
