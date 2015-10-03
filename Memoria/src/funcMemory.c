@@ -62,7 +62,7 @@ char * crear_tlb()
 
 }
 
-void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memoria_real, t_list * TLB, t_list * tabla_adm, char * socketCliente)
+void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memoria_real, t_list * TLB, t_list * tabla_adm, int socketCliente)
 {
 	int flag;
 	switch (registro_prueba->type_ejecution)
@@ -131,10 +131,13 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 			iniciarEnMemReal(registro_prueba, tabla_adm, memoria_real);
 	 		else
 	 		{
+	 			printf("Tamanio %d \n", registro_prueba->tamanio_msj);
 	 			flag= meConectoAlSwap(registro_prueba, NULL);
 	 			if(flag)
 	 			{
 	 				puts ("FLAG OK");
+	 				bool recibi = true;
+	 				send(socketCliente,&recibi,sizeof(bool),0);
 	 				log_info(logger, "Se hizo conexion con swap, se envio proceso a iniciar y este fue recibido correctamente");
 	 			}
 	 			else

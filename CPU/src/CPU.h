@@ -24,7 +24,7 @@
 
 typedef int pid;
 pid PID_actual;
-
+typedef bool flag;
 t_pcb* traduceMsj(t_msjRecibido * msj);
 
 #endif /* CPU_H_ */

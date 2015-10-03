@@ -75,7 +75,7 @@ int main()
 
 void iniciaCPU(){
 
-
+	flag recibi=false;
 	int socketPlanificador = crearCliente(miContexto.ipPlanificador, miContexto.puertoPlanificador); //conecta con el planificador
 	int socketMemoria = crearCliente(miContexto.ipMemoria, miContexto.puertoMemoria);//conecta con la memoria
 	const char prueba = "corto.cod\n";
@@ -127,16 +127,30 @@ void iniciaCPU(){
 						case 0://iniciar
 						{
 								puts("INICIAR");
+								creoHeader(PCB,header);
+								header->tamanio_msj = 5;
+								header->type_ejecution = 2;
+								printf ("HEADER TIPO EJ %d \n", header->type_ejecution);
+								send(socketMemoria, header, sizeof(t_header), 0);
+								recv(socketMemoria, &recibi, sizeof(flag),0);
+								if(recibi)
+									puts("Recibi ok");
+								else
+									puts("Error");
 								break;
 						}
 						case 1: //leer
 						{
 								puts("LEER");
+								//creoHeader(PCB,header);
+								//send(socketMemoria, header, sizeof(t_header), 0);
 								break;
 						}
 						case 4: //finalizar
 						{
 								puts("FINALIZAR");
+								//creoHeader(PCB,header);
+								//send(socketMemoria, header, sizeof(t_header), 0);
 								break;
 						}
 						default:
@@ -148,7 +162,7 @@ void iniciaCPU(){
 					}
 				PCB->instructionPointer	++;
 				}
-
+			/*
 				if (status != 0)
 				{
 					creoHeader(PCB,header);
@@ -156,7 +170,7 @@ void iniciaCPU(){
 					puts("Envie a memoria!");
 				}
 				break;
-
+			*/
 			default:
 				break;
 			}

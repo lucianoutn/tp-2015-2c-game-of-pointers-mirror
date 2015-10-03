@@ -49,7 +49,7 @@ int main()
    TLB = crearListaTlb();
    printf ("La TLB esta habilitada \n");
    int tamanio_memoria_cache = miContexto.tamanioMarco * 4;
-   t_list * TLB = crearListaTlb();
+   //t_list * TLB = crearListaTlb();
   }
 
   reciboDelCpu(&memoria_real, TLB, tablaAdm);
@@ -65,16 +65,13 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 
  int listenningSocket, socketCliente, resultadoSelect;
  fd_set readset;
- t_header * package;
+ t_header * package = malloc(sizeof(t_header));
  char * mensaje;
  int status = 1;
 
-
- /* COMENTADO PARA PROBAR TRANSFERENCIAS CORRECTAS CON EL SWAP
   conexionAlCliente(&listenningSocket, &socketCliente, miContexto.puertoServidor);
   printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
   printf("El socket de conexión con el CPU es %d\n", socketCliente);
-    FIN COMENTADO DE PRUEBAS */
 
 
   /* SELECT */
@@ -143,19 +140,27 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
   int serverSocket;
   conexionAlServer(&serverSocket, miContexto.puertoCliente);
    //FIN SWAP
+    */
   while(status!=0)
   {
 	  //sem_wait(sem_1);
-	  status = recv(socketCliente, &package, sizeof(t_header), 0);
+	  puts ("WHILE");
+	  status = recv(socketCliente, package, sizeof(t_header), 0);
+	  puts ("RCV");
+	  //package->type_ejecution = 1;
+	  printf ("EL TIPO DE EJECUCION RECIBIDO %d \n", package->type_ejecution);
+	  /*
 	  if(package.tamanio_msj!=0)
 	  {
 		  mensaje = malloc(package.tamanio_msj);
 		  status = recv(socketCliente, mensaje, package.tamanio_msj,0);
 	  }
-*/
+	   */
+
+	  ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCliente);
 
 
-
+/*
  t_header * package2 = package_create(1,4,0,2);
 
  ejecutoInstruccion(package2, mensaje, memoria_real, TLB, tablaAdm, socketCliente);
@@ -163,7 +168,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 
   if(status!= 0)
   {
-
+*/
 
 		  //send(serverSocket, &package, sizeof(t_header), 0);
 /*
