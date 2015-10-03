@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <pthread.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
@@ -28,6 +29,10 @@ typedef struct{
 	int retardo_compac;
 }t_contexto;
 
+typedef struct{
+	int status;
+	char* contenido;
+}t_devuelvo;
 //Declaro variables globales
 t_contexto * contexto;
 FILE* archivo;
@@ -46,13 +51,13 @@ char * numero_de_pagina(char *);
 
 void analizoPaquete(t_header, int );
 
-void leerSwap(t_header, char*);
+void leerSwap(t_header,char *);
 
-void escribirSwap(t_header, int);
+int escribirSwap(t_header, int);
 
-void inicializarProc(t_header);
+int inicializarProc(t_header);
 
-void finalizarProc(t_header);
+int finalizarProc(t_header);
 
 void rellenarParticion(int, int);
 

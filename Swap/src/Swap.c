@@ -19,17 +19,12 @@
 #include <commons/string.h>
 #include "funcSwap.h"
 #include <semaphore.h>
-
+#include <pthread.h>
 
 void reciboDelAdminMem();
 
 int main()
 {
-	/*
-	int a;
-	a=sem_init(sem_2,1,1);
-	a=sem_init(sem_1,1,0);
-	*/
 	//-------Contexto--------------------------//
 	traigoContexto();
 	creoLogger();
@@ -61,13 +56,12 @@ void reciboDelAdminMem()
   while(status!=0)
   //Una vez conectado el cliente..
   {
-	  //sem_wait(sem_2);
 	  status = recv(socketCliente, &package, sizeof(t_header), 0);
 	  //Recibido el paquete lo proceso..
-	  if(status!= 0)
-	  analizoPaquete(package,socketCliente);
-	  sleep(contexto->retardo_swap);
-	  //sem_post(sem_1);
+	  if(status > 0){
+		  analizoPaquete(package,socketCliente);
+		  sleep(contexto->retardo_swap);
+	  }
   }
 
 

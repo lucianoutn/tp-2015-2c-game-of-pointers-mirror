@@ -79,26 +79,37 @@ void traigoContexto() {
 
 void analizoPaquete(t_header package, int socketCliente) {
 	global = &package;
-
+	int status=0;
 	switch (package.type_ejecution)
 	{
 	case 0:
 		printf("Se recibio orden de lectura\n");
 		char * contenido = malloc(contexto->tam_pagina);
-		leerSwap(package, contenido);
-		free(contenido);
+		t_devuelvo devuelvo;
+		leerSwap(package,contenido);
+		if(contenido!=NULL){
+			devuelvo.status = 1;
+			devuelvo.contenido = contenido;
+			send(socketCliente,&devuelvo,sizeof(t_devuelvo),0);
+		}
+		else{
+			send(socketCliente,&status,sizeof(int),0);
+		}
 		break;
 	case 1:
 		printf("Se recibio orden de escritura\n");
-		escribirSwap(package, socketCliente);
+		status = escribirSwap(package, socketCliente);
+		send(socketCliente,&status,sizeof(int),0);
 		break;
 	case 2:
 		printf("Se recibio orden de inicializacion\n");
-		inicializarProc(package);
+		status = inicializarProc(package);
+		send(socketCliente,&status,sizeof(int),0);
 		break;
 	case 3:
 		printf("Se recibio orden de finalizacion de proceso\n");
-		finalizarProc(package);
+		status = finalizarProc(package);
+		send(socketCliente,&status,sizeof(int),0);
 		break;
 	default:
 		printf("El tipo de ejecucion recibido no es valido\n");
@@ -107,10 +118,9 @@ void analizoPaquete(t_header package, int socketCliente) {
 	}
 }
 
-void leerSwap(t_header package, char * contenido)
+void leerSwap(t_header package,char * contenido)
 {
 	t_pag * pag = list_find(lista_paginas, (void *)numeroDePid);
-
 	if(pag!=NULL)
 	{
 		fseek(archivo,pag->inicio + (package.pagina_proceso * contexto->tam_pagina),SEEK_SET);
@@ -120,11 +130,12 @@ void leerSwap(t_header package, char * contenido)
 	}
 	else
 	{
-		printf("Final Feliz, pagina no encontrada");
-		abort();
+		contenido = NULL;
+		puts("Final feliz, pagina no encontrada");
+		log_error(logger, "No se encontro la pagina solicitada");
 	}
 }
-void escribirSwap(t_header package, int socketCliente)
+int escribirSwap(t_header package, int socketCliente)
 {
 	char * mensaje = malloc(package.tamanio_msj);
 	strcpy(mensaje,"hola\0");
@@ -148,17 +159,21 @@ void escribirSwap(t_header package, int socketCliente)
 	}
 	else
 	{
-		printf("Final feliz, pagina no encontrada");
-		abort();
+		puts("Final feliz, pagina no encontrada");
+		log_error(logger, "No se encontro la pagina solicitada");
+		return 0;
 	}
 
 	free(mensaje);
 	pag_destroy(pag);
+	return 1;
 
 }
-void inicializarProc(t_header package) {
+
+int inicializarProc(t_header package) {
 	t_hueco * hueco = buscarHueco(package.pagina_proceso);
-	if (hueco != NULL) {
+	if (hueco != NULL)
+	{
 		//Inicializo
 		list_add(lista_paginas,pag_create(package.PID, hueco->inicio, package.pagina_proceso));
 		log_info(logger, "Se recibio orden de inicializacion: PID: %d Inicio: %d Bytes: %d"
@@ -166,15 +181,17 @@ void inicializarProc(t_header package) {
 		//rellenarParticion(hueco->inicio, package.pagina_proceso);
 		//Actualizo huecos
 		hueco->inicio = hueco->inicio + (package.pagina_proceso * contexto->tam_pagina);
+		return 1;
 
 	} else {
-		printf("No hay hueco \n Final feliz");
-		abort();
+		puts("Final feliz");
+		log_error(logger, "No hay hueco para poder escribir");
+		return 0;
 	}
 
 }
 
-void finalizarProc(t_header package)
+int finalizarProc(t_header package)
 {
 	//Actualizo lista huecos
 	t_pag * pag = list_find(lista_paginas, (void*)numeroDePid);
@@ -186,11 +203,14 @@ void finalizarProc(t_header package)
 						,package.PID, pag->inicio,pag->paginas * contexto->tam_pagina);
 		//Actualizo lista paginas
 		list_remove_and_destroy_by_condition(lista_paginas, (void *)numeroDePid, (void *)pag_destroy);
+
+		return 1;
 	}
 	else
 	{
-		printf("Final Feliz, pagina no encontrada");
-		abort();
+		puts("Final feliz, pagina no encontrada");
+		log_error(logger, "No se encontro la pagina solicitada");
+		return 0;
 	}
 
 }
