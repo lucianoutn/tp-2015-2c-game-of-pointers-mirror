@@ -59,7 +59,7 @@ bool elNodoTienePidIgualA(int *);
 bool numeroDePaginaIgualA(int *);
 void iniciarEnCache(t_header, char*, char*); // INICIAR PROCESO EN TABLA TLB CON DIRECCION DE CACHE
 void iniciarEnMemReal(t_header *, t_list*, char*);
-void meConectoAlSwap(t_header *, char*);
+int meConectoAlSwap(t_header *, char*);
 bool tlbLlena(t_list *);
 void matarProceso(t_header *, t_list*);
 

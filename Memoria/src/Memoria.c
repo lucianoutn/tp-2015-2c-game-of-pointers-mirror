@@ -151,10 +151,9 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 
 
 
-
  t_header * package2 = package_create(1,4,0,2);
 
-  ejecutoInstruccion(package2, mensaje, memoria_real, TLB, tablaAdm);
+ ejecutoInstruccion(package2, mensaje, memoria_real, TLB, tablaAdm);
 
   if(status!= 0)
   {

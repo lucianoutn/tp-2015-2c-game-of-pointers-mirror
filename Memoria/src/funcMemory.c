@@ -46,7 +46,6 @@ void liberarMemoria(char * memoria_a_liberar)
  printf ("Memoria Liberada");
 }
 
-
 char * crear_tlb()
 {
  char * arreglo = (char *) malloc(4*3*sizeof(char*));
@@ -65,13 +64,21 @@ char * crear_tlb()
 
 void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memoria_real, t_list * TLB, t_list * tabla_adm)
 {
+	int flag;
 	switch (registro_prueba->type_ejecution)
 	 	{
 	 	case 0:
 			printf ("Se recibio orden de lectura\n");
-
-
-			meConectoAlSwap(registro_prueba, NULL);
+			char * contenido = malloc(sizeof(miContexto.tamanioMarco));
+			flag= meConectoAlSwap(registro_prueba, contenido);
+			if(flag)
+			{
+				//esta todo bien
+			}
+			else
+			{
+				//error
+			}
 	 		break;
 	 	case 1:
 			printf ("Se recibio orden de escritura\n");
@@ -115,12 +122,29 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 	*/
 	 			//printf("LA TABLA DE MEMORIA PRINCIPAL TIENE %d ELEMENTOS \n", tabla_mem_real->elements_count);
 	 			iniciarEnMemReal(registro_prueba, tabla_adm, memoria_real);
+	 			flag= meConectoAlSwap(registro_prueba, NULL);
+	 			if(flag)
+	 			{
+	 				//esta todo bien
+	 			}
+	 			else
+	 			{
+	 				//error
+	 			}
 	 	//	}
 	 		break;
 	 	case 3:
 			printf ("Se recibio orden de finalizacion de proceso :) \n");
 			matarProceso(registro_prueba, tabla_adm);
-
+			flag= meConectoAlSwap(registro_prueba, NULL);
+			if(flag)
+			{
+				//esta todo bien
+			}
+			else
+			{
+				//error
+			}
 			/*
 			numero_de_pid = registro_prueba->PID;
 			t_tlb * reg_tlb = list_find(TLB, elNodoTienePidIgualA);
@@ -137,7 +161,6 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			printf("LA TLB TIENE %d ELEMENTOS DESPUES DE DESTRUIR\n", TLB->elements_count);
 			//list_remove_by_condition(TLB, elNodoTienePidIgualA);
 			 */
-
 	 		break;
 	 	default:
 			printf ("El tipo de ejecucion recibido no es valido\n");
@@ -209,27 +232,34 @@ bool elNodoTienePidIgualA(int * pid_number)
 
 }
 
-void meConectoAlSwap(t_header * registro_prueba, char * mensaje)
+int meConectoAlSwap(t_header * registro_prueba, char * contenido)
 {
- int serverSocket;
+	int serverSocket;
+	int flag;
+	conexionAlServer(&serverSocket, miContexto.puertoCliente);
 
- conexionAlServer(&serverSocket, miContexto.puertoCliente);
+	printf("Conectado al servidor Swap\n. Bienvenido al sistema, ya puede enviar mensajes\n. Escriba 'exit' para salir\n");
 
- //int enviar = 1;
- //char message[PACKAGESIZE];
+	send(serverSocket, registro_prueba, sizeof(t_header), 0);
 
- printf("Conectado al servidor Swap\n. Bienvenido al sistema, ya puede enviar mensajes\n. Escriba 'exit' para salir\n");
+	/*
+	 * Una vez enviado el registro, recibo la notificación por parte del swap.
+  	 * 0 = Hubo un error.
+  	 * 1 = Todo ok.
+  	 */
+	recv(serverSocket, &flag, sizeof(int),0);
 
- //while(enviar)
- //{
-  //fgets(message, PACKAGESIZE, stdin);   // Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
-  //if (!strcmp(message,"exit\n")) enviar = 0;   // Chequeo que el usuario no quiera salir
-  //if (enviar) send(serverSocket, package, strlen(package) + 1, 0);  // Solo envio si el usuario no quiere salir.
-  send(serverSocket, registro_prueba, sizeof(t_header), 0);
-  //send(serverSocket, mensaje, strlen(mensaje), 0);
-  //enviar = 0;
- //}
- close(serverSocket);
+	if(flag) //si no hubo error
+	{
+		if(registro_prueba->type_ejecution==0) //si hice una lectura, devuelve la pag
+		{
+			recv(serverSocket, contenido, sizeof(miContexto.tamanioMarco),0);
+		}
+	}
+
+	close(serverSocket);
+
+ return flag;
 }
 
 bool numeroDePaginaIgualA(int * pagina_number)
