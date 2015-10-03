@@ -16,17 +16,17 @@ FILE* crearParticion() {
 	FILE *archivo;
 	char * comando = malloc(200);
 
-	strcpy(comando,"dd if=/home/utnso/workspace/tp-2015-2c-game-of-pointers/Swap/");
+	strcpy(comando,"dd if=/home/utnso/git/tp-2015-2c-game-of-pointers/Swap/");
 	strcat(comando, contexto->nombre);
-	strcat(comando," of=/home/utnso/workspace/tp-2015-2c-game-of-pointers/Swap/aux.txt");
+	strcat(comando," of=/home/utnso/git/tp-2015-2c-game-of-pointers/Swap/aux.txt");
 	strcat(comando, " bs=");
 	strcat(comando,  string_itoa(contexto->tam_pagina));
 	strcat(comando, " count=");
 	strcat(comando,  string_itoa(contexto->cant_paginas));
 	system(comando);
 
-	strcpy(comando,"dd if=/home/utnso/workspace/tp-2015-2c-game-of-pointers/Swap/aux.txt");
-	strcat(comando," of=/home/utnso/workspace/tp-2015-2c-game-of-pointers/Swap/");
+	strcpy(comando,"dd if=/home/utnso/git/tp-2015-2c-game-of-pointers/Swap/aux.txt");
+	strcat(comando," of=/home/utnso/git/tp-2015-2c-game-of-pointers/Swap/");
 	strcat(comando, contexto->nombre);
 	strcat(comando, " bs=");
 	strcat(comando,  string_itoa(contexto->tam_pagina));
@@ -34,7 +34,7 @@ FILE* crearParticion() {
 	strcat(comando,  string_itoa(contexto->cant_paginas));
 	system(comando);
 
-	system("rm /home/utnso/workspace/tp-2015-2c-game-of-pointers/Swap/aux.txt");
+	system("rm /home/utnso/git/tp-2015-2c-game-of-pointers/Swap/aux.txt");
 
 	archivo = fopen(contexto->nombre, "rb+");
 	if (archivo)
@@ -146,7 +146,8 @@ int escribirSwap(t_header package, int socketCliente)
 	{
 		fseek(archivo,pag->inicio + ((package.pagina_proceso) * contexto->tam_pagina),SEEK_SET);
 		fwrite(mensaje, strlen(mensaje) + 1, 1, archivo);
-
+		log_info(logger, "Se recibio orden de escritura: PID: %d Byte Inicial: %d Contenido: %s"
+										,package.PID, pag->inicio+(package.pagina_proceso * contexto->tam_pagina),mensaje);
 		//Relleno pagina
 		int relleno= pag->inicio + strlen(mensaje) + 1;
 		int final_pagina= pag->inicio+((package.pagina_proceso + 1) * contexto->tam_pagina);
