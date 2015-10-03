@@ -23,7 +23,7 @@ char* leerInstruccion(FILE *fd)
 		buffer= (char*)realloc(buffer, (I+1)*sizeof(char)); //solicito mas espacio en la memoria para buffer
 		c=fgetc(fd);
 	}
-
+	buffer[I]='\0';
 	return buffer;
 }
 
