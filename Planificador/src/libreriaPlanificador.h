@@ -36,7 +36,7 @@ typedef struct PCB {
 	unsigned int numInstrucciones;
 	int prioridad;
 	int permisos;
-	const char *ruta;
+	char * ruta;
 }t_pcb;
 
 
@@ -49,7 +49,14 @@ typedef struct{
 
 typedef struct MSJ {
 	t_headcpu headMSJ;
-	t_pcb * pcbMSJ;
+	int PID;
+	//estado del proceso
+	unsigned int instructionPointer;
+	unsigned int numInstrucciones;
+	int prioridad;
+	int permisos;
+	char ruta[20];
+	//t_pcb  pcbMSJ;
 }t_msj;
 
 typedef struct{
@@ -86,7 +93,7 @@ t_pcb desencolar (t_pcb *cabecera);
 
 //inicio consola
 
-void procesarPCB (t_queue *, char *, int);
+void procesarPCB (t_queue*, char *, int);
 
 int consola (t_queue *);
 

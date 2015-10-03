@@ -16,11 +16,11 @@ void *escuchar (struct Conexiones* conexion){
 	{
 		//guarda las nuevas conexiones para acceder a ellas desde cualquier parte del codigo
 		conexion->CPU[i] = accept(conexion->socket_escucha, (struct sockaddr *) &conexion->direccion, &conexion->tamanio_direccion);
-		sem_post(&semEsperaCPU); //avisa que hay 1 CPU disponible
 		if(conexion->CPU[i]==-1)
 		{
 			perror("ACCEPT");	//control error
 		}
+		sem_post(&semEsperaCPU); //avisa que hay 1 CPU disponible
 		puts("NUEVO HILO ESCUCHA!\n");
 		i++;
 	}

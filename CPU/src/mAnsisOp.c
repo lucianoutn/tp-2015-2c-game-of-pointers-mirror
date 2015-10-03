@@ -16,7 +16,7 @@ char* leerInstruccion(FILE *fd)
 	{
 		return "fin";
 	}
-	while(c!='\n')
+	while(c!='\n' && c!=EOF) //agrego EOF sino no sale nunca salvo q despues del finalizar hayan hecho un ENTER
 	{
 		buffer[I]=c;
 		I++;
@@ -29,7 +29,9 @@ char* leerInstruccion(FILE *fd)
 
 char** leermCod(const char* ruta, int num)
 {
+	//El archivo tiene q estar en la ruta blahblah/CPU/archivo.algo
 	FILE *fd = fopen(ruta,"r"); //abro el archivo mCod
+	if(fd == NULL) printf("Error al abrir el mCod. Path: %s.\n",ruta);
 	char **instruccion= (char**)malloc(sizeof(char*)); //solicito espacio en la memoria para el buffer
 	num=0;
 	while(!feof(fd))
@@ -43,7 +45,6 @@ char** leermCod(const char* ruta, int num)
 		num+=1;
 		instruccion= (char**)realloc(instruccion, (num+1)*sizeof(char*)); //solicito mas espacio en la memoria para buffer
 	}
-
 	return instruccion;
 }
 

@@ -107,7 +107,7 @@ void traigoContexto()
  miContexto.algoritmoPlanificacion = config_get_string_value(config_planificador, "ALGORITMO_PLANIFICACION" );
 }
 
-void procesarPCB(t_queue * cola_ready, char * path, int socketCPU)
+void procesarPCB(t_queue* cola_ready, char * path, int socketCPU)
 {
 	CPUenUso=true;
 	/*enviar(PCB) a la CPU
@@ -115,29 +115,44 @@ void procesarPCB(t_queue * cola_ready, char * path, int socketCPU)
 	 *recibe respuesta de la CPU loguea y termina
 	 */
 
-	t_pcb * pcb;
-	//armo pcb
-	pcb->PID = max_PID +1;
+	//inicializo las variables y reservo memoria (hay que ver donde hacer los free)
+	t_msj msj;
+	t_pcb* pcb = malloc(sizeof(t_pcb));
+	pcb->ruta = malloc(20);
+
+	//header
+	msj.headMSJ.tipo_ejecucion = 1;
+	//tamaño a recibir igual tamaño total del msj menos el header que lo recibe de una
+	msj.headMSJ.tamanio_msj = (sizeof(t_msj) - sizeof(t_headcpu));
+
+	//copio el path
+	int x;
+	for (x = 0; x < 20; x++) {
+		msj.ruta[x] = path[x];
+		pcb->ruta[x] = path[x];
+	}
+
+	//armo PCB y msj para enviar al CPU
 	pcb->instructionPointer = 0;
+	msj.instructionPointer = pcb->instructionPointer;
 	pcb->numInstrucciones = 0;
+	msj.numInstrucciones = pcb->numInstrucciones;
 	pcb->prioridad=0;
+	msj.prioridad = pcb->prioridad;
 	pcb->permisos=0;
-	pcb->ruta = path;
+	msj.permisos = pcb->permisos;
+	pcb->PID = max_PID +1;
+	msj.PID = pcb->PID;
 	max_PID = pcb->PID;
+
+	//encolo a la cola de ready
+	//queue_push(cola_ready, &pcb);
+	//le envio a la CPU el t_headcpu y el PCB
 
 	CPUenUso=false;
 
-	//encolo a la cola de ready
-	queue_push(cola_ready, pcb);
-	//le envio a la CPU el t_headcpu y el PCB
-
-	t_msj msj;
-	msj.headMSJ.tipo_ejecucion = 1;
-	msj.headMSJ.tamanio_msj = sizeof(t_pcb);
-	msj.pcbMSJ = pcb;
 	send(socketCPU, &msj,sizeof(t_msj),0);
 	puts("Mensaje enviado\n");
-
 }
 
 
@@ -151,7 +166,6 @@ int consola (t_queue * cola_ready)
 	t_msj msj;
 	CPUenUso=false;
 	pthread_t hCPU1;
-
 	//muestra cartel de consola
 	system("clear");
 	printf("_____________________________________________________________________________________________\n");
@@ -240,7 +254,7 @@ void iniciarPlanificador(t_queue* cola_ready)
 	int enviar =1 ;
 	int cpuElegida;
 	int socketCPU = conexiones.CPU[0];
-	char * message=malloc(150);
+	char* message=malloc(20);
 	//t_pcb *PCB=(t_pcb*)malloc(sizeof(t_pcb));
 	//PCB->ruta=path;
 	// encolar(inicio, PCB);
@@ -270,7 +284,7 @@ void iniciarPlanificador(t_queue* cola_ready)
 		while(enviar)
 		{
 			fflush(stdin);
-			fgets(message, 150, stdin);			// Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
+			fgets(message, 20, stdin);			// Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
 			if (!strcmp(message,"cpu\n"))
 			{
 				primeraVez = 0;
@@ -300,12 +314,13 @@ void iniciarPlanificador(t_queue* cola_ready)
 			if (!strcmp(string_substring(message,0,7),"correr "))
 			{
 				primeraVez=1;
-				char * path= malloc(143);
+				char * path = malloc(20);
 				//Tomo el path
 				path = string_substring_from(message, 7); //inclye el \n
 				//PROCESO EL PCB
 				procesarPCB(cola_ready, path,socketCPU);
-
+				puts("PCB Procesado\n");
+				//sem_wait(&semSalir); //es para pruebas
 				free(path);
 				break;
 			}
