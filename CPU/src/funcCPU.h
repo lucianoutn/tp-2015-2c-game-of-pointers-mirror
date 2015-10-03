@@ -36,9 +36,20 @@ typedef struct PCB {
 	unsigned int numInstrucciones;
 	int prioridad;
 	int permisos;
-	const char *ruta;
+	char* ruta;
 	struct PCB *sig;
 }t_pcb;
+
+typedef struct MSJ {
+	int PID;
+	//estado del proceso
+	unsigned int instructionPointer;
+	unsigned int numInstrucciones;
+	int prioridad;
+	int permisos;
+	char ruta[20];
+	struct PCB *sig;
+}t_msjRecibido;
 
 
 //Protocolo de envio Planificador -> CPU
