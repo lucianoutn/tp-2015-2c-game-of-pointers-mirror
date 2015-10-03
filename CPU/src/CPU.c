@@ -29,6 +29,8 @@ int main()
 	puts("!!!CPU!!"); /* prints !!!CPU!! */
 
 	traigoContexto();
+	creoLogger();
+	log_info(logger, "Inicio Log CPU", NULL);
 
 	pthread_mutex_init(&mutex, NULL); //inicializo semaforo.lucho
 	semSalir.__align =0;

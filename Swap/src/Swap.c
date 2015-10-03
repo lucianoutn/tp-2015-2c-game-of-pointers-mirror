@@ -28,6 +28,7 @@ int main()
 	//-------Contexto--------------------------//
 	traigoContexto();
 	creoLogger();
+	log_info(logger, "Inicio Log SWAP", NULL);
 	//------Fin Contexto----------------------//
 
 	//Creo particion y listas

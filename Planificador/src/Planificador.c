@@ -19,6 +19,8 @@ int main() {
 
 
 	traigoContexto(); //levanta el archivo de configuracion
+	creoLogger();
+	log_info(logger, "Inicio Log PLANIFICADOR", NULL);
 
 	/*
 	 * Funcion que crea un socket nuevo y lo prepara para escuchar conexiones entrantes a travez del puerto PUERTO

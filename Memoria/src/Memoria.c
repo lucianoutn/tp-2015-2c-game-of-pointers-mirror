@@ -31,7 +31,7 @@ int main()
 {
  traigoContexto();
  creoLogger();
-
+ log_info(logger, "Inicio Log MEMORIA", NULL);
  // RESERVO ESPACIO PARA LA MEMORIA REAL /
  int tamanio_memoria_real = miContexto.tamanioMarco * miContexto.cantidadMarcos;
  char * memoria_real = reservarMemoria(tamanio_memoria_real);
