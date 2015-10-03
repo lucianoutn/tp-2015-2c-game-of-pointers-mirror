@@ -60,4 +60,10 @@ void iniciaCPU();
 
 void creoHeader(t_pcb *, t_header*);
 
+//Funcion que permite verificar el tipo de cada instruccion del mCod
+char* interpretarIntruccion(char* instruccion);
+
+//Funcion que le asigna un valor numerico a cada tipo de instruccion
+int compararPalabra(char *palabra);
+
 #endif /* FUNCCPU_H_ */

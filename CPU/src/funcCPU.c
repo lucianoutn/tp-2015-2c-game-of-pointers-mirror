@@ -39,3 +39,48 @@ void creoHeader(t_pcb * pcb, t_header* header)
 	header->type_ejecution = 1; //prueba
 	//ARMO HEADER SEGUN PROTOCOLO
 }
+
+
+
+int compararPalabra(char *palabra)
+{
+	int valor;
+	if(strcmp(palabra,"iniciar")==0)
+	{
+		valor=0;
+	}
+	else if (strcmp(palabra,"leer")==0)
+	{
+		valor=1;
+	}
+	else if (strcmp(palabra,"escribir")==0)
+	{
+		valor=2;
+	}
+	else if (strcmp(palabra,"entrada-salida")==0)
+	{
+		valor=3;
+	}
+	else if (strcmp(palabra,"finalizar")==0)
+	{
+		valor=4;
+	}
+	else
+	{
+		puts("instruccion no valida");
+	}
+	return valor;
+}
+
+char* interpretarIntruccion(char* instruccion)
+{
+	int I=0;
+	char *palabra=(char*)malloc(sizeof(char));
+	while(instruccion[I]!=32)
+	{
+		palabra[I]=instruccion[I];
+		I++;
+		palabra=(char*)realloc(palabra, (I+1)*sizeof(char));
+	}
+	return palabra;
+}

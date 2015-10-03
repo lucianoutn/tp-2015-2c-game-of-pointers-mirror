@@ -20,5 +20,9 @@
 #include <SharedLibs/manejoListas.h>
 #include <commons/config.h>
 #include <semaphore.h>
+#include "mAnsisOp.h"
+
+typedef int pid;
+pid PID_actual;
 
 #endif /* CPU_H_ */

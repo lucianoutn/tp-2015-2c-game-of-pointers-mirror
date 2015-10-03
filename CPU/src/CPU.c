@@ -83,7 +83,7 @@ void iniciaCPU(){
 
 	//Recepcion de instrucciones
 
-	t_pcb * pcb=malloc(sizeof(t_pcb));
+	t_pcb * PCB=malloc(sizeof(t_pcb));
 	int status=1;		// Estructura que manjea el status de los recieve.
 	printf("CPU ID: %d conectada. Esperando instrucciones:\n", (pthread_t)id);
 
@@ -104,11 +104,43 @@ void iniciaCPU(){
 				sem_post(&semSalir);
 				break;
 			case 1:
-				status = recv(socketPlanificador, pcb, headcpu->tamanio_msj, 0);
+				status = recv(socketPlanificador, PCB, headcpu->tamanio_msj, 0);
+				//pcb.PID=PID_actual
+				PCB->instructionPointer=0;//inicializo el puntero de intruccion
+				//reservo espacio en la memoria para guardar todas las instrucciones del archivo mCod
+				char **instrucciones= (char**)malloc(sizeof(leermCod(PCB->ruta, PCB->numInstrucciones)));
+				//guardo las intrucciones
+				instrucciones = (leermCod(PCB->ruta, PCB->numInstrucciones));
+				//ciclo que envia instruccion por instruccion
+				while(strcmp(instrucciones[PCB->instructionPointer], "fin"))
+				{
+					//Switch que verifica el tipo de cada instruccion
+					switch(compararPalabra(interpretarIntruccion(instrucciones[PCB->instructionPointer])))
+					{
+						case 0://iniciar
+						{
+
+						}
+						case 1: //leer
+						{
+
+						}
+						case 4: //finalizar
+						{
+
+						}
+						default:
+						{
+
+						}
+					}
+				PCB->instructionPointer	++;
+				}
+
 				if (status != 0)
 				{
 					puts("Recibi PCB\n");
-					creoHeader(pcb,header);
+					creoHeader(PCB,header);
 					send(socketMemoria, header, sizeof(t_header), 0);
 				}break;
 			default:
