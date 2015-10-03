@@ -16,10 +16,12 @@
  * Al igual que los semaforos que vamos a utilizar para sincronizacion
  * A.
  */
+#include <unistd.h>
 
 t_log* logger;
 
-
+char* cwd();
 
 void creoLogger();
+
 #endif /* SHAREDLIBS_COMUN_H_ */

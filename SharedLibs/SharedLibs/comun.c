@@ -25,3 +25,8 @@ void creoLogger()
 
 }
 
+char* cwd(){		// devuelve el current working dir para usar rutas relativas
+	char *cwd = getcwd(NULL,0);
+return cwd;
+}
+
