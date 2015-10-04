@@ -30,16 +30,14 @@ void traigoContexto()
 }
 
 
-void creoHeader(t_pcb * pcb, t_header* header)
+void creoHeader(t_pcb * pcb, t_header* header, int ejecucion, int pagina)
 {
-	/*//LEO INSTRUCCION DEL ARCHIVO
+	//LEO INSTRUCCION DEL ARCHIVO
 	header->PID = pcb->PID;
-	header->pagina_proceso = 0;
+	header->pagina_proceso = pagina;
 	header->tamanio_msj = 0;
-	header->type_ejecution =
+	header->type_ejecution = ejecucion;
 	//ARMO HEADER SEGUN PROTOCOLO
-	 *
-	 */
 }
 
 int compararPalabra(char *palabra)

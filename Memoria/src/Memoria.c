@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <commons/config.h>
 #include <SharedLibs/sockets.h>
+#include <SharedLibs/manejoListas.h>
 #include "funcMemory.h"
 #include <errno.h>
 
@@ -63,15 +64,18 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 {
 	printf("RECIBO DEL CPU \n");
 
- int listenningSocket, socketCliente, resultadoSelect;
- fd_set readset;
- t_header * package = malloc(sizeof(t_header));
- char * mensaje;
- int status = 1;
+	int listenningSocket, socketCliente, resultadoSelect, serverSocket;
+ 	fd_set readset;
+ 	t_header * package = malloc(sizeof(t_header));
+ 	char * mensaje;
+ 	int status = 1;
 
-  conexionAlCliente(&listenningSocket, &socketCliente, miContexto.puertoServidor);
-  printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
-  printf("El socket de conexión con el CPU es %d\n", socketCliente);
+	conexionAlServer(&serverSocket, miContexto.puertoCliente);
+	printf("Conectado al servidor Swap\n. Bienvenido al sistema, ya puede enviar mensajes\n.");
+
+	conexionAlCliente(&listenningSocket, &socketCliente, miContexto.puertoServidor);
+	printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
+	printf("El socket de conexión con el CPU es %d\n", socketCliente);
 
 
   /* SELECT */
@@ -144,11 +148,11 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
   while(status!=0)
   {
 	  //sem_wait(sem_1);
-	  puts ("WHILE");
+	  //puts ("WHILE");
 	  status = recv(socketCliente, package, sizeof(t_header), 0);
-	  puts ("RCV");
+	  //puts ("RCV");
 	  //package->type_ejecution = 1;
-	  printf ("EL TIPO DE EJECUCION RECIBIDO %d \n", package->type_ejecution);
+	  printf ("RECIBI EJECUCION TIPO: %d \n", package->type_ejecution);
 	  /*
 	  if(package.tamanio_msj!=0)
 	  {
@@ -157,7 +161,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	  }
 	   */
 
-	  ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCliente);
+	  ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCliente, serverSocket);
 
 
 /*
@@ -183,8 +187,8 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 
   //meConectoAlSwap(package,mensaje);
 
- //close(listenningSocket);
- //close(socketCliente);
- //close(serverSocket); //SWAP
+ close(listenningSocket);
+ close(socketCliente);
+ close(serverSocket); //SWAP
 
  }

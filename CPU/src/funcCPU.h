@@ -69,7 +69,7 @@ void traigoContexto();
 
 void iniciaCPU();
 
-void creoHeader(t_pcb *, t_header*);
+void creoHeader(t_pcb *, t_header*,int,int);
 
 //Funcion que permite verificar el tipo de cada instruccion del mCod
 char* interpretarIntruccion(char* instruccion);

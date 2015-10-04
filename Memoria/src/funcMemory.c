@@ -62,7 +62,7 @@ char * crear_tlb()
 
 }
 
-void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memoria_real, t_list * TLB, t_list * tabla_adm, int socketCliente)
+void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memoria_real, t_list * TLB, t_list * tabla_adm, int socketCliente,int serverSocket)
 {
 	int flag;
 	switch (registro_prueba->type_ejecution)
@@ -70,10 +70,13 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 	case 0:
 			printf ("Se recibio orden de lectura\n");
 			char * contenido = malloc(sizeof(miContexto.tamanioMarco));
-			flag= meConectoAlSwap(registro_prueba, contenido);
+			flag= meConectoAlSwap(serverSocket,registro_prueba, contenido);
 			if(flag)
 			{
- 				puts ("FLAG OK");
+ 				//puts ("FLAG OK");
+ 				printf("Leida pagina n°: %d \n", registro_prueba->pagina_proceso);
+ 				bool recibi = true;				//Mejorar mas adelante
+ 				send(socketCliente,&recibi,sizeof(bool),0);
 				log_info(logger, "Se hizo conexion con swap, se envio paquete a leer y este fue recibido correctamente");
 				/* Como la transferencia con el swap fue exitosa, le envio la pagina al CPU
 				send(socketCliente,contenido,sizeof(miContexto.tamanioMarco),0);
@@ -82,6 +85,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			else
 			{
  				puts ("FLAG NO OK");
+ 				bool recibi = false;			//Mejorar
+ 				send(socketCliente,&recibi,sizeof(bool),0);
 				log_error(logger, "Hubo un problema con la conexion/envio al swap");
 			}
 	 		break;
@@ -128,14 +133,19 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 			//printf("LA TABLA DE MEMORIA PRINCIPAL TIENE %d ELEMENTOS \n", tabla_mem_real->elements_count);
 	 		/* SI LA MEMORIA TIENE MARCOD, SE MANDA A INICIAR A MEMORIA, SINO SE MANDA DIRECO AL SWAP (CHECKPOINT)*/
 	 		if ( miContexto.cantidadMarcos != 0)
+	 		{
 	 			iniciarEnMemReal(registro_prueba, tabla_adm, memoria_real);
+				bool recibi = true;
+				send(socketCliente,&recibi,sizeof(bool),0);
+	 		}
 	 		else
 	 		{
-	 			printf("Tamanio %d \n", registro_prueba->tamanio_msj);
-	 			flag= meConectoAlSwap(registro_prueba, NULL);
+	 			//printf("Iniciar pagina n°: %d \n", registro_prueba->pagina_proceso);
+	 			flag= meConectoAlSwap(serverSocket,registro_prueba, NULL);
 	 			if(flag)
 	 			{
-	 				puts ("FLAG OK");
+	 				printf("Iniciada pagina n°: %d \n", registro_prueba->pagina_proceso);
+	 				//puts ("FLAG OK");
 	 				bool recibi = true;
 	 				send(socketCliente,&recibi,sizeof(bool),0);
 	 				log_info(logger, "Se hizo conexion con swap, se envio proceso a iniciar y este fue recibido correctamente");
@@ -143,6 +153,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 			else
 	 			{
 	 				puts ("FLAG NO OK");
+	 				bool recibi = false;			//Mejorar
+	 				send(socketCliente,&recibi,sizeof(bool),0);
 					log_error(logger, "Hubo un problema con la conexion/envio al swap");
 	 			}
 	 		}
@@ -150,15 +162,19 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 	case 3:
 			printf ("Se recibio orden de finalizacion de proceso :) \n");
 			matarProceso(registro_prueba, tabla_adm);
-			flag= meConectoAlSwap(registro_prueba, NULL);
+			flag= meConectoAlSwap(serverSocket,registro_prueba, NULL);
 			if(flag)
 			{
  				puts ("FLAG OK");
+ 				bool recibi = true;			//Mejorar
+ 				send(socketCliente,&recibi,sizeof(bool),0);
 				log_info(logger, "Se hizo conexion con swap, se envio proceso a matar y este fue recibido correctamente");
 			}
 			else
 			{
  				puts ("FLAG NO OK");
+ 				bool recibi = false;			//Mejorar
+ 				send(socketCliente,&recibi,sizeof(bool),0);
 				log_error(logger, "Hubo un problema con la conexion/envio al swap");
 			}
 			/*
@@ -188,7 +204,7 @@ void iniciarEnCache(t_header registro_prueba, char * TLB, char * memoria_cache)
 {
  int cant_paginas = registro_prueba.pagina_proceso;
  int x = 0, bytes = 0, a = 0;
- printf ("CANTIDAD DE PAGINAS: %d \n", cant_paginas);
+ printf ("CANTIDAD DE PAGINAS EN CACHE: %d \n", cant_paginas);
  // MIENTRAS HAYA PAGINAS DEL PROCESO PARA INICIAR /
  while (x != cant_paginas)
  {
@@ -208,7 +224,7 @@ void iniciarEnMemReal(t_header * proceso_entrante, t_list * tabla_adm, char * me
 {
  int cant_paginas = proceso_entrante->pagina_proceso;
  int x = 0, a = 0;
- printf ("CANTIDAD DE PAGINAS: %d \n", cant_paginas);
+ printf ("CANTIDAD DE PAGINAS EN MEMORIA REAL: %d \n", cant_paginas);
  t_list * lista_proceso = crearListaProceso();
  // MIENTRAS HAYA PAGINAS DEL PROCESO PARA INICIAR /
  while (x != cant_paginas)
@@ -248,13 +264,9 @@ bool elNodoTienePidIgualA(int * pid_number)
 
 }
 
-int meConectoAlSwap(t_header * registro_prueba, char * contenido)
+int meConectoAlSwap(int serverSocket, t_header * registro_prueba, char * contenido)
 {
-	int serverSocket;
 	int flag;
-	conexionAlServer(&serverSocket, miContexto.puertoCliente);
-
-	printf("Conectado al servidor Swap\n. Bienvenido al sistema, ya puede enviar mensajes\n. Escriba 'exit' para salir\n");
 
 	send(serverSocket, registro_prueba, sizeof(t_header), 0);
 
@@ -272,8 +284,6 @@ int meConectoAlSwap(t_header * registro_prueba, char * contenido)
 			recv(serverSocket, contenido, sizeof(miContexto.tamanioMarco),0);
 		}
 	}
-
-	close(serverSocket);
 
  return flag;
 }

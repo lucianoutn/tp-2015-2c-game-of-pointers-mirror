@@ -195,8 +195,9 @@ int inicializarProc(t_header * package) {
 
 int finalizarProc(t_header* package)
 {
+
 	//Actualizo lista huecos
-	t_pag * pag = list_find(lista_paginas, (void*)numeroDePid);
+	t_pag * pag = list_find(lista_paginas, (void*)numeroDePid(package->PID));
 
 	if(pag!= NULL)
 	{
