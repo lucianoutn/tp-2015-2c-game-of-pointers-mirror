@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <commons/config.h>
 #include <SharedLibs/sockets.h>
+#include <SharedLibs/manejoListas.h>
 #include "funcMemory.h"
 #include <errno.h>
 
@@ -49,7 +50,7 @@ int main()
    TLB = crearListaTlb();
    printf ("La TLB esta habilitada \n");
    int tamanio_memoria_cache = miContexto.tamanioMarco * 4;
-   t_list * TLB = crearListaTlb();
+   //t_list * TLB = crearListaTlb();
   }
 
   reciboDelCpu(&memoria_real, TLB, tablaAdm);
@@ -63,18 +64,18 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 {
 	printf("RECIBO DEL CPU \n");
 
- int listenningSocket, socketCliente, resultadoSelect;
- fd_set readset;
- t_header * package;
- char * mensaje;
- int status = 1;
+	int listenningSocket, socketCliente, resultadoSelect, serverSocket;
+ 	fd_set readset;
+ 	t_header * package = malloc(sizeof(t_header));
+ 	char * mensaje;
+ 	int status = 1;
 
+	conexionAlServer(&serverSocket, miContexto.puertoCliente);
+	printf("Conectado al servidor Swap\n. Bienvenido al sistema, ya puede enviar mensajes\n.");
 
- /* COMENTADO PARA PROBAR TRANSFERENCIAS CORRECTAS CON EL SWAP
-  conexionAlCliente(&listenningSocket, &socketCliente, miContexto.puertoServidor);
-  printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
-  printf("El socket de conexión con el CPU es %d\n", socketCliente);
-    FIN COMENTADO DE PRUEBAS */
+	conexionAlCliente(&listenningSocket, &socketCliente, miContexto.puertoServidor);
+	printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
+	printf("El socket de conexión con el CPU es %d\n", socketCliente);
 
 
   /* SELECT */
@@ -143,19 +144,27 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
   int serverSocket;
   conexionAlServer(&serverSocket, miContexto.puertoCliente);
    //FIN SWAP
+    */
   while(status!=0)
   {
 	  //sem_wait(sem_1);
-	  status = recv(socketCliente, &package, sizeof(t_header), 0);
+	  //puts ("WHILE");
+	  status = recv(socketCliente, package, sizeof(t_header), 0);
+	  //puts ("RCV");
+	  //package->type_ejecution = 1;
+	  printf ("RECIBI EJECUCION TIPO: %d \n", package->type_ejecution);
+	  /*
 	  if(package.tamanio_msj!=0)
 	  {
 		  mensaje = malloc(package.tamanio_msj);
 		  status = recv(socketCliente, mensaje, package.tamanio_msj,0);
 	  }
-*/
+	   */
+
+	  ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCliente, serverSocket);
 
 
-
+/*
  t_header * package2 = package_create(1,4,0,2);
 
  ejecutoInstruccion(package2, mensaje, memoria_real, TLB, tablaAdm, socketCliente);
@@ -163,7 +172,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 
   if(status!= 0)
   {
-
+*/
 
 		  //send(serverSocket, &package, sizeof(t_header), 0);
 /*
@@ -178,8 +187,8 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 
   //meConectoAlSwap(package,mensaje);
 
- //close(listenningSocket);
- //close(socketCliente);
- //close(serverSocket); //SWAP
+ close(listenningSocket);
+ close(socketCliente);
+ close(serverSocket); //SWAP
 
  }

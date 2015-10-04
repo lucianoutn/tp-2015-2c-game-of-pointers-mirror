@@ -47,17 +47,17 @@ int main()
 void reciboDelAdminMem()
 {
   int listenningSocket,socketCliente;
-  t_header package;
+  t_header * package = malloc(sizeof(t_header));
   int status = 2; // Estructura que maneja el status de los receive.
 
   conexionAlCliente(&listenningSocket, &socketCliente,contexto->puerto);
   printf("Cliente conectado. Esperando mensajes:\n");
 
 
-  while(status!=0)
+  while(status>0)
   //Una vez conectado el cliente..
   {
-	  status = recv(socketCliente, &package, sizeof(t_header), 0);
+	  status = recv(socketCliente, package, sizeof(t_header), 0);
 	  //Recibido el paquete lo proceso..
 	  if(status > 0){
 		  analizoPaquete(package,socketCliente);

@@ -77,10 +77,10 @@ void traigoContexto() {
 	free(config_swap);
 }
 
-void analizoPaquete(t_header package, int socketCliente) {
-	global = &package;
+void analizoPaquete(t_header * package, int socketCliente) {
+	global = package;
 	int status=0;
-	switch (package.type_ejecution)
+	switch (package->type_ejecution)
 	{
 	case 0:
 		printf("Se recibio orden de lectura\n");
@@ -118,15 +118,15 @@ void analizoPaquete(t_header package, int socketCliente) {
 	}
 }
 
-void leerSwap(t_header package,char * contenido)
+void leerSwap(t_header *package,char * contenido)
 {
 	t_pag * pag = list_find(lista_paginas, (void *)numeroDePid);
 	if(pag!=NULL)
 	{
-		fseek(archivo,pag->inicio + (package.pagina_proceso * contexto->tam_pagina),SEEK_SET);
+		fseek(archivo,pag->inicio + (package->pagina_proceso * contexto->tam_pagina),SEEK_SET);
 		fread(contenido, contexto->tam_pagina, 1, archivo);
 		log_info(logger, "Se recibio orden de lectura: PID: %d Byte Inicial: %d Contenido: %s"
-								,package.PID, pag->inicio+(package.pagina_proceso * contexto->tam_pagina),contenido);
+								,package->PID, pag->inicio+(package->pagina_proceso * contexto->tam_pagina),contenido);
 	}
 	else
 	{
@@ -135,22 +135,22 @@ void leerSwap(t_header package,char * contenido)
 		log_error(logger, "No se encontro la pagina solicitada");
 	}
 }
-int escribirSwap(t_header package, int socketCliente)
+int escribirSwap(t_header * package, int socketCliente)
 {
-	char * mensaje = malloc(package.tamanio_msj);
+	char * mensaje = malloc(package->tamanio_msj);
 	strcpy(mensaje,"hola\0");
 	//status = recv(socketCliente, mensaje, package.tamanio_msj, 0);
 	t_pag * pag = list_find(lista_paginas, (void *)numeroDePid);
 
 	if(pag!= NULL)
 	{
-		fseek(archivo,pag->inicio + ((package.pagina_proceso) * contexto->tam_pagina),SEEK_SET);
+		fseek(archivo,pag->inicio + ((package->pagina_proceso) * contexto->tam_pagina),SEEK_SET);
 		fwrite(mensaje, strlen(mensaje) + 1, 1, archivo);
 		log_info(logger, "Se recibio orden de escritura: PID: %d Byte Inicial: %d Contenido: %s"
 										,package.PID, pag->inicio+(package.pagina_proceso * contexto->tam_pagina),mensaje);
 		//Relleno pagina
 		int relleno= pag->inicio + strlen(mensaje) + 1;
-		int final_pagina= pag->inicio+((package.pagina_proceso + 1) * contexto->tam_pagina);
+		int final_pagina= pag->inicio+((package->pagina_proceso + 1) * contexto->tam_pagina);
 
 		for(;relleno<=final_pagina;relleno++)
 		{
@@ -171,17 +171,19 @@ int escribirSwap(t_header package, int socketCliente)
 
 }
 
-int inicializarProc(t_header package) {
-	t_hueco * hueco = buscarHueco(package.pagina_proceso);
+int inicializarProc(t_header * package) {
+
+	t_hueco * hueco = buscarHueco(package->tamanio_msj);
+
 	if (hueco != NULL)
 	{
 		//Inicializo
-		list_add(lista_paginas,pag_create(package.PID, hueco->inicio, package.pagina_proceso));
+		list_add(lista_paginas,pag_create(package->PID, hueco->inicio, package->pagina_proceso));
 		log_info(logger, "Se recibio orden de inicializacion: PID: %d Inicio: %d Bytes: %d"
-				,package.PID, hueco->inicio,package.pagina_proceso * contexto->tam_pagina);
+				,package->PID, hueco->inicio,package->pagina_proceso * contexto->tam_pagina);
 		//rellenarParticion(hueco->inicio, package.pagina_proceso);
 		//Actualizo huecos
-		hueco->inicio = hueco->inicio + (package.pagina_proceso * contexto->tam_pagina);
+		hueco->inicio = hueco->inicio + (package->pagina_proceso * contexto->tam_pagina);
 		return 1;
 
 	} else {
@@ -192,16 +194,17 @@ int inicializarProc(t_header package) {
 
 }
 
-int finalizarProc(t_header package)
+int finalizarProc(t_header* package)
 {
+
 	//Actualizo lista huecos
-	t_pag * pag = list_find(lista_paginas, (void*)numeroDePid);
+	t_pag * pag = list_find(lista_paginas, (void*)numeroDePid(package->PID));
 
 	if(pag!= NULL)
 	{
 		list_add(lista_huecos, hueco_create(pag->inicio, pag->paginas));
 		log_info(logger, "Se recibio orden de finalizacion: PID: %d Inicio: %d Bytes: %d"
-						,package.PID, pag->inicio,pag->paginas * contexto->tam_pagina);
+						,package->PID, pag->inicio,pag->paginas * contexto->tam_pagina);
 		//Actualizo lista paginas
 		list_remove_and_destroy_by_condition(lista_paginas, (void *)numeroDePid, (void *)pag_destroy);
 
@@ -228,7 +231,7 @@ t_hueco* buscarHueco(int tamanio) {
 		t_hueco * hueco = list_get(lista_huecos, i);
 		if (hueco->paginas >= tamanio)
 		{
-			status = 0;
+			status = 1;
 			return hueco;
 		}
 		i++;

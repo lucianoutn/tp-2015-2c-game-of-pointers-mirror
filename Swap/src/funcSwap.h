@@ -49,15 +49,15 @@ void traigoContexto();
 
 char * numero_de_pagina(char *);
 
-void analizoPaquete(t_header, int );
+void analizoPaquete(t_header *, int );
 
-void leerSwap(t_header,char *);
+void leerSwap(t_header*,char *);
 
-int escribirSwap(t_header, int);
+int escribirSwap(t_header*, int);
 
-int inicializarProc(t_header);
+int inicializarProc(t_header*);
 
-int finalizarProc(t_header);
+int finalizarProc(t_header*);
 
 void rellenarParticion(int, int);
 

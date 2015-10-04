@@ -30,40 +30,38 @@ void traigoContexto()
 }
 
 
-void creoHeader(t_pcb * pcb, t_header* header)
+void creoHeader(t_pcb * pcb, t_header* header, int ejecucion, int pagina)
 {
 	//LEO INSTRUCCION DEL ARCHIVO
 	header->PID = pcb->PID;
-	//header->pagina_proceso = ??
-	//header->tamanio_msj = sizeof();
-	header->type_ejecution = 1; //prueba
+	header->pagina_proceso = pagina;
+	header->tamanio_msj = 0;
+	header->type_ejecution = ejecucion;
 	//ARMO HEADER SEGUN PROTOCOLO
 }
-
-
 
 int compararPalabra(char *palabra)
 {
 	int valor;
 	if(strcmp(palabra,"iniciar")==0)
 	{
-		valor=0;
+		valor=2;
 	}
 	else if (strcmp(palabra,"leer")==0)
 	{
-		valor=1;
+		valor=0;
 	}
 	else if (strcmp(palabra,"escribir")==0)
 	{
-		valor=2;
+		valor=1;
 	}
 	else if (strcmp(palabra,"entrada-salida")==0)
 	{
-		valor=3;
+		valor=4;
 	}
 	else if (strcmp(palabra,"finalizar")==0)
 	{
-		valor=4;
+		valor=3;
 	}
 	else
 	{
