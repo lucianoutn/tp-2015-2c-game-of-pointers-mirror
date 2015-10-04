@@ -147,7 +147,7 @@ int escribirSwap(t_header * package, int socketCliente)
 		fseek(archivo,pag->inicio + ((package->pagina_proceso) * contexto->tam_pagina),SEEK_SET);
 		fwrite(mensaje, strlen(mensaje) + 1, 1, archivo);
 		log_info(logger, "Se recibio orden de escritura: PID: %d Byte Inicial: %d Contenido: %s"
-										,package.PID, pag->inicio+(package.pagina_proceso * contexto->tam_pagina),mensaje);
+										,package->PID, pag->inicio+(package->pagina_proceso * contexto->tam_pagina),mensaje);
 		//Relleno pagina
 		int relleno= pag->inicio + strlen(mensaje) + 1;
 		int final_pagina= pag->inicio+((package->pagina_proceso + 1) * contexto->tam_pagina);
