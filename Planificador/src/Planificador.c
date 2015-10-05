@@ -19,7 +19,7 @@ int main() {
 
 
 	traigoContexto(); //levanta el archivo de configuracion
-	creoLogger();
+	creoLogger(0); //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
 	log_info(logger, "Inicio Log PLANIFICADOR", NULL);
 
 	/*

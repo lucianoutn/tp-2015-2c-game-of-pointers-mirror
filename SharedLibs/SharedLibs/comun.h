@@ -22,6 +22,6 @@ t_log* logger;
 
 char* cwd();
 
-void creoLogger();
+void creoLogger(int pantalla);
 
 #endif /* SHAREDLIBS_COMUN_H_ */

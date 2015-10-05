@@ -10,9 +10,12 @@
 
 
 
-void creoLogger()
+void creoLogger(int pantalla) //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
 {
-    logger = log_create("log.txt", "Cache13",true, LOG_LEVEL_INFO);
+	if (pantalla)
+		logger = log_create("log.txt", "Cache13",true, LOG_LEVEL_INFO);
+	else
+		logger = log_create("log.txt", "Cache13",false, LOG_LEVEL_INFO);
 
     /*
      * FUNCIONES UTILIZABLES PARA EL LOGGEO, EJEMPLOS:
