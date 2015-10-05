@@ -27,7 +27,7 @@ int main()
 {
 	//-------Contexto--------------------------//
 	traigoContexto();
-	creoLogger();
+	creoLogger(1); //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
 	log_info(logger, "Inicio Log SWAP", NULL);
 	//------Fin Contexto----------------------//
 

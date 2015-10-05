@@ -31,7 +31,7 @@ void reciboDelCpu(char *, t_list *, t_list *);
 int main()
 {
  traigoContexto();
- creoLogger();
+ creoLogger(1);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
  log_info(logger, "Inicio Log MEMORIA", NULL);
  // RESERVO ESPACIO PARA LA MEMORIA REAL /
  int tamanio_memoria_real = miContexto.tamanioMarco * miContexto.cantidadMarcos;
