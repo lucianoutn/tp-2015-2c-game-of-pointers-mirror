@@ -9,7 +9,6 @@
 #define CPU_H_
 
 #include "SharedLibs/libreriaCliente.h" //SharedLibs/Debug
-#include "funcCPU.h"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -25,6 +24,6 @@
 typedef int pid;
 pid PID_actual;
 typedef bool flag;
-t_pcb* traduceMsj(t_msjRecibido * msj);
+
 
 #endif /* CPU_H_ */

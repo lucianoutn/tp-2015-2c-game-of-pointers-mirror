@@ -54,15 +54,17 @@ int main() {
 
 	//Se crea la cola de readys
 	t_queue *  cola_ready = queue_create();
-	//llamo a la funcion consola para activar la consola y se le envia el principio de la cola
+	//crear hilo de consola para que quede a la escucha de comandos por consola para el planificador
 
-	consola(cola_ready);
-
+	consola();
 	/*
 		pthread_create(&hilo_consola, NULL, (void*)consola, NULL);
 
 		pthread_join(hilo_consola, NULL);
 	*/
+
+	//si entra el comando correr PATH desde el hilo consola:
+
 
 
 
@@ -75,29 +77,7 @@ int main() {
 	{
 		close(conexiones.CPU[i++]);
 	}
-	/* Cuando reciba el comando correr PATH, se creara un nuevo hilo en donde se crea el PCB del nuevo proceso. El
-		hilo debe ejecutar la siguiente rutina:
-		t_pcb PCB;
-		PCB.ruta=path;
-		envia ruta del PCB a la CPU, la cual termina de completar el PCB y empieza a ejecutar la rafaga
-		de CPU.
 	
-	(otra funcion)
-	
-	si llega uno y pregunta si ya termino de ejecutar el hilo (pq en este caso no hay cuanto de tiempo
-	por lo que cnd se le manda el archivo a la CPU ejecutar hasta que termina)
-	if(no termino hilo)
-	{
-		t_pcb PCB;
-		PCB.ruta=path;
-		encolar(inicio, PCB) el que llega
-	}
-
-	cuando se libera la CPU
-	desencolar(inicio);
-	envia ruta del PCB a la CPU.
-
-	 */
 
 	return EXIT_SUCCESS;
 }

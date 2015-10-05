@@ -19,6 +19,7 @@
 #include <SharedLibs/manejoListas.h>
 #include <SharedLibs/comun.h>
 #include <commons/config.h>
+#include "CPU.h"
 
 typedef struct{
 	char * ipPlanificador;
@@ -29,15 +30,15 @@ typedef struct{
 	int retardo;
 } contexto;
 
+//tipo de dato t_pcb que es una estructura que almacena el PCB de cada proceso
 typedef struct PCB {
-	int PID;
+	int PID; //numero del proceso
 	//estado del proceso
-	unsigned int instructionPointer;
-	unsigned int numInstrucciones;
-	int prioridad;
-	int permisos;
-	char* ruta;
-	struct PCB *sig;
+	unsigned int instructionPointer; //numero de instruccion actual
+	unsigned int numInstrucciones; //numero total de instrucciones
+	int prioridad; // prioridad (usar mas adelante)
+	int permisos; // sin uso por ahora
+	char * ruta; //ruta del archivo mCod que tiene las instrucciones a procesar
 }t_pcb;
 
 typedef struct MSJ {
@@ -52,14 +53,21 @@ typedef struct MSJ {
 }t_msjRecibido;
 
 
-//Protocolo de envio Planificador -> CPU
-
+//Protocolo de envio Planificador->CPU
 typedef struct{
 	int tipo_ejecucion;
 	int tamanio_msj;
 }t_headcpu;
 
-//Estructura que almacenara los datos del PCB de cada proceso
+sem_t semSalir;
+
+//preparo semaforos.lucho
+pthread_mutex_t mutex;
+//ptrhead_mutex_lock(&mutex);
+//ptrhead_mutex_unlock(&mutex);
+//fin semaforos
+
+pthread_t cpu[1];
 
 
 contexto miContexto;
@@ -67,7 +75,7 @@ int numero_de_pid;
 
 void traigoContexto();
 
-void iniciaCPU();
+void iniciarCPU();
 
 void creoHeader(t_pcb *, t_header*,int,int);
 
@@ -76,5 +84,7 @@ char* interpretarIntruccion(char* instruccion);
 
 //Funcion que le asigna un valor numerico a cada tipo de instruccion
 int compararPalabra(char *palabra);
+
+t_pcb* traduceMsj(t_msjRecibido * msj);
 
 #endif /* FUNCCPU_H_ */
