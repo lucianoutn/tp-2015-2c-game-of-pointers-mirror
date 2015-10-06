@@ -26,9 +26,11 @@
 #include <semaphore.h>
 #include <commons/collections/queue.h>
 
+
 #define BACKLOG 10 //comentar
 #define PACKAGESIZE 1024 //comentar
 #define WORD_SIZE 35 //comentar
+#define MAX_CPUS 1
 
 //tipo de dato t_pcb que es una estructura que almacena el PCB de cada proceso
 typedef struct PCB {
@@ -70,6 +72,7 @@ typedef struct{
 typedef bool flag;
 
 sem_t semSalir;
+sem_t semEsperaCPU;
 
 contexto miContexto;
 

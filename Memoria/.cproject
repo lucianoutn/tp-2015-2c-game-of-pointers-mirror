@@ -35,8 +35,8 @@
 								<option id="gnu.c.compiler.option.include.paths.585471114" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/commons}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/SharedLibs}&quot;"/>
-									<listOptionValue builtIn="false" value="/home/utnso/workspace/tp-2015-2c-game-of-pointers/Memoria/Debug/pthread"/>
 								</option>
+								<option id="gnu.c.compiler.option.dialect.std.1957015531" name="Language standard" superClass="gnu.c.compiler.option.dialect.std" value="gnu.c.compiler.dialect.default" valueType="enumerated"/>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.1448902444" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.gnu.c.linker.exe.debug.1727321764" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.exe.debug">
@@ -59,7 +59,6 @@
 								<option id="gnu.both.asm.option.include.paths.1123470266" name="Include paths (-I)" superClass="gnu.both.asm.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/commons}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/SharedLibs}&quot;"/>
-									<listOptionValue builtIn="false" value="/home/utnso/workspace/tp-2015-2c-game-of-pointers/Memoria/Debug/pthread"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.268493806" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
@@ -145,5 +144,13 @@
 		</scannerConfigBuildInfo>
 	</storageModule>
 	<storageModule moduleId="org.eclipse.cdt.core.LanguageSettingsProviders"/>
-	<storageModule moduleId="refreshScope"/>
+	<storageModule moduleId="refreshScope" versionNumber="2">
+		<configuration configurationName="Release">
+			<resource resourceType="PROJECT" workspacePath="/Memoria"/>
+		</configuration>
+		<configuration configurationName="Debug">
+			<resource resourceType="PROJECT" workspacePath="/Memoria"/>
+		</configuration>
+	</storageModule>
+	<storageModule moduleId="org.eclipse.cdt.internal.ui.text.commentOwnerProjectMappings"/>
 </cproject>

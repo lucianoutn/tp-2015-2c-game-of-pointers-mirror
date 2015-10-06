@@ -30,8 +30,6 @@
 								<option id="gnu.c.compiler.option.include.paths.2007706376" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/commons}&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;${workspace_loc:/SharedLibs}&quot;"/>
-									<listOptionValue builtIn="false" value="pthread"/>
-									<listOptionValue builtIn="false" value="stdio"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.597249505" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
 							</tool>
