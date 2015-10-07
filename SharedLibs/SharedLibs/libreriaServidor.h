@@ -17,6 +17,7 @@
 #include <unistd.h>
 #include <pthread.h>
 #include <semaphore.h>
+#include "comun.h"
 
 #define MAX_CPUS 1
 

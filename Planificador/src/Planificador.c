@@ -69,11 +69,12 @@ int main() {
 
 
 	//cierra los sockets
-	puts("FINALIZANDO PROGRAMA\n");
+
 	sem_wait(&semSalir);
+	puts("FINALIZANDO PROGRAMA\n");
 	close(conexiones.socket_escucha);
 	int i=0;
-	while(i<5)
+	while(i<MAX_CPUS)
 	{
 		close(conexiones.CPU[i++]);
 	}

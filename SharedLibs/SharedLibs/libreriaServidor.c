@@ -22,6 +22,7 @@ void *escuchar (struct Conexiones* conexion){
 		}
 		sem_post(&semEsperaCPU); //avisa que hay 1 CPU disponible
 		puts("NUEVO HILO ESCUCHA!\n");
+		log_info(logger, "CPU %d conectado", i);
 		i++;
 	}
 

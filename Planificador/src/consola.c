@@ -18,7 +18,7 @@ int consola ()
 	t_msj msj;
 	CPUenUso=false;
 	pthread_t hCPU1;
-	//muestra cartel de consola
+
 	system("clear");
 	printf("_____________________________________________________________________________________________\n");
 	printf("                     Consola VERSION 2.0 | Grupo: Game of Pointers\n");
@@ -53,7 +53,7 @@ int consola ()
 			}
 			case ps:
 			{
-				printf("Este comando todavia no ha sido implemenado\n");
+				printf("Este comando falta desarrollar\n");
 				system("ps");
 				break;
 			}
@@ -64,13 +64,13 @@ int consola ()
 			}
 			case salir:
 			{
-				for(m=0;m<5;m++)
+				for(m=0;m<MAX_CPUS;m++)
 				{
 					msj.headMSJ.tipo_ejecucion = 0;
 					msj.headMSJ.tamanio_msj = 0;
 					send(conexiones.CPU[m], &msj,sizeof(t_msj),0);
 				}
-				//command=-2;
+
 				sem_post(&semSalir);
 				return -1;
 				break;
@@ -84,7 +84,7 @@ int consola ()
 			{
 				// No se que tan necesario es esto porque nosotros devolvemos el comando ingresado, pero bueno...
 				printf("No se pudo encontrar el comando especificado\n");
-				printf("Ingrese el comando deseado o help para conocer los comandos posibles\n");
+				printf("Ingrese el comando deseado o ayuda para conocer los comandos posibles\n");
 				break;
 			}
 			// esto es porque al final de la ejecución de un comando, puede quedar en el flujo estandar el ingreso

@@ -19,7 +19,7 @@ const char* allCommands[] =
 	// lo que el usuario ingrese va a ser comparado con esto
 	// TODOS LOS COMANDOS deben estar en minúscula para que lo reconozca bien sin importar como lo ingrese el usuario
 	"ayuda",
-	"iniciar",
+	"iniciar", // tendria q ser correr PATH directamente acá
 	"finalizar PID",
 	"ps",
 	"cpu",
@@ -34,7 +34,7 @@ enum Commands
 	// si se ingresa un nuevo comando o se modifica, se debe modificar también su representación
 	// del lado del usuario, en la lista de arriba.
 	ayuda = 0,
-	iniciar,
+	iniciar,	// tendria q ser correr PATH directamente acá
 	finalizar,
 	ps,
 	cpu,
