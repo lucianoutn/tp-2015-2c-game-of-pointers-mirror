@@ -21,15 +21,10 @@ int main()
 	puts("!!!CPU!!"); /* prints !!!CPU!! */
 
 	traigoContexto();
-	creoLogger(0);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
+	creoLogger(1);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
 	log_info(logger, "Inicio Log CPU", NULL);
 
 	pthread_mutex_init(&mutex, NULL); //inicializo semaforo.lucho
-	//preparo semaforos.lucho
-	//pthread_mutex_t mutex;
-	//ptrhead_mutex_lock(&mutex);
-	//ptrhead_mutex_unlock(&mutex);
-	//fin semaforos
 
 	semSalir.__align =0;
 	//creando los hilos

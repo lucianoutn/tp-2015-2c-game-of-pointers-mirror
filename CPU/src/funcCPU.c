@@ -44,7 +44,23 @@ void iniciarCPU(){
 
 	flag recibi=false;
 	int socketPlanificador = crearCliente(miContexto.ipPlanificador, miContexto.puertoPlanificador); //conecta con el planificador
+
+	if (socketPlanificador==-1){	//controlo error
+		puts("No se pudo conectar con el Planificador");
+		perror("SOCKET PLANIFICADOR!");
+		log_error(logger,"No se pudo conectar con el Planificador");
+		abort();
+
+	}
 	int socketMemoria = crearCliente(miContexto.ipMemoria, miContexto.puertoMemoria);//conecta con la memoria
+
+	if (socketMemoria==-1){		//controlo error
+		puts("No se pudo concetar con el Adm. de Memoria");
+		perror("SOCKET MEMORIA!");
+		log_error(logger,"No se pudo conectar con el Adm. de Memoria");
+		abort();
+	}
+
 	const char prueba = "corto.cod\n";
 	pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
 	printf("CPU ID: %d conectado\n", (pthread_t)id);
