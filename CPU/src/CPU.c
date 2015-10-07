@@ -20,7 +20,7 @@ int main()
 	semSalir.__align =0;
 
 	if (configuroSocketsYLogs(&socketPlanificador, &socketMemoria) == 1) //Preparo las configuraciones bascias para ejecutar la CPU
-		puts("¡¡¡CPU CONECTADA!!!");
+		puts("¡¡¡CPU!!!");
 	else
 		return EXIT_FAILURE;
 
@@ -58,16 +58,24 @@ int configuroSocketsYLogs (int *socketPlanificador,int *socketMemoria){
 	log_info(logger, "Inicio Log CPU", NULL);
 	puts("Conexion con el Planificador");
 	*socketPlanificador = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
+	if (*socketPlanificador==-1){	//controlo error
+			puts("No se pudo conectar con el Planificador");
+			perror("SOCKET PLANIFICADOR!");
+			log_error(logger,"No se pudo conectar con el Planificador");
+			abort();
+	}
+
 	puts("Conexion con la Memoria");
 	*socketMemoria = crearCliente(configuracion.ipMemoria, configuracion.puertoMemoria);//conecta con la memoria
-	if (*socketPlanificador < 0)
-		return 0;
-	else {
-		if (*socketMemoria < 0)
-			return 0;
-		else
-			return 1;
+	if (*socketMemoria==-1){		//controlo error
+			puts("No se pudo concetar con el Adm. de Memoria");
+			perror("SOCKET MEMORIA!");
+			log_error(logger,"No se pudo conectar con el Adm. de Memoria");
+			abort();
 	}
+
+	return 1;
+
 }
 
 
