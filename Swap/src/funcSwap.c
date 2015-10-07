@@ -90,21 +90,23 @@ void analizoPaquete(t_header * package, int socketCliente) {
 		if(contenido!=NULL){
 			devuelvo.status = 1;
 			devuelvo.contenido = contenido;
-			send(socketCliente,&devuelvo,sizeof(t_devuelvo),0);
+			puts("Todo ok");
+			//send(socketCliente,&devuelvo,sizeof(t_devuelvo),0);
 		}
 		else{
-			send(socketCliente,&status,sizeof(int),0);
+			puts("Todo mal");
+			//send(socketCliente,&status,sizeof(int),0);
 		}
 		break;
 	case 1:
 		printf("Se recibio orden de escritura\n");
 		status = escribirSwap(package, socketCliente);
-		send(socketCliente,&status,sizeof(int),0);
+		//send(socketCliente,&status,sizeof(int),0);
 		break;
 	case 2:
 		printf("Se recibio orden de inicializacion\n");
 		status = inicializarProc(package);
-		send(socketCliente,&status,sizeof(int),0);
+		//send(socketCliente,&status,sizeof(int),0);
 		break;
 	case 3:
 		printf("Se recibio orden de finalizacion de proceso\n");
@@ -118,9 +120,13 @@ void analizoPaquete(t_header * package, int socketCliente) {
 	}
 }
 
-void leerSwap(t_header *package,char * contenido)
+void leerSwap(t_header * package,char * contenido)
 {
-	t_pag * pag = list_find(lista_paginas, (void *)numeroDePid);
+	bool _numeroDePid(void * p)
+	{
+		return (p == package->PID);
+	}
+	t_pag * pag = list_find(lista_paginas, (void *)_numeroDePid);
 	if(pag!=NULL)
 	{
 		fseek(archivo,pag->inicio + (package->pagina_proceso * contexto->tam_pagina),SEEK_SET);
@@ -130,17 +136,23 @@ void leerSwap(t_header *package,char * contenido)
 	}
 	else
 	{
-		contenido = NULL;
+		strcpy(contenido,NULL);
 		puts("Final feliz, pagina no encontrada");
 		log_error(logger, "No se encontro la pagina solicitada");
 	}
 }
+
 int escribirSwap(t_header * package, int socketCliente)
 {
+	int a = package->PID;
+	bool _numeroDePid (int p)
+	{
+		return (p == package->PID);
+	}
 	char * mensaje = malloc(package->tamanio_msj);
-	strcpy(mensaje,"hola\0");
-	//status = recv(socketCliente, mensaje, package.tamanio_msj, 0);
-	t_pag * pag = list_find(lista_paginas, (void *)numeroDePid);
+	strcpy(mensaje,"Hola\0");
+	//status = recv(socketCliente, mensaje, package->tamanio_msj, 0);
+	t_pag * pag = list_find(lista_paginas, (void *)_numeroDePid);
 
 	if(pag!= NULL)
 	{
@@ -149,7 +161,7 @@ int escribirSwap(t_header * package, int socketCliente)
 		log_info(logger, "Se recibio orden de escritura: PID: %d Byte Inicial: %d Contenido: %s"
 										,package->PID, pag->inicio+(package->pagina_proceso * contexto->tam_pagina),mensaje);
 		//Relleno pagina
-		int relleno= pag->inicio + strlen(mensaje) + 1;
+		int relleno= pag->inicio + strlen(mensaje);
 		int final_pagina= pag->inicio+((package->pagina_proceso + 1) * contexto->tam_pagina);
 
 		for(;relleno<=final_pagina;relleno++)
@@ -173,7 +185,7 @@ int escribirSwap(t_header * package, int socketCliente)
 
 int inicializarProc(t_header * package) {
 
-	t_hueco * hueco = buscarHueco(package->tamanio_msj);
+	t_hueco * hueco = buscarHueco(package->pagina_proceso);
 
 	if (hueco != NULL)
 	{
@@ -181,7 +193,7 @@ int inicializarProc(t_header * package) {
 		list_add(lista_paginas,pag_create(package->PID, hueco->inicio, package->pagina_proceso));
 		log_info(logger, "Se recibio orden de inicializacion: PID: %d Inicio: %d Bytes: %d"
 				,package->PID, hueco->inicio,package->pagina_proceso * contexto->tam_pagina);
-		//rellenarParticion(hueco->inicio, package.pagina_proceso);
+		//rellenarParticion(hueco->inicio, package->pagina_proceso);
 		//Actualizo huecos
 		hueco->inicio = hueco->inicio + (package->pagina_proceso * contexto->tam_pagina);
 		return 1;
@@ -198,7 +210,7 @@ int finalizarProc(t_header* package)
 {
 
 	//Actualizo lista huecos
-	t_pag * pag = list_find(lista_paginas, (void*)numeroDePid(package->PID));
+	t_pag * pag = list_find(lista_paginas, (void*)numeroDePid);
 
 	if(pag!= NULL)
 	{
