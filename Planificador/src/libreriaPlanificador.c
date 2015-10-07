@@ -61,8 +61,9 @@ void procesarPCB(t_queue* cola_ready, char * path, int socketCPU)
 	msj.permisos = pcb->permisos;
 	pcb->PID = max_PID +1;
 	msj.PID = pcb->PID;
-	max_PID = pcb->PID;
+	max_PID = pcb->PID; // ¿aca no habria q preguntar si es menor primero?? (lucho)
 
+	//creo q aca estaria bueno q pregunte por el algoritmo de planificacion configurado ¿?(lucho)
 	//encolo a la cola de ready
 	//queue_push(cola_ready, &pcb);
 	//le envio a la CPU el t_headcpu y el PCB
@@ -71,6 +72,7 @@ void procesarPCB(t_queue* cola_ready, char * path, int socketCPU)
 
 	send(socketCPU, &msj,sizeof(t_msj),0);
 	puts("Mensaje enviado\n");
+	log_info(logger,"Comienzo ejecucion PID: %d Nombre: %s", pcb->PID, pcb->ruta);
 }
 
 

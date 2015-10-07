@@ -84,7 +84,7 @@ int consola ()
 			{
 				// No se que tan necesario es esto porque nosotros devolvemos el comando ingresado, pero bueno...
 				printf("No se pudo encontrar el comando especificado\n");
-				printf("Ingrese el comando deseado o help para conocer los comandos posibles\n");
+				printf("Ingrese el comando deseado o ayuda para conocer los comandos posibles\n");
 				break;
 			}
 			// esto es porque al final de la ejecución de un comando, puede quedar en el flujo estandar el ingreso
