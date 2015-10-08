@@ -16,67 +16,38 @@
 //Inicio de funcion principal
 int main()
 {
-	int socketPlanificador, socketMemoria/*, i, err*/;
+	//int socketPlanificador, socketMemoria;
 	semSalir.__align =0;
 
-	if (configuroSocketsYLogs(&socketPlanificador, &socketMemoria) == 1) //Preparo las configuraciones bascias para ejecutar la CPU
+	if (configuroSocketsYLogs(&(sockets.socketPlanificador), &(sockets.socketMemoria)) == 1) //Preparo las configuraciones bascias para ejecutar la CPU
 		puts("¡¡¡CPU!!!");
 	else
 		return EXIT_FAILURE;
 
 	pthread_mutex_init(&mutex, NULL); //inicializo semaforo.lucho
-	//preparo semaforos.lucho
-	//pthread_mutex_t mutex;
-	//ptrhead_mutex_lock(&mutex);
-	//ptrhead_mutex_unlock(&mutex);
-	//fin semaforos
 
 
 	//creando los hilos
 
 
-//	for (i=0; i<CANT_CPU; i++){
-		//err= pthread_create(&(cpu[0]), NULL, (void*)iniciaCPU, NULL);
+	int i, err;
+	for (i=0; i<configuracion.cantHilos; i++){
+		err= pthread_create(&(cpu[i]), NULL, (void*)iniciarCPU,&sockets);
 		//sleep(1);
-		//if (err != 0)
-		//	printf("no se pudo crear el hilo de cpu :[%s]", strerror(err));
-//	}
-	iniciarCPU(socketPlanificador,socketMemoria);
+		if (err != 0)
+		printf("no se pudo crear el hilo de cpu :[%s]", strerror(err));
+	}
 
-	sem_wait(&semSalir);
+	pthread_join(cpu[0], NULL);
+
+	//iniciarCPU(socketPlanificador,socketMemoria); //sin hilos
+
+	//sem_wait(&semSalir);
 
 	return EXIT_SUCCESS;
 }
 
 
-/*Configuraciones basicas de los Sockets
- * y los Logs para el CPU
- */
-int configuroSocketsYLogs (int *socketPlanificador,int *socketMemoria){
-	cargoArchivoConfiguracion(); //carga las configuraciones basicas
-	creoLogger(0);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
-	log_info(logger, "Inicio Log CPU", NULL);
-	puts("Conexion con el Planificador");
-	*socketPlanificador = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
-	if (*socketPlanificador==-1){	//controlo error
-			puts("No se pudo conectar con el Planificador");
-			perror("SOCKET PLANIFICADOR!");
-			log_error(logger,"No se pudo conectar con el Planificador");
-			abort();
-	}
-
-	puts("Conexion con la Memoria");
-	*socketMemoria = crearCliente(configuracion.ipMemoria, configuracion.puertoMemoria);//conecta con la memoria
-	if (*socketMemoria==-1){		//controlo error
-			puts("No se pudo concetar con el Adm. de Memoria");
-			perror("SOCKET MEMORIA!");
-			log_error(logger,"No se pudo conectar con el Adm. de Memoria");
-			abort();
-	}
-
-	return 1;
-
-}
 
 
 

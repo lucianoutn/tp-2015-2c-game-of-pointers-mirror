@@ -248,8 +248,9 @@ void procesoMSJ(int socketMemoria, t_pcb *PCB){
 
 
 
-void iniciarCPU(int socketPlanificador, int socketMemoria){
-
+void iniciarCPU(t_sockets *sockets){
+	int socketPlanificador= sockets->socketPlanificador;
+	int socketMemoria= sockets -> socketMemoria;
 	pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
 	printf("CPU ID: %d conectado", (pthread_t)id);
 	int status=1;		// Estructura que manjea el status de los recieve.
@@ -273,7 +274,7 @@ void iniciarCPU(int socketPlanificador, int socketMemoria){
 				//FINALIZO CONEXIONES
 				puts("Recibi salir, cierro conexiones");
 				status=0;	//Salgo del while
-				sem_post(&semSalir);	//Semaforo que controla la finalizacion de la CPU
+				//sem_post(&semSalir);	//Semaforo que controla la finalizacion de la CPU
 				break;
 
 			case 1: 	//INSTRUCCION PARA RECIBIR MSJS
@@ -295,7 +296,7 @@ void iniciarCPU(int socketPlanificador, int socketMemoria){
 		else	//SI SE PIERDE LA CONEXION SALGO
 		{
 			puts("Conexion perdida!");
-			sem_post(&semSalir);	//Semaforo para controlar la finalizacion de la CPU
+			//sem_post(&semSalir);	//Semaforo para controlar la finalizacion de la CPU
 			break;
 		}
 
@@ -308,6 +309,34 @@ void iniciarCPU(int socketPlanificador, int socketMemoria){
 
 }
 
+/*Configuraciones basicas de los Sockets
+ * y los Logs para el CPU
+ */
+int configuroSocketsYLogs (int *socketPlanificador,int *socketMemoria){
+	cargoArchivoConfiguracion(); //carga las configuraciones basicas
+	creoLogger(0);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
+	log_info(logger, "Inicio Log CPU", NULL);
+	puts("Conexion con el Planificador");
+	*socketPlanificador = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
+	if (*socketPlanificador==-1){	//controlo error
+			puts("No se pudo conectar con el Planificador");
+			perror("SOCKET PLANIFICADOR!");
+			log_error(logger,"No se pudo conectar con el Planificador");
+			abort();
+	}
+
+	puts("Conexion con la Memoria");
+	*socketMemoria = crearCliente(configuracion.ipMemoria, configuracion.puertoMemoria);//conecta con la memoria
+	if (*socketMemoria==-1){		//controlo error
+			puts("No se pudo concetar con el Adm. de Memoria");
+			perror("SOCKET MEMORIA!");
+			log_error(logger,"No se pudo conectar con el Adm. de Memoria");
+			abort();
+	}
+
+	return 1;
+
+}
 
 
 

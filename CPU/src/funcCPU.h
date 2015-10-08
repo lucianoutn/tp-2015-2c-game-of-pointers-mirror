@@ -66,6 +66,13 @@ typedef struct{
 	int tamanio_msj;
 }t_headcpu;
 
+//empaqueto los sockets para poder pasarle al hilo mas de un parametro (lucho)
+typedef struct {
+	int socketPlanificador;
+	int socketMemoria;
+}t_sockets;
+
+
 sem_t semSalir;
 
 //preparo semaforos.lucho
@@ -74,9 +81,11 @@ pthread_mutex_t mutex;
 //ptrhead_mutex_unlock(&mutex);
 //fin semaforos
 
-pthread_t cpu[1];
-
 config configuracion;
+
+pthread_t cpu[0];
+
+t_sockets sockets;
 
 int numero_de_pid;
 
@@ -92,6 +101,8 @@ int procesaInstruccion(char*,int *);
 
 void procesoMSJ(int,t_pcb *);
 
-void iniciarCPU(int,int);
+void iniciarCPU(t_sockets *);
+
+int configuroSocketsYLogs (int *,int *);
 
 #endif /* FUNCCPU_H_ */
