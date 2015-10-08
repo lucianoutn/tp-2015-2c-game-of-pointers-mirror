@@ -22,16 +22,17 @@ int crearCliente(const char *IP, const char *PUERTO){
 	//descriptor del socket servidor
 	int socketServer = socket(serverInfo_server->ai_family, serverInfo_server->ai_socktype, serverInfo_server->ai_protocol);
 	//se comprueba que el socket se creo correctamente
-	if(socketServer==-1)
+	if(socketServer==-1){
+		return -1;
 		perror ("SOCKET con servidor no se pudo crear!");
-
+	}
 
 	//conecta
 	int C = connect(socketServer, serverInfo_server->ai_addr, serverInfo_server->ai_addrlen);
 	if (C==-1){
-		perror ("CONNECT");
 		return -1;
-		}
+		perror ("CONNECT");
+	}
 	else
 		printf ("Conexion con el Servidor en la ip: %s lograda\n", IP);
 

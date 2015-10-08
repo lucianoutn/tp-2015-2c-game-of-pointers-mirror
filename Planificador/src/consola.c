@@ -42,7 +42,8 @@ int consola ()
 			}
 			case iniciar:
 			{
-				//iniciarPlanificador(cola_ready);
+				//el hilo debe enviar una señal al planificador para que invoque la funcion
+				//iniciarPlanificador() ya que no es trabajo de la consola
 				break;
 			}
 

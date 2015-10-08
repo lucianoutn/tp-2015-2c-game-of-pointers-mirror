@@ -41,6 +41,7 @@ typedef struct PCB {
 	int prioridad; // prioridad (usar mas adelante)
 	int permisos; // sin uso por ahora
 	char * ruta; //ruta del archivo mCod que tiene las instrucciones a procesar
+	//struct PCB *sig;
 }t_pcb;
 
 

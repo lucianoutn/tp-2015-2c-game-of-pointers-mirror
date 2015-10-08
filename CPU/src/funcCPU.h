@@ -19,7 +19,14 @@
 #include <SharedLibs/manejoListas.h>
 #include <SharedLibs/comun.h>
 #include <commons/config.h>
-#include "CPU.h"
+#include <semaphore.h>
+#include "mAnsisOp.h"
+
+typedef int pid;
+
+pid PID_actual;
+
+typedef bool flag;
 
 typedef struct{
 	char * ipPlanificador;
@@ -28,7 +35,7 @@ typedef struct{
 	char * puertoMemoria;
 	int cantHilos;
 	int retardo;
-} contexto;
+} config;
 
 //tipo de dato t_pcb que es una estructura que almacena el PCB de cada proceso
 typedef struct PCB {
@@ -69,22 +76,22 @@ pthread_mutex_t mutex;
 
 pthread_t cpu[1];
 
+config configuracion;
 
-contexto miContexto;
 int numero_de_pid;
 
-void traigoContexto();
-
-void iniciarCPU();
+void cargoArchivoConfiguracion();
 
 void creoHeader(t_pcb *, t_header*,int,int);
 
-//Funcion que permite verificar el tipo de cada instruccion del mCod
-char* interpretarIntruccion(char* instruccion);
-
-//Funcion que le asigna un valor numerico a cada tipo de instruccion
-int compararPalabra(char *palabra);
-
 t_pcb* traduceMsj(t_msjRecibido * msj);
+
+int palabraAValor(char *palabra);
+
+int procesaInstruccion(char*,int *);
+
+void procesoMSJ(int,t_pcb *);
+
+void iniciarCPU(int,int);
 
 #endif /* FUNCCPU_H_ */

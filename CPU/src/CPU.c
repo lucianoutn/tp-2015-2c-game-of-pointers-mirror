@@ -4,25 +4,25 @@
  Author      : Game of Pointers
  Version     :
  Copyright   : Your copyright notice
- Description : Modulo - Planificador
+ Description : Modulo - CPU
  ============================================================================
  */
 
-#include "CPU.h"
+
 #include "funcCPU.h"
 
 #define PACKAGESIZE 1024
 
-
-
 //Inicio de funcion principal
 int main()
 {
-	puts("!!!CPU!!"); /* prints !!!CPU!! */
+	int socketPlanificador, socketMemoria/*, i, err*/;
+	semSalir.__align =0;
 
-	traigoContexto();
-	creoLogger(0);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
-	log_info(logger, "Inicio Log CPU", NULL);
+	if (configuroSocketsYLogs(&socketPlanificador, &socketMemoria) == 1) //Preparo las configuraciones bascias para ejecutar la CPU
+		puts("¡¡¡CPU!!!");
+	else
+		return EXIT_FAILURE;
 
 	pthread_mutex_init(&mutex, NULL); //inicializo semaforo.lucho
 	//preparo semaforos.lucho
@@ -31,9 +31,9 @@ int main()
 	//ptrhead_mutex_unlock(&mutex);
 	//fin semaforos
 
-	semSalir.__align =0;
+
 	//creando los hilos
-	int i, err;
+
 
 //	for (i=0; i<CANT_CPU; i++){
 		//err= pthread_create(&(cpu[0]), NULL, (void*)iniciaCPU, NULL);
@@ -41,39 +41,42 @@ int main()
 		//if (err != 0)
 		//	printf("no se pudo crear el hilo de cpu :[%s]", strerror(err));
 //	}
-		iniciarCPU();
-	//	while(1);
-	sem_wait(&semSalir); //poner sincro
-/*	for (i=0; i<CANT_CPU; i++){
-		pthread_join(&(cpu[i]), NULL);
-	}*/
+	iniciarCPU(socketPlanificador,socketMemoria);
 
-	/*
-	 * La cpu recibe el PCB del planificador (luego de que este halla recibido la instruccion correr PATH
-	 * 	PCB=recv(puntero a la estructura del PCB que creo el plani)
-	 * 	PCB.PID=PID_actual
-		PCB.instructionPointer=0
-		char **instrucciones= (char**)malloc(sizeof(leermCod(PATH, PCB.numInstrucciones));
-		instrucciones = (leermCod(PATH, PCB.numInstrucciones);
-
-		hace el switch y segun el caso envia el playload y dps la instruccion (afuera del switch).
-		while(!strcmp(instruccion[num],"fin")) //envia hasta que llegue a la ultima instrucciones
-		{
-			switch(tipo de instruccion)
-			{
-				case n:
-					send(payload) que corresponda segun el caso a la memoria
-			}
-			send(instrucciones[instructionPointer]);
-			instructionPointer++;
-			y espera a lo que tenga que hacer la instruccion o a algun valor que devuelva la memoria
-		}
-	 */
+	sem_wait(&semSalir);
 
 	return EXIT_SUCCESS;
 }
 
 
+/*Configuraciones basicas de los Sockets
+ * y los Logs para el CPU
+ */
+int configuroSocketsYLogs (int *socketPlanificador,int *socketMemoria){
+	cargoArchivoConfiguracion(); //carga las configuraciones basicas
+	creoLogger(0);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
+	log_info(logger, "Inicio Log CPU", NULL);
+	puts("Conexion con el Planificador");
+	*socketPlanificador = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
+	if (*socketPlanificador==-1){	//controlo error
+			puts("No se pudo conectar con el Planificador");
+			perror("SOCKET PLANIFICADOR!");
+			log_error(logger,"No se pudo conectar con el Planificador");
+			abort();
+	}
+
+	puts("Conexion con la Memoria");
+	*socketMemoria = crearCliente(configuracion.ipMemoria, configuracion.puertoMemoria);//conecta con la memoria
+	if (*socketMemoria==-1){		//controlo error
+			puts("No se pudo concetar con el Adm. de Memoria");
+			perror("SOCKET MEMORIA!");
+			log_error(logger,"No se pudo conectar con el Adm. de Memoria");
+			abort();
+	}
+
+	return 1;
+
+}
 
 
 

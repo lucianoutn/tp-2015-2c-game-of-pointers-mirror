@@ -63,6 +63,24 @@ void procesarPCB(t_queue* cola_ready, char * path, int socketCPU)
 	msj.PID = pcb->PID;
 	max_PID = pcb->PID; // ¿aca no habria q preguntar si es menor primero?? (lucho)
 
+	/*ENVIO DE MSJS A LA CPU
+	 *	pcb->PID=contador;
+	 *	pcb->instructionPointer=0
+	 *	pcb->numInstrucciones=0;
+	 *	pcb->prioridad=0;
+	 *	pcb->permisos=0;
+	 *	pcb->ruta=(char*)malloc(sizeof(path));
+	 *	pcb.ruta=path;
+	 *	free(path);
+	 *	send(socketCPU, pcb, sizeof(t_pcb));
+	 */
+	/*RECIBE MSJS LA CPU
+	 * 	t_pcb pcb=(t_pcb*)malloc(sizeof(t_pcb));
+	 * 	recibo LA DIRECCION DE MEMORIA del pcb
+	 * 	pcb=msj;
+	 * 	imprimo a ver que onda
+	 */
+
 	//creo q aca estaria bueno q pregunte por el algoritmo de planificacion configurado ¿?(lucho)
 	//encolo a la cola de ready
 	//queue_push(cola_ready, &pcb);
@@ -142,7 +160,7 @@ void iniciarPlanificador(t_queue* cola_ready)
 			if (!strcmp(string_substring(message,0,7),"correr "))
 			{
 				primeraVez=1;
-				char * path = malloc(20);
+				char *path = (char*)malloc(sizeof(string_substring_from(message, 7)));
 				//Tomo el path
 				path = string_substring_from(message, 7); //inclye el \n
 				//PROCESO EL PCB

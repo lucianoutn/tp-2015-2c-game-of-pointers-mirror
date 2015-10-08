@@ -8,28 +8,32 @@
 
 #include "funcCPU.h"
 
-
-void traigoContexto()
+/* Cargo las configuraciones del archivo Config.cfg
+ * y compruebo que no haya errores.
+ */
+void cargoArchivoConfiguracion()
 {
  // LEVANTO EL ARCHIVO CONFIG Y VERIFICO QUE LO HAYA HECHO CORRECTAMENTE /
  t_config * config_cpu = config_create("resources/config.cfg");
 
  if( config_cpu == NULL )
  {
-  puts("Final felize");
+  puts("Error al abrir el archivo de configuraciones.");
   abort();
  }
 
  // OBTENGO CONFIGURACION DEL CONFIG /
- miContexto.ipPlanificador = config_get_string_value(config_cpu, "IP_PLANIFICADOR" );
- miContexto.puertoPlanificador = config_get_string_value(config_cpu, "PUERTO_PLANIFICADOR" );
- miContexto.ipMemoria = config_get_string_value(config_cpu, "IP_MEMORIA");
- miContexto.puertoMemoria = config_get_string_value(config_cpu, "PUERTO_MEMORIA");
- miContexto.cantHilos = config_get_int_value(config_cpu, "CANTIDAD_HILOS");
- miContexto.retardo = config_get_int_value(config_cpu, "RETARDO");
+ configuracion.ipPlanificador = config_get_string_value(config_cpu, "IP_PLANIFICADOR" );
+ configuracion.puertoPlanificador = config_get_string_value(config_cpu, "PUERTO_PLANIFICADOR" );
+ configuracion.ipMemoria = config_get_string_value(config_cpu, "IP_MEMORIA");
+ configuracion.puertoMemoria = config_get_string_value(config_cpu, "PUERTO_MEMORIA");
+ configuracion.cantHilos = config_get_int_value(config_cpu, "CANTIDAD_HILOS");
+ configuracion.retardo = config_get_int_value(config_cpu, "RETARDO");
 }
 
-
+/* Crea el Header para enviar a la memoria
+ * con los datos del PCB, ejecucion y n° de pagina
+ */
 void creoHeader(t_pcb * pcb, t_header* header, int ejecucion, int pagina)
 {
 	//LEO INSTRUCCION DEL ARCHIVO
@@ -40,159 +44,9 @@ void creoHeader(t_pcb * pcb, t_header* header, int ejecucion, int pagina)
 	//ARMO HEADER SEGUN PROTOCOLO
 }
 
-void iniciarCPU(){
-
-	flag recibi=false;
-	int socketPlanificador = crearCliente(miContexto.ipPlanificador, miContexto.puertoPlanificador); //conecta con el planificador
-	int socketMemoria = crearCliente(miContexto.ipMemoria, miContexto.puertoMemoria);//conecta con la memoria
-	const char prueba = "corto.cod\n";
-	pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
-	printf("CPU ID: %d conectado\n", (pthread_t)id);
-	int o=0;
-	//Recepcion de instrucciones
-
-	//t_pcb * PCB;
-	int status=1;		// Estructura que manjea el status de los recieve.
-	printf("CPU ID: %d conectada. Esperando instrucciones:\n", (pthread_t)id);
-
-	t_header *header = malloc(sizeof(t_header));
-	t_headcpu *headcpu = malloc(sizeof(t_headcpu));
-	t_msjRecibido msj;
-
-	while(status!=0)
-	{
-		puts("Esperando Instrucciones\n");
-		status = recv(socketPlanificador, headcpu, sizeof(t_headcpu),0);
-		if(status!=0)
-		{
-			switch (headcpu->tipo_ejecucion)
-			{
-			case 0:
-				//FINALIZO CONEXIONES
-				puts("Recibi salir, cierro conexiones");
-				status=0;
-				sem_post(&semSalir);
-				break;
-			case 1:
-				status = recv(socketPlanificador, &msj, headcpu->tamanio_msj, 0);
-				t_pcb * PCB = traduceMsj(&msj);//interpreta el msj (reserva memoria para el PCB)
-
-				printf("Recibi PCB. PID:%d\n",PCB->PID);
-				//pcb.PID=PID_actual
-				PCB->instructionPointer=0;//inicializo el puntero de intruccion
-				//reservo espacio en la memoria para guardar todas las instrucciones del archivo mCod
-				leermCod(PCB->ruta,&PCB->numInstrucciones);
-				char **instrucciones= (char**)malloc(sizeof(char**) * (PCB->numInstrucciones));
-				//guardo las intrucciones
-				instrucciones = (leermCod(PCB->ruta, &PCB->numInstrucciones));
-				puts("Instrucciones leidas"); //Control (para pruebas)
-				//ciclo que envia instruccion por instruccion
-				while(strcmp(instrucciones[PCB->instructionPointer], "finalizar"))
-				{
-					//Switch que verifica el tipo de cada instruccion
-					switch(compararPalabra(interpretarIntruccion(instrucciones[PCB->instructionPointer])))
-					{
-
-						case 0: //leer
-
-								puts("LEER");
-								creoHeader(PCB,header,0,o); //PCB HEADER TIPOEJECUCION PAGINA
-								//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
-								send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
-								recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
-								o++;
-								if(recibi)
-									puts("Leido");
-								else
-									puts("NO Leido");
-								break;
-
-						case 1: //Escribir
-
-								//HAY QUE AGREGAR EL CAMPO PARA EL MSJ Y MANDARLO
-								puts("ESCRIBIR");
-								creoHeader(PCB,header,1,0); //PCB HEADER TIPOEJECUCION PAGINA
-								//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
-								send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
-								recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
-								if(recibi)
-									puts("Recibi ok");
-								else
-								puts("Error");
-								break;
-
-						case 2://iniciar
-
-								puts("INICIAR");
-								creoHeader(PCB,header,2,2); //PCB HEADER TIPOEJECUCION PAGINA
-								//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
-								send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
-								recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
-								if(recibi)
-									puts("Inicializado");
-								else
-									puts("NO Inicializado");
-								break;
-
-						case 3: //finalizar
-
-								/*puts("FINALIZAR");
-								printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
-								creoHeader(PCB,header,3,0); //PCB HEADER TIPOEJECUCION PAGINA
-								printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
-								send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
-								recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
-								if(recibi)
-									puts("Recibi ok");
-								else
-									puts("Error");
-								NOFIN = 0; //ULTIMA INSTRUCCION SALGO DEL WHILE*/
-								break;
-
-						default:
-
-						puts("default");
-						break;
-
-					}
-				PCB->instructionPointer	++;
-				}
-				if(strcmp(instrucciones[PCB->instructionPointer - 1], "finalizar"))
-				{
-					puts("FINALIZAR");
-					creoHeader(PCB,header,3,0); //PCB HEADER TIPOEJECUCION PAGINA
-					//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
-					send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
-					recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
-					if(recibi)
-						puts("Finalizado");
-					else
-						puts("Error");
-					printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
-				}
-				break;
-			default:
-			{
-				puts("TIPO DE INSTRUCCION NO VALIDA def2\n");
-				break;
-			}
-			}
-		}
-		else
-		{
-			puts("Conexion perdida!");
-			sem_post(&semSalir);
-			break;
-		}
-
-	}
-	free(header);
-	free(headcpu);
-	close(socketPlanificador);
-	close(socketMemoria);	// agrego el cierre del otro socket.lucho
-
-}
-
+/* Recibe un MSJ y arma el PCB correspondiente
+ * y lo devuelve (RESERVA MEMORIA)
+ */
 t_pcb* traduceMsj(t_msjRecibido * msj){
 	t_pcb* pcb = malloc(sizeof(t_pcb));
 	pcb->PID = msj->PID;
@@ -212,47 +66,248 @@ t_pcb* traduceMsj(t_msjRecibido * msj){
 	return pcb;
 }
 
-int compararPalabra(char *palabra)
+/* Recibe una palabra y devuelve el valor
+ * del tipo de instruccion correspondiente
+ * 0=iniciar	1=escribir	2=iniciar
+ * 3=finalizar	4=entrada-salida
+ */
+int palabraAValor(char *palabra)
 {
 	int valor;
-	if(strcmp(palabra,"iniciar")==0)
-	{
+	if(strcmp(palabra,"iniciar")==0){
 		valor=2;
 	}
-	else if (strcmp(palabra,"leer")==0)
-	{
+	else if (strcmp(palabra,"leer")==0){
 		valor=0;
 	}
-	else if (strcmp(palabra,"escribir")==0)
-	{
+	else if (strcmp(palabra,"escribir")==0){
 		valor=1;
 	}
-	else if (strcmp(palabra,"entrada-salida")==0)
-	{
+	else if (strcmp(palabra,"entrada-salida")==0){
 		valor=4;
 	}
-	else if (strcmp(palabra,"finalizar")==0)
-	{
+	else if (strcmp(palabra,"finalizar")==0){
 		valor=3;
 	}
-	else
-	{
+	else{
 		puts("instruccion no valida");
 	}
 	return valor;
 }
 
-char* interpretarIntruccion(char* instruccion)
-{
-	int I=0;
-	char *palabra=(char*)malloc(sizeof(char));
-	while(instruccion[I]!=32)
-	{
-		palabra[I]=instruccion[I];
-		I++;
-		palabra=(char*)realloc(palabra, (I+1)*sizeof(char));
+/* Recibe una instruccion y una variable para la pagina
+ * y devuelve el numero del tipo de instruccion y la pagina
+ */
+int procesaInstruccion(char* instruccion, int *pagina){
+
+	//Inicializo variables y reservo memoria
+	int i=0, j=0, valor;
+	char * palabra=malloc(sizeof(char*) * 20);
+	char * aux =malloc(sizeof(char*) * 4);
+
+	//Borro las variables
+	memset(palabra,'\0',20);
+	memset(aux,'\0',4);
+
+	//CONTROLO QUE NO SE TERMINE LA PALABRA
+	while(instruccion[i]!= ' '){
+		if (instruccion[i] == '\0')
+			break;
+		palabra[i]=instruccion[i];
+		i++;
 	}
-	return palabra;
+	i++;	//incremento para ver el numero de pagina
+
+	//CONTROLO QUE NO SE TERMINE LA INSTRUCCION
+	while(instruccion[i] != '\0'){
+		aux[j]=instruccion[i];
+		i++; j++;
+	}
+	//Convierto a int la cadena
+	*pagina = atoi(aux);
+	valor = palabraAValor(palabra);	//Guardo el valor para liberar la memoria
+
+	//Libero memoria
+	free(palabra);
+	free(aux);
+
+	//Retorno el valor del tipo de instruccion
+	return valor;
+
 }
+
+/* Procesa los MSJ recibidos
+ * y envia el MSJ correspondiente a la memoria
+ */
+void procesoMSJ(int socketMemoria, t_pcb *PCB){
+
+	int pagina = 0;
+	//reservo espacio para el header
+	t_header *header = malloc(sizeof(t_header));
+
+	//flag para controlar la respuesta a las instrucciones
+	flag recibi=false;
+
+	//reservo espacio en la memoria para guardar todas las instrucciones del archivo mCod
+	leermCod(PCB->ruta,&PCB->numInstrucciones);	//primero leo para saber el numero de instrucciones
+	char **instrucciones= (char**)malloc(sizeof(char**) * (PCB->numInstrucciones));
+
+	//guardo las intrucciones
+	instrucciones = (leermCod(PCB->ruta, &PCB->numInstrucciones));
+
+	puts("Ejecutando..."); //Control (para pruebas)
+
+	//CONTROLO INSTRUCCION POR INSTRUCCION QUE NO QUIERA FINALIZAR
+	//while(strcmp(instrucciones[PCB->instructionPointer], "finalizar"))
+	while(PCB->numInstrucciones > PCB->instructionPointer)
+	{
+		//Switch que verifica el tipo de cada instruccion
+		switch(procesaInstruccion(instrucciones[PCB->instructionPointer],&pagina))
+		{
+
+			case 0: //leer
+
+					puts("LEER");
+					creoHeader(PCB,header,0,pagina); //PCB HEADER TIPOEJECUCION PAGINA
+					//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
+					send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
+					recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
+					if(recibi)	//Controlo que haya llegado bien
+						puts("Leido");
+					else
+						puts("NO Leido");
+					break;
+
+			case 1: //Escribir
+
+					//HAY QUE AGREGAR EL CAMPO PARA EL MSJ Y MANDARLO
+					puts("ESCRIBIR");
+					creoHeader(PCB,header,1,pagina); //PCB HEADER TIPOEJECUCION PAGINA
+					//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
+					send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
+					recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
+					if(recibi)	//Controlo que haya llegado bien
+						puts("Recibi ok");
+					else
+					puts("Error");
+					break;
+
+			case 2://iniciar
+
+					puts("INICIAR");
+					creoHeader(PCB,header,2,pagina); //PCB HEADER TIPOEJECUCION PAGINA
+					//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
+					send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
+					recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
+					if(recibi)	//Controlo que haya llegado bien
+						puts("Inicializado");
+					else
+						puts("NO Inicializado");
+					break;
+
+			case 3: //finalizar
+
+					puts("FINALIZAR");
+					creoHeader(PCB,header,3,pagina); //PCB HEADER TIPOEJECUCION PAGINA
+					//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
+					send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
+					recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
+					if(recibi)	//Controlo que haya llegado bien
+						puts("Finalizado");
+					else
+						puts("Error");
+					printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
+					break;
+
+			default:
+
+			puts("default");
+			break;
+
+		}
+	PCB->instructionPointer	++;
+	}	//FIN WHILE
+
+	/*if(strcmp(instrucciones[PCB->instructionPointer - 1], "finalizar"))
+	{
+		puts("FINALIZAR");
+		creoHeader(PCB,header,3,pagina); //PCB HEADER TIPOEJECUCION PAGINA
+		//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
+		send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
+		recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
+		if(recibi)	//Controlo que haya llegado bien
+			puts("Finalizado");
+		else
+			puts("Error");
+		printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
+	}*/
+	free(header);
+
+}
+
+
+
+
+void iniciarCPU(int socketPlanificador, int socketMemoria){
+
+	pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
+	printf("CPU ID: %d conectado", (pthread_t)id);
+	int status=1;		// Estructura que manjea el status de los recieve.
+
+	//Estructuras que manejan los datos recibidos
+	t_headcpu *headcpu = malloc(sizeof(t_headcpu));
+	t_msjRecibido msj;
+
+	while(status!=0)	//MIENTRAS NO QUIERA SALIR RECIBO INSTRUCCIONES
+	{
+		puts("\n\nEsperando Instrucciones...\n\n");
+		//CPU a la espera de nuevas instrucciones
+		status = recv(socketPlanificador, headcpu, sizeof(t_headcpu),0);
+
+		if(status!=0)	//CONTROLA QUE NO SE PIERDA LA CONEXION
+		{
+			switch (headcpu->tipo_ejecucion){	//CONTROLA EL TIPO DE INSTRUCCION
+
+			case 0:		//INSTRUCCION PARA SALIR
+
+				//FINALIZO CONEXIONES
+				puts("Recibi salir, cierro conexiones");
+				status=0;	//Salgo del while
+				sem_post(&semSalir);	//Semaforo que controla la finalizacion de la CPU
+				break;
+
+			case 1: 	//INSTRUCCION PARA RECIBIR MSJS
+
+				status = recv(socketPlanificador, &msj, headcpu->tamanio_msj, 0);	//Recibo el MSJ
+				t_pcb * PCB = traduceMsj(&msj);	//interpreta el MSJ (reserva memoria para el PCB)
+				printf("PCB Recibido. PID:%d\n",PCB->PID);
+				PCB->instructionPointer=0;//inicializo el puntero de intruccion
+				procesoMSJ(socketMemoria,PCB);		//PROCESA EL PCB Y LO ENVIA A MEMORIA SI CORRESPONDE
+				break;
+
+			default:	//PARA ERRORES EN EL TIPO DE INSTRUCCION
+			{
+				puts("TIPO DE INSTRUCCION NO VALIDA\n");
+				break;
+			}
+			}
+		}
+		else	//SI SE PIERDE LA CONEXION SALGO
+		{
+			puts("Conexion perdida!");
+			sem_post(&semSalir);	//Semaforo para controlar la finalizacion de la CPU
+			break;
+		}
+
+	}	//FIN DEL WHILE
+
+	//CIERRO LOS SOCKETS Y EL HEADER
+	free(headcpu);
+	close(socketPlanificador);
+	close(socketMemoria);
+
+}
+
+
 
 
