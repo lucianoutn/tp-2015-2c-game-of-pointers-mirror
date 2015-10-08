@@ -18,7 +18,7 @@ int main()
 {
 	//int socketPlanificador, socketMemoria;
 	semSalir.__align =0;
-
+	semProduccionMsjs = sem_open("semPlani", 0);
 	if (configuroSocketsYLogs(&(sockets.socketPlanificador), &(sockets.socketMemoria)) == 1) //Preparo las configuraciones bascias para ejecutar la CPU
 		puts("¡¡¡CPU!!!");
 	else
@@ -42,7 +42,7 @@ int main()
 
 	//iniciarCPU(socketPlanificador,socketMemoria); //sin hilos
 
-	//sem_wait(&semSalir);
+	sem_wait(&semSalir);
 
 	return EXIT_SUCCESS;
 }

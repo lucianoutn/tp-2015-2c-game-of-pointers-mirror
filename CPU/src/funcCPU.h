@@ -74,7 +74,7 @@ typedef struct {
 
 
 sem_t semSalir;
-sem_t semProduccionMsjs;
+sem_t *semProduccionMsjs;
 
 //preparo semaforos.lucho
 pthread_mutex_t mutex;

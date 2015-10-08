@@ -25,6 +25,9 @@
 #include <unistd.h>
 #include <semaphore.h>
 #include <commons/collections/queue.h>
+#include <fcntl.h>           /* para las constantes O_*  */
+#include <sys/stat.h>        /* para las constantes de modo */
+
 
 
 #define BACKLOG 10 //comentar
@@ -74,7 +77,7 @@ typedef bool flag;
 
 sem_t semSalir;
 sem_t semEsperaCPU;
-
+sem_t *semProduccionMsjs;
 
 contexto miContexto;
 

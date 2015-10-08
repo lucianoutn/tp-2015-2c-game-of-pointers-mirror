@@ -48,6 +48,5 @@ int consola ();
 
 int leeComando(void);
 
-sem_t semProduccionMsjs;
 
 #endif /* SRC_CONSOLA_H_ */

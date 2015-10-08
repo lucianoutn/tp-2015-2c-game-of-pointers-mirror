@@ -7,6 +7,8 @@
 
 #include "libreriaPlanificador.h"
 
+
+
 //Funcion que permite cargar el archivo de configuracion en el programa.
 void traigoContexto()
 {

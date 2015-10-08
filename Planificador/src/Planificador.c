@@ -10,8 +10,12 @@
 
 #include "libreriaPlanificador.h"
 
+
 int main() {
 	semSalir.__align =0;
+	semProduccionMsjs = sem_open("semPlani", O_CREAT, 0644, 0);
+	//mmap();
+	//sem_init(&semProduccionMsjs, 1, 0); //la variable del medio es "0" para hilos y <>0 para procesos
 	max_PID=0;      //inicializo numero de pid
 	puts("!!!!Planificador!!!!"); /* prints !!!Planificador!!! */
 
@@ -56,7 +60,7 @@ int main() {
 	t_queue *  cola_ready = queue_create();
 	//crear hilo de consola para que quede a la escucha de comandos por consola para el planificador
 
-	consola();
+	consola(); //sin hilo
 	/*
 		pthread_create(&hilo_consola, NULL, (void*)consola, NULL);
 

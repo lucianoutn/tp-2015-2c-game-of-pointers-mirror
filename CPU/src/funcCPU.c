@@ -263,7 +263,7 @@ void iniciarCPU(t_sockets *sockets){
 	{
 		puts("\n\nEsperando Instrucciones...\n\n");
 		//CPU a la espera de nuevas instrucciones
-		sem_wait(&semProduccionMsjs); //semaforo productor-consumidor
+		sem_wait(semProduccionMsjs); //semaforo productor-consumidor
 		status = recv(socketPlanificador, headcpu, sizeof(t_headcpu),0);
 
 		if(status!=0)	//CONTROLA QUE NO SE PIERDA LA CONEXION
@@ -275,7 +275,7 @@ void iniciarCPU(t_sockets *sockets){
 				//FINALIZO CONEXIONES
 				puts("Recibi salir, cierro conexiones");
 				status=0;	//Salgo del while
-				//sem_post(&semSalir);	//Semaforo que controla la finalizacion de la CPU
+				sem_post(&semSalir);	//Semaforo que controla la finalizacion de la CPU
 				break;
 
 			case 1: 	//INSTRUCCION PARA RECIBIR MSJS
@@ -297,7 +297,7 @@ void iniciarCPU(t_sockets *sockets){
 		else	//SI SE PIERDE LA CONEXION SALGO
 		{
 			puts("Conexion perdida!");
-			//sem_post(&semSalir);	//Semaforo para controlar la finalizacion de la CPU
+			sem_post(&semSalir);	//Semaforo para controlar la finalizacion de la CPU
 			break;
 		}
 

@@ -20,7 +20,7 @@
 #include <unistd.h>
 
 t_log* logger;
-sem_t semProduccionMsjs;
+//sem_t *semProduccionMsjs;
 
 char* cwd();
 
