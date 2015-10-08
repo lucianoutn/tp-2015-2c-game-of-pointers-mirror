@@ -365,7 +365,7 @@ int envioAlSwap ( t_header * header, int serverSocket, char * contenido)
 			}
 		}
 
-		close(serverSocket);
+		//close(serverSocket);
 
 	 return flag;
 }

@@ -91,22 +91,22 @@ void analizoPaquete(t_header * package, int socketCliente) {
 			devuelvo.status = 1;
 			devuelvo.contenido = contenido;
 			puts("Todo ok");
-			//send(socketCliente,&devuelvo,sizeof(t_devuelvo),0);
+			send(socketCliente,&devuelvo,sizeof(t_devuelvo),0);
 		}
 		else{
 			puts("Todo mal");
-			//send(socketCliente,&status,sizeof(int),0);
+			send(socketCliente,&status,sizeof(int),0);
 		}
 		break;
 	case 1:
 		printf("Se recibio orden de escritura\n");
 		status = escribirSwap(package, socketCliente);
-		//send(socketCliente,&status,sizeof(int),0);
+		send(socketCliente,&status,sizeof(int),0);
 		break;
 	case 2:
 		printf("Se recibio orden de inicializacion\n");
 		status = inicializarProc(package);
-		//send(socketCliente,&status,sizeof(int),0);
+		send(socketCliente,&status,sizeof(int),0);
 		break;
 	case 3:
 		printf("Se recibio orden de finalizacion de proceso\n");
@@ -122,11 +122,13 @@ void analizoPaquete(t_header * package, int socketCliente) {
 
 void leerSwap(t_header * package,char * contenido)
 {
+	/*
 	bool _numeroDePid(void * p)
 	{
 		return (p == package->PID);
 	}
-	t_pag * pag = list_find(lista_paginas, (void *)_numeroDePid);
+	*/
+	t_pag * pag = list_find(lista_paginas, (void *)numeroDePid);
 	if(pag!=NULL)
 	{
 		fseek(archivo,pag->inicio + (package->pagina_proceso * contexto->tam_pagina),SEEK_SET);
@@ -231,10 +233,6 @@ int finalizarProc(t_header* package)
 
 }
 
-bool numeroDePid(int * pid) {
-	return (*pid == global->PID);
-}
-
 t_hueco* buscarHueco(int tamanio) {
 	int status = 0;
 	int i = 0;
@@ -261,4 +259,6 @@ void rellenarParticion(int inicio, int paginas) {
 	}
 }
 
-
+bool numeroDePid(int * pid) {
+	return (*pid == global->PID);
+}

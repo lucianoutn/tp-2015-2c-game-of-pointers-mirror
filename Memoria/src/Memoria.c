@@ -16,10 +16,12 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <commons/config.h>
-#include <SharedLibs/sockets.h>
+#include <SharedLibs/libreriaCliente.h>
+#include <SharedLibs/libreriaServidor.h>
 #include "funcMemory.h"
 #include <errno.h>
 
+#define IP "127.0.0.1"
 #define N 50
 
 int descriptoresVec[N], maxDescriptor, j;
@@ -52,7 +54,7 @@ int main()
    //t_list * TLB = crearListaTlb();
   }
 
-  reciboDelCpu(&memoria_real, TLB, tablaAdm);
+  reciboDelCpu(memoria_real, TLB, tablaAdm);
 
   log_destroy(logger);
   return 0;
@@ -60,44 +62,50 @@ int main()
 
 void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 {
-	int serverSocket;
-	int listenningSocket, socketCliente, resultadoSelect;
+	int resultadoSelect;
 	fd_set readset;
 	t_header * package = malloc(sizeof(t_header));
 	char * mensaje;
 	int status = 1;
 
-	//conexionAlCliente(&listenningSocket, &socketCliente, miContexto.puertoServidor);
+	int listenningSocket=crearServer(miContexto.puertoServidor);
+
+	//Estructura que tendra los datos de la conexion del cliente MEMORIA
+	struct sockaddr_in addr;
+	socklen_t addrlen = sizeof(addr);
+
+	int L = listen(listenningSocket, BACKLOG);
+	if (L==-1)
+	 perror("LISTEN");
+
+	int socketCPU = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen);
 	printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
-	printf("El socket de conexión con el CPU es %d\n", socketCliente);
+	printf("Conexion aceptada Socket= %d \n",socketCPU);
 
 	// ME CONECTO AL SWAP PARA ENVIARLE LO QUE VOY A RECIBIR DE LA CPU
-	serverSocket = meConectoAlSwap();
+	int serverSocket = crearCliente(IP,miContexto.puertoCliente);
 
-	/*PRUEBAS
 
 	while(status!=0)
 	{
 		//sem_wait(sem_1);
 		// RECIBO EL PAQUETE(t_header) ENVIADO POR LA CPU
-		status = recv(socketCliente, package, sizeof(t_header), 0);
+		status = recv(socketCPU, package, sizeof(t_header), 0);
 
 		printf ("l tipo de ejecucion recibido es %d \n", package->type_ejecution);
 
-		//
+		/*
 	  	  if(package.tamanio_msj!=0)
 	  	  {
 		  mensaje = malloc(package.tamanio_msj);
 		  status = recv(socketCliente, mensaje, package.tamanio_msj,0);
 	  	  }
-		//
+		*/
 
 		// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
-		ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCliente, serverSocket);
+		ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 	}
-FIN PRUEBAS
-*/
-
+/*
 	t_header * package1 = malloc(sizeof(t_header));
 	package1->type_ejecution=2;
 	package1->PID=1;
@@ -110,6 +118,8 @@ FIN PRUEBAS
 	package1->pagina_proceso=0;
 
 	ejecutoInstruccion(package1, mensaje, memoria_real, TLB, tablaAdm, socketCliente, serverSocket);
+
+*/
   /* SELECT primera version no borrar
   do {
      FD_ZERO(&readset); 	//esto abre y limpia la estructura cada vez q se reinicia el select luego de un error

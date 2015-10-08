@@ -14,12 +14,15 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <SharedLibs/sockets.h>
+#include <SharedLibs/libreriaServidor.h>
+#include <SharedLibs/libreriaCliente.h>
 #include <commons/config.h>
 #include <commons/string.h>
 #include "funcSwap.h"
 #include <semaphore.h>
 #include <pthread.h>
+
+#define BACKLOG 10
 
 void reciboDelAdminMem();
 
@@ -68,11 +71,22 @@ int main()
 
 void reciboDelAdminMem()
 {
-  int listenningSocket,socketCliente;
+  int listenningSocket=crearServer(contexto->puerto);
+
+  //Estructura que tendra los datos de la conexion del cliente MEMORIA
+  struct sockaddr_in addr;
+  socklen_t addrlen = sizeof(addr);
+
+  int L = listen(listenningSocket, BACKLOG);
+  if (L==-1)
+	  perror("LISTEN");
+
+  int socketCliente = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen);
+  printf("Conexion aceptada Socket= %d \n",socketCliente);
+
   t_header * package = malloc(sizeof(t_header));
   int status = 2; // Estructura que maneja el status de los receive.
 
-  conexionAlCliente(&listenningSocket, &socketCliente,contexto->puerto);
   printf("Cliente conectado. Esperando mensajes:\n");
 
 
