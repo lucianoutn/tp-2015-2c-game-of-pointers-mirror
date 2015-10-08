@@ -91,6 +91,7 @@ void procesarPCB(t_queue* cola_ready, char * path, int socketCPU)
 	CPUenUso=false;
 
 	send(socketCPU, &msj,sizeof(t_msj),0);
+	sem_post(semProduccionMsjs);
 	puts("Mensaje enviado\n");
 	log_info(logger,"Comienzo ejecucion PID: %d Nombre: %s", pcb->PID, pcb->ruta);
 }

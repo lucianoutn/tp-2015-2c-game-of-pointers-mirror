@@ -73,7 +73,8 @@ int main() {
 
 
 	switch (orden){
-		case 0:{
+		case 0:{  //orden correr path
+			iniciarPlanificador();
 			puts("llegue");
 		}
 	}
