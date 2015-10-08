@@ -8,8 +8,21 @@
 #include "libreriaPlanificador.h"
 #include "consola.h"
 
+const char* allCommands[] =
+{
+	// esto define las palabras de los comandos aceptados
+	// lo que el usuario ingrese va a ser comparado con esto
+	// TODOS LOS COMANDOS deben estar en minúscula para que lo reconozca bien sin importar como lo ingrese el usuario
+	"ayuda",
+	"iniciar", // tendria q ser correr PATH directamente acá
+	"finalizar PID",
+	"ps",
+	"cpu",
+	"salir"
+};
+
 //Funcion que muestra la consola por pantalla con las opciones a enviar a la CPU
-int consola ()
+void *consola (void* arg)
 {
 	//variables auxiliares para el uso de la consola
 	char *buffer;
@@ -44,7 +57,9 @@ int consola ()
 			{
 				//el hilo debe enviar una señal al planificador para que invoque la funcion
 				//iniciarPlanificador() ya que no es trabajo de la consola
-				sem_post(semProduccionMsjs);
+				//sem_post(semProduccionMsjs); //este sem hay q colocarlo adentro de inciarPlanificador();
+				orden=0;
+				sem_post(&ordenIngresada);
 				break;
 			}
 
@@ -99,7 +114,7 @@ int consola ()
 			printf("\nIngrese el comando deseado o ayuda para conocer los comandos posibles\n");
 			command = leeComando(); // read lee la palabra y me devuelve un comando del enum
 	}
-	return 0;
+
 }
 
 //Funcion que lee el comando y lo busca entre los reconocidos

@@ -9,13 +9,12 @@
  */
 
 #include "libreriaPlanificador.h"
+#include "consola.h"
 
 
 int main() {
 	semSalir.__align =0;
-	semProduccionMsjs = sem_open("semPlani", O_CREAT, 0644, 0);
-	//mmap();
-	//sem_init(&semProduccionMsjs, 1, 0); //la variable del medio es "0" para hilos y <>0 para procesos
+	semProduccionMsjs = sem_open("semPlani", O_CREAT, 0644, 0);//inicializo sem prod-consum, el 0_creat es para evitar q se inicialize en el otro proceso
 	max_PID=0;      //inicializo numero de pid
 	puts("!!!!Planificador!!!!"); /* prints !!!Planificador!!! */
 
@@ -60,12 +59,26 @@ int main() {
 	t_queue *  cola_ready = queue_create();
 	//crear hilo de consola para que quede a la escucha de comandos por consola para el planificador
 
-	consola(); //sin hilo
-	/*
-		pthread_create(&hilo_consola, NULL, (void*)consola, NULL);
+	//consola(); //sin hilo
 
-		pthread_join(hilo_consola, NULL);
-	*/
+	pthread_t hilo_consola;
+	pthread_create(&hilo_consola, NULL, consola, NULL);
+
+
+
+
+	sem_wait(&ordenIngresada);
+
+	PUNTODERETORNO:
+
+
+	switch (orden){
+		case 0:{
+			puts("llegue");
+		}
+	}
+
+	pthread_join(hilo_consola, NULL);
 
 	//si entra el comando correr PATH desde el hilo consola:
 

@@ -8,25 +8,15 @@
 #ifndef SRC_CONSOLA_H_
 #define SRC_CONSOLA_H_
 
-#include <semaphore.h>
-#include "SharedLibs/comun.h"
+//#include "libreriaPlanificador.h"
+//#include <semaphore.h>
+//#include "SharedLibs/comun.h"
 
 /********************************************************
  * LIBRERIA DEDICADA UNICAMENTE A LA CONSOLA
  ********************************************************/
 
-const char* allCommands[] =
-{
-	// esto define las palabras de los comandos aceptados
-	// lo que el usuario ingrese va a ser comparado con esto
-	// TODOS LOS COMANDOS deben estar en minúscula para que lo reconozca bien sin importar como lo ingrese el usuario
-	"ayuda",
-	"iniciar", // tendria q ser correr PATH directamente acá
-	"finalizar PID",
-	"ps",
-	"cpu",
-	"salir"
-};
+
 
 enum Commands
 {
@@ -44,9 +34,10 @@ enum Commands
 	enter
 };
 
-int consola ();
+void *consola (void*);
 
 int leeComando(void);
 
+int orden; //var q permite verificar q orden se ingreso x consola
 
 #endif /* SRC_CONSOLA_H_ */
