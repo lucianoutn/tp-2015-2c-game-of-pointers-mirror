@@ -22,6 +22,7 @@
 #include <errno.h>
 
 #define IP "127.0.0.1"
+#define BACKLOG 10
 #define N 50
 
 int descriptoresVec[N], maxDescriptor, j;
@@ -62,12 +63,14 @@ int main()
 
 void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 {
+	int socketCPU;
 	int resultadoSelect;
 	fd_set readset;
 	t_header * package = malloc(sizeof(t_header));
 	char * mensaje;
 	int status = 1;
 
+	//CONEXION AL CPU
 	int listenningSocket=crearServer(miContexto.puertoServidor);
 
 	//Estructura que tendra los datos de la conexion del cliente MEMORIA
@@ -78,9 +81,10 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	if (L==-1)
 	 perror("LISTEN");
 
-	int socketCPU = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen);
+	socketCPU = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen);
 	printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
 	printf("Conexion aceptada Socket= %d \n",socketCPU);
+
 
 	// ME CONECTO AL SWAP PARA ENVIARLE LO QUE VOY A RECIBIR DE LA CPU
 	int serverSocket = crearCliente(IP,miContexto.puertoCliente);
@@ -95,12 +99,12 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 		printf ("l tipo de ejecucion recibido es %d \n", package->type_ejecution);
 
 		/*
-	  	  if(package.tamanio_msj!=0)
+	  	  if(package->tamanio_msj!=0)
 	  	  {
-		  mensaje = malloc(package.tamanio_msj);
-		  status = recv(socketCliente, mensaje, package.tamanio_msj,0);
+		  mensaje = malloc(package->tamanio_msj);
+		  status = recv(socketCPU, mensaje, package->tamanio_msj,0);
 	  	  }
-		*/
+		 */
 
 		// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
 		ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
@@ -111,13 +115,13 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	package1->PID=1;
 	package1->pagina_proceso=3;
 
-	ejecutoInstruccion(package1, mensaje, memoria_real, TLB, tablaAdm, socketCliente, serverSocket);
+	ejecutoInstruccion(package1, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 
 	package1->type_ejecution=0;
 	package1->PID=1;
 	package1->pagina_proceso=0;
 
-	ejecutoInstruccion(package1, mensaje, memoria_real, TLB, tablaAdm, socketCliente, serverSocket);
+	ejecutoInstruccion(package1, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 
 */
   /* SELECT primera version no borrar
@@ -175,37 +179,10 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
   fin tercera version */
   //FIN SELECT
 
-  //status = recv(socketCliente, mensaje, package.tamanio_msj,0);
-  /*SWAP
-  int serverSocket;
-  conexionAlServer(&serverSocket, miContexto.puertoCliente);
-   //FIN SWAP
-    */
 
 /*
- t_header * package2 = package_create(1,4,0,2);
-
- ejecutoInstruccion(package2, mensaje, memoria_real, TLB, tablaAdm, socketCliente);
- sleep(miContexto.retardoMemoria);
-
-  if(status!= 0)
-  {
+	close(listenningSocket);
+	close(socketCPU);
+	close(serverSocket); //SWAP
 */
-
-		  //send(serverSocket, &package, sizeof(t_header), 0);
-/*
-		  if(package.tamanio_msj!=0)
-		  {
-			  //send(serverSocket, mensaje, strlen(mensaje), 0);
-		  }
-	  }
-	*/
-	  //sem_post(sem_2);
-
-	//meConectoAlSwap(package,mensaje);
-
-	//close(listenningSocket);
-	//close(socketCliente);
-	//close(serverSocket); //SWAP
-
 }

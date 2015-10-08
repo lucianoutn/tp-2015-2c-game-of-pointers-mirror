@@ -20,7 +20,6 @@
 #include <commons/config.h>
 #include <SharedLibs/manejoListas.h>
 #include <SharedLibs/comun.h>
-#include <SharedLibs/sockets.h>
 
 typedef struct{
  char * puertoServidor;
@@ -42,7 +41,10 @@ typedef struct
 }process_pag;
 // ------------------------------------//
 
-
+typedef struct{
+	int status;
+	char* contenido;
+}t_devuelvo;
 // DECLARACIONES GLOBALES PARA USAR FUNCIONES DE CONDICION EN LISTFIND
 int numero_de_pid;
 int numero_pagina;

@@ -203,8 +203,14 @@ void iniciarProceso(t_list* tabla_adm, t_header * proceso)
 		int x = 0;
 
 		// MIENTRAS FALTEN PAGINAS PARA INICIAR //
+		/*
+		 * KOLO!!!
+		 * Para que crear esas paginas ahi, si despues la referencia a memoria la perdes
+		 * no conviene ya agregarla a la lista?
+		 */
 		while (x<proceso->pagina_proceso)
 		{
+			//process_pag * pagina = pag_proc_create(x, NULL);
 			list_add(lista_proceso,pag_proc_create(x, NULL));
 			x++;
 		}
@@ -300,13 +306,21 @@ void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_rea
 	t_marco_hueco * marco_vacio = listaFramesHuecosMemR->head;
 	printf("LA DIRECCION DE MI MARCO VACIO ES %p \n", marco_vacio->direccion_inicio);
 
-	// CREO LA ENTRADA DE LA PAGINA A LA TABLA DE PROCESO
-	process_pag * pagina_proceso = malloc(sizeof(process_pag));
+	// preguntar!! CREO LA ENTRADA DE LA PAGINA A LA TABLA DE PROCESO
 
+	//BUSCO LA ENTRADA DE ESA PAGINA EN LISTA_PROCESO Y LA CARGO
+	process_pag * pagina_proceso = list_find(lista_proceso,(void*)numeroDePaginaIgualA);
 	pagina_proceso->pag = proceso_entrante->pagina_proceso;
 	pagina_proceso->direccion_fisica = marco_vacio->direccion_inicio;
-	list_add(lista_proceso,pagina_proceso);
-
+	/*
+	 * KOLO!
+	 * Aca como ya la agregue a la lista, tendria que buscarlo y rellenar con los valores correspondientes
+	 *
+	 * 	process_pag * pagina_proceso = malloc(sizeof(process_pag));
+	  	pagina_proceso->pag = proceso_entrante->pagina_proceso;
+		pagina_proceso->direccion_fisica = marco_vacio->direccion_inicio;
+		list_add(lista_proceso,pagina_proceso);.
+	 */
 	// VERIFICO QUE HAYA AGREGADO LA PAGINA A LA TABLA
 	printf("LA CANTIDAD DE PAGINAS EN MI TABLA DE PAGINAS ES %d \n", lista_proceso->elements_count);
 
@@ -318,7 +332,7 @@ void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_rea
 	printf ("LA CANTIDAD DE NODOS EN MI LISTA DE FRAMES OCUPADOS ES %d \n", listaFramesMemR->elements_count);
 
 	// ESCRIBO EN EL MARCO LA PAGINA QUE RECIBI DEL SWAP
-	strcat(pagina_proceso->direccion_fisica, contenido);
+	strcpy(pagina_proceso->direccion_fisica, contenido);
 
 	printf("ESCRIBI EN LA PAGINA: %s", pagina_proceso->direccion_fisica);
 
@@ -335,16 +349,6 @@ void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_rea
 
 }
 
-int meConectoAlSwap()
-{
-	int serverSocket;
-
-	conexionAlServer(&serverSocket, miContexto.puertoCliente);
-	printf("Conectado al servidor Swap\n. Bienvenido al sistema, ya puede enviar mensajes\n. Escriba 'exit' para salir\n");
-
-	return serverSocket;
-}
-
 int envioAlSwap ( t_header * header, int serverSocket, char * contenido)
 {
 		int flag;
@@ -355,13 +359,15 @@ int envioAlSwap ( t_header * header, int serverSocket, char * contenido)
 	  	 * 0 = Hubo un error.
 	  	 * 1 = Todo ok.
  	 	*/
+		//t_devuelvo * devuelvo = malloc(sizeof(t_devuelvo));
+		//recv(serverSocket,(void*)devuelvo,sizeof(t_devuelvo),0);
 		recv(serverSocket, &flag, sizeof(int),0);
 
 		if(flag) //si no hubo error
 		{
 			if(header->type_ejecution==0) //si hice una lectura, devuelve la pag
 			{
-				recv(serverSocket, contenido, sizeof(miContexto.tamanioMarco),0);
+				recv(serverSocket, (void *)contenido, sizeof(miContexto.tamanioMarco),0);
 			}
 		}
 

@@ -85,7 +85,7 @@ void analizoPaquete(t_header * package, int socketCliente) {
 	case 0:
 		printf("Se recibio orden de lectura\n");
 		char * contenido = malloc(contexto->tam_pagina);
-		t_devuelvo devuelvo;
+		t_devuelvo  devuelvo;
 		leerSwap(package,contenido);
 		if(contenido!=NULL){
 			devuelvo.status = 1;
