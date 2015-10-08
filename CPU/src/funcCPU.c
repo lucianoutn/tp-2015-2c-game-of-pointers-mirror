@@ -263,6 +263,7 @@ void iniciarCPU(t_sockets *sockets){
 	{
 		puts("\n\nEsperando Instrucciones...\n\n");
 		//CPU a la espera de nuevas instrucciones
+		sem_wait(&semProduccionMsjs); //semaforo productor-consumidor
 		status = recv(socketPlanificador, headcpu, sizeof(t_headcpu),0);
 
 		if(status!=0)	//CONTROLA QUE NO SE PIERDA LA CONEXION
@@ -314,7 +315,7 @@ void iniciarCPU(t_sockets *sockets){
  */
 int configuroSocketsYLogs (int *socketPlanificador,int *socketMemoria){
 	cargoArchivoConfiguracion(); //carga las configuraciones basicas
-	creoLogger(0);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
+	creoLogger(1);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
 	log_info(logger, "Inicio Log CPU", NULL);
 	puts("Conexion con el Planificador");
 	*socketPlanificador = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador

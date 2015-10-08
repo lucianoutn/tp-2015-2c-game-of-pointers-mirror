@@ -3,8 +3,8 @@
 	<name>CPU</name>
 	<comment></comment>
 	<projects>
-		<project>SharedLibs</project>
 		<project>commons</project>
+		<project>SharedLibs</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>

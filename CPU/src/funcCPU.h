@@ -16,8 +16,8 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
-#include <SharedLibs/manejoListas.h>
-#include <SharedLibs/comun.h>
+#include "SharedLibs/manejoListas.h"
+#include "SharedLibs/comun.h"
 #include <commons/config.h>
 #include <semaphore.h>
 #include "mAnsisOp.h"
@@ -74,6 +74,7 @@ typedef struct {
 
 
 sem_t semSalir;
+sem_t semProduccionMsjs;
 
 //preparo semaforos.lucho
 pthread_mutex_t mutex;

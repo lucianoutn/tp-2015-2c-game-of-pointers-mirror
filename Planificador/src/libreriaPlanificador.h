@@ -75,6 +75,7 @@ typedef bool flag;
 sem_t semSalir;
 sem_t semEsperaCPU;
 
+
 contexto miContexto;
 
 flag CPUenUso; //Flag que permite verificar si una CPU esta en uso o no

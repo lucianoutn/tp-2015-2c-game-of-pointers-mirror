@@ -8,6 +8,8 @@
 #ifndef SRC_CONSOLA_H_
 #define SRC_CONSOLA_H_
 
+#include <semaphore.h>
+#include "SharedLibs/comun.h"
 
 /********************************************************
  * LIBRERIA DEDICADA UNICAMENTE A LA CONSOLA
@@ -45,5 +47,7 @@ enum Commands
 int consola ();
 
 int leeComando(void);
+
+sem_t semProduccionMsjs;
 
 #endif /* SRC_CONSOLA_H_ */

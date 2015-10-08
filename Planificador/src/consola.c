@@ -44,6 +44,7 @@ int consola ()
 			{
 				//el hilo debe enviar una señal al planificador para que invoque la funcion
 				//iniciarPlanificador() ya que no es trabajo de la consola
+				sem_post(&semProduccionMsjs);
 				break;
 			}
 

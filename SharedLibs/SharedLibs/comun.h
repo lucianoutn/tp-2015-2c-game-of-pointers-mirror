@@ -9,6 +9,7 @@
 #define SHAREDLIBS_COMUN_H_
 
 #include <commons/log.h>
+#include <semaphore.h>
 /*
  * Utilizamos esta libreria para poner todas las declaraciones
  * de variables que van a ser globales a TODOS los procesos.
@@ -19,6 +20,7 @@
 #include <unistd.h>
 
 t_log* logger;
+sem_t semProduccionMsjs;
 
 char* cwd();
 
