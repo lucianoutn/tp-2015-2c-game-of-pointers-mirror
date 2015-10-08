@@ -1,6 +1,4 @@
 /*
-
-/*
  * funcMemory.c
  *
  *  Created on: 29/9/2015
@@ -45,7 +43,7 @@ void liberarMemoria(char * memoria_a_liberar)
  free (memoria_a_liberar);
  printf ("Memoria Liberada");
 }
-
+/*
 char * crear_tlb()
 {
  char * arreglo = (char *) malloc(4*3*sizeof(char*));
@@ -59,50 +57,50 @@ char * crear_tlb()
  }
  printf ("La TLB se ha creado satisfactoriamente");
  return arreglo;
-
 }
-
-void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memoria_real, t_list * TLB, t_list * tabla_adm, int socketCliente,int serverSocket)
+*/
+void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memoria_real, t_list * TLB, t_list * tabla_adm, int socketCliente, int serverSocket)
 {
 	int flag;
+	// DEPENDIENDO EL TIPO DE EJECUCION, CASE
 	switch (registro_prueba->type_ejecution)
-	 	{
+	{
 	 	case 0:
 			printf ("Se recibio orden de lectura\n");
-			char * contenido = malloc(sizeof(miContexto.tamanioMarco));
-			flag= meConectoAlSwap(serverSocket,registro_prueba, contenido);
-			if(flag)
+			/* CUANDO SE RECIBE UNA INSTRUCCION DE LECTURA, PRIMERO SE VERIFICA LA TLB A VER SI YA FUE CARGADA
+			 * RECIENTEMENTE, EN CASO CONTRARIO SE ENVIA AL SWAP, ESTE ME VA A DEVOLVER LA PAGINA A LEER,
+			 * LA MEMORIA LA ALMACENA EN UN MARCO DISPONIBLE PARA EL PROCESO DE LA PAGINA Y ACTUALIZA SUS TABLAS
+			 */
+			numero_pagina = registro_prueba->pagina_proceso;
+			numero_de_pid = registro_prueba->PID;
+			// PRIMER VERIFICO QUE LA TLB ESTE HABILITADA*/
+			if (!strcmp(miContexto.tlbHabilitada, "SI"))
 			{
- 				//puts ("FLAG OK");
- 				printf("Leida pagina n°: %d \n", registro_prueba->pagina_proceso);
- 				bool recibi = true;				//Mejorar mas adelante
- 				send(socketCliente,&recibi,sizeof(bool),0);
-				log_info(logger, "Se hizo conexion con swap, se envio paquete a leer y este fue recibido correctamente");
-				/* Como la transferencia con el swap fue exitosa, le envio la pagina al CPU
-				send(socketCliente,contenido,sizeof(miContexto.tamanioMarco),0);
-				*/
+				flag=buscarEnCache(socketCliente,TLB);
+				if(!flag)
+				{
+					buscarEnMemReal(tabla_adm,TLB, registro_prueba, serverSocket,socketCliente, memoria_real);
+				}
 			}
 			else
 			{
- 				puts ("FLAG NO OK");
- 				bool recibi = false;			//Mejorar
- 				send(socketCliente,&recibi,sizeof(bool),0);
-				log_error(logger, "Hubo un problema con la conexion/envio al swap");
+				buscarEnMemReal(tabla_adm, TLB,registro_prueba, serverSocket,socketCliente, memoria_real);
 			}
 	 		break;
+
 	 	case 1:
 			printf ("Se recibio orden de escritura\n");
 		/*
 			int PID = registro_prueba.PID;
 			numero_pagina = registro_prueba.pagina_proceso;
 			numero_de_pid = registro_prueba.PID;
-			/* VERIFICO QUE EL PID ESTE CARGADO EN LA TLB
+			// VERIFICO QUE EL PID ESTE CARGADO EN LA TLB
 			t_tlb * registro_tlb = list_find(TLB, elNodoTienePidIgualA);
 			if (registro_tlb != NULL)
 			{
 				printf ("ENCONTRE EL REGISTRO CON PID %d \n ",registro_tlb->pid);
 				pag_proceso * pag = list_find(registro_tlb->direccion_fisica, numeroDePaginaIgualA);
-				/* VERIFICO QUE LA PAGINA A ESCRIBIR ESTE CARGADA EN LA CACHE
+				// VERIFICO QUE LA PAGINA A ESCRIBIR ESTE CARGADA EN LA CACHE
 				if (pag != NULL)
 				{
 					printf("LA PAGINA ESTA EN CACHE \n");
@@ -117,76 +115,52 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			else
 			{
 				printf ("NO ESTÁ EN CACHE");
-				/* ME FIJO SI ESTÁ EN MEMORIA REAL
+				// ME FIJO SI ESTÁ EN MEMORIA REAL
 			}
 			//printf("ACABO DE ESCRIBIR: %s", point_to_write);
 	*/
 	 		break;
 	 	case 2:
 	 		printf("Se recibio orden de inicializacion \n");
-	 	/*	if( !strcmp(miContexto.tlbHabilitada, "SI") && !tlbLlena(TLB))
+	 		iniciarProceso(tabla_adm, registro_prueba);
+	 		/* LA INICIALIZACION SE MANDA DIRECO AL SWAP PARA QUE RESERVE ESPACIO,
+	 		   EL FLAG = 1 ME AVISA QUE RECIBIO OK */
+
+	 		flag = envioAlSwap(registro_prueba, serverSocket, NULL);
+	 		if(flag)
 	 		{
-		 		//iniciarEnCache(registro_prueba, TLB,  memoria_cache);
-		 		printf("LA TLB TIENE %d ELEMENTOS \n", TLB->elements_count);
-	 		}else{
-	 	*/
-	 			//printf("LA TABLA DE MEMORIA PRINCIPAL TIENE %d ELEMENTOS \n", tabla_mem_real->elements_count);
-	 		/* SI LA MEMORIA TIENE MARCOD, SE MANDA A INICIAR A MEMORIA, SINO SE MANDA DIRECO AL SWAP (CHECKPOINT)*/
-	 		if ( miContexto.cantidadMarcos != 0)
-	 		{
-	 			iniciarEnMemReal(registro_prueba, tabla_adm, memoria_real);
-				bool recibi = true;
-				send(socketCliente,&recibi,sizeof(bool),0);
+	 			bool recibi = true;
+	 			send(socketCliente,&recibi,sizeof(bool),0);
+	 			log_info(logger, "Se hizo conexion con swap, se envio proceso a iniciar y este fue recibido correctamente");
 	 		}
 	 		else
 	 		{
-	 			//printf("Iniciar pagina n°: %d \n", registro_prueba->pagina_proceso);
-	 			flag= meConectoAlSwap(serverSocket,registro_prueba, NULL);
-	 			if(flag)
-	 			{
-	 				printf("Iniciada pagina n°: %d \n", registro_prueba->pagina_proceso);
-	 				//puts ("FLAG OK");
-	 				bool recibi = true;
-	 				send(socketCliente,&recibi,sizeof(bool),0);
-	 				log_info(logger, "Se hizo conexion con swap, se envio proceso a iniciar y este fue recibido correctamente");
-	 			}
-	 			else
-	 			{
-	 				puts ("FLAG NO OK");
-	 				bool recibi = false;			//Mejorar
-	 				send(socketCliente,&recibi,sizeof(bool),0);
-					log_error(logger, "Hubo un problema con la conexion/envio al swap");
-	 			}
+				log_error(logger, "Hubo un problema con la conexion/envio al swap");
 	 		}
+
 	 		break;
 	 	case 3:
 			printf ("Se recibio orden de finalizacion de proceso :) \n");
 			matarProceso(registro_prueba, tabla_adm);
-			flag= meConectoAlSwap(serverSocket,registro_prueba, NULL);
+			/*
 			if(flag)
 			{
- 				puts ("FLAG OK");
- 				bool recibi = true;			//Mejorar
- 				send(socketCliente,&recibi,sizeof(bool),0);
 				log_info(logger, "Se hizo conexion con swap, se envio proceso a matar y este fue recibido correctamente");
 			}
 			else
 			{
- 				puts ("FLAG NO OK");
- 				bool recibi = false;			//Mejorar
- 				send(socketCliente,&recibi,sizeof(bool),0);
 				log_error(logger, "Hubo un problema con la conexion/envio al swap");
 			}
-			/*
+
 			numero_de_pid = registro_prueba->PID;
 			t_tlb * reg_tlb = list_find(TLB, elNodoTienePidIgualA);
 
 			printf("La TLB TIENE %d ELEMENTOS ANTES DE DESTRUIR\n", TLB->elements_count);
-			/* DIRECCION TABLA PROCESO A ELIMINAR
+			// DIRECCION TABLA PROCESO A ELIMINAR
 			list_destroy(reg_tlb->direccion_fisica);
 		//	printf("LA DIRECCION DE LA TABLA DEL PROCESO A ELIMINAR ES %s \n", direccion_tabla_proc);
 
-			/* NO ME RECONOCE EL INPUT_DESTROY DEFINIDO EN MANEJOLISTAS
+			// NO ME RECONOCE EL INPUT_DESTROY DEFINIDO EN MANEJOLISTAS
 		//	list_remove_and_destroy_by_condition(TLB, elNodoTienePidIgualA, input_destroy);
 
 			list_remove_by_condition(TLB, elNodoTienePidIgualA);
@@ -199,12 +173,12 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 		break;
 	 	}
 }
-
+/*
 void iniciarEnCache(t_header registro_prueba, char * TLB, char * memoria_cache)
 {
  int cant_paginas = registro_prueba.pagina_proceso;
  int x = 0, bytes = 0, a = 0;
- printf ("CANTIDAD DE PAGINAS EN CACHE: %d \n", cant_paginas);
+ printf ("CANTIDAD DE PAGINAS: %d \n", cant_paginas);
  // MIENTRAS HAYA PAGINAS DEL PROCESO PARA INICIAR /
  while (x != cant_paginas)
  {
@@ -219,73 +193,181 @@ void iniciarEnCache(t_header registro_prueba, char * TLB, char * memoria_cache)
   x++;
  }
 }
+*/
 
-void iniciarEnMemReal(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_real)
+void iniciarProceso(t_list* tabla_adm, t_header * proceso)
 {
- int cant_paginas = proceso_entrante->pagina_proceso;
- int x = 0, a = 0;
- printf ("CANTIDAD DE PAGINAS EN MEMORIA REAL: %d \n", cant_paginas);
- t_list * lista_proceso = crearListaProceso();
- // MIENTRAS HAYA PAGINAS DEL PROCESO PARA INICIAR /
- while (x != cant_paginas)
- {
-	printf ( "ENTRE A CREAR UNA PAGINA \n");
-   /* TRAIGO EL PRIMER MARCO VACIO DE MI MEMORIA */
-	printf ("LA LISTA DE FRAMES HUECOS TIENE %d ELEMENTOS \n", listaFramesHuecosMemR->elements_count);
-   t_marco_hueco * marco_vacio = listaFramesHuecosMemR->head;
-   printf("LA DIRECCION DE MI MARCO VACIO ES %p \n", marco_vacio->direccion_inicio);
+		// PRIMERO CREO LA TABLA DEL PROCESO Y LA AGREGO A LA LISTA DE LISTAS DE PROCESOS JUNTO CON EL PID
+		t_list * lista_proceso = crearListaProceso();
+		// AGREGO UN NODO PARA CADA PAGINA A INICIALIZAR, OBVIAMENTE APUNTANDO A NULL PORQUE NO ESTAN EN MEMORIA TODAVIA
+		int x = 0;
 
-   /* CREO LA ENTRADA DE UNA PAGINA A LA TABLA DE PROCESO */
-   process_pag * pagina_proceso = malloc(sizeof(process_pag));
-   pagina_proceso->pag = proceso_entrante->pagina_proceso;
-   pagina_proceso->direccion_fisica = marco_vacio->direccion_inicio;
-   a=list_add(lista_proceso,pagina_proceso);
-   printf("LA CANTIDAD DE PAGINAS EN MI TABLA DE PAGINAS ES %d \n", lista_proceso->elements_count);
+		// MIENTRAS FALTEN PAGINAS PARA INICIAR //
+		while (x<proceso->pagina_proceso)
+		{
+			list_add(lista_proceso,pag_proc_create(x, NULL));
+			x++;
+		}
 
-   /* PASO EL MARCO LIBRE A LA LISTA DE OCUPADOS Y LO ELIMINO */
-   t_marco * marco_ocupado = marco_create(marco_vacio->direccion_inicio, marco_vacio->numero_marco);
-   a = list_add(listaFramesMemR, marco_ocupado);
-   printf ("LA CANTIDAD DE NODOS EN MI LISTA DE FRAMES OCUPADOS ES %d \n", listaFramesMemR->elements_count);
-
-   /* LE HAGO FREE Y NO USO LA FUNCION DESTROY PORQUE NO LA ENCUENTRA -.- */
-   list_remove(listaFramesHuecosMemR, 0);
-   //free (marco_vacio);
-   //marco_hueco_destroy(marco_vacio);
-  x++;
- }
- /* AGREGO UNA ENTRADA A LA TABLA DE TABLAS DE PROCESOS */
-   a = list_add(tabla_adm,tabla_adm_create(proceso_entrante->PID, lista_proceso) );
-   printf ("LA LISTA DE LSITAS DE PROCESOS TIENE %d ELEMENTOS \n", tabla_adm->elements_count);
-}
-
-bool elNodoTienePidIgualA(int * pid_number)
-{
- return (*pid_number == numero_de_pid);
+		list_add(tabla_adm,tabla_adm_create(proceso->PID, lista_proceso) );
 
 }
 
-int meConectoAlSwap(int serverSocket, t_header * registro_prueba, char * contenido)
+int buscarEnCache(int socketCliente, t_list * TLB)
+{
+	// VERIFICO TODAS LAS ENTRADAS DE LA TLB QUE TIENE EL PID DEL PROCESO
+	t_list * subListaProceso = list_filter(TLB, (void *) elNodoTienePidIgualA);
+	// SI ENCONTRE ALGUNA ENTRADA CON ESE PID
+	if (subListaProceso != NULL)
+	{
+		// VERIFICO QUE ALGUNA DE LAS ENTRADAS TENGA LA PAGINA QUE BUSCO
+		t_tlb * registro_tlb = list_find(subListaProceso, (void *)numeroDePaginaIgualA);
+
+		// SI LA ENCONTRO LA LEO Y SE LA ENVIO AL CPU
+		if (registro_tlb != NULL)
+		{
+			send(socketCliente,*(registro_tlb->direccion_fisica) ,sizeof(miContexto.tamanioMarco),0);
+			return 1;
+		}else
+		{
+			// SI NO LA ENCONTRO ENTONCES LA BUSCO EN LA TABLA DE TABLAS, COMO CUANDO NO ESTA HABILITADA LA TLB
+			return 0;
+		}
+	/* SI LA TLB NO ESTA HABILITADA ENTONCES TENGO QUE VERIFICAR EN LA TABLA DE TABLAS
+	 * SI YA ESTA CARGADA EN MEMORIA O SI ESTA EN SWAP */
+	}
+	else
+	{
+		return 0;
+	}
+	return 1;
+}
+
+int buscarEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serverSocket, int socketCliente, char * memoria_real)
 {
 	int flag;
+	t_tabla_adm * reg_tabla_tablas = list_find(tabla_adm, elNodoTienePidIgualA);
 
-	send(serverSocket, registro_prueba, sizeof(t_header), 0);
-
-	/*
-	 * Una vez enviado el registro, recibo la notificación por parte del swap.
-  	 * 0 = Hubo un error.
-  	 * 1 = Todo ok.
-  	 */
-	recv(serverSocket, &flag, sizeof(int),0);
-
-	if(flag) //si no hubo error
+	// SI ENCONTRO UN REGISTRO CON ESE PID
+	if (reg_tabla_tablas != NULL)
 	{
-		if(registro_prueba->type_ejecution==0) //si hice una lectura, devuelve la pag
+		// TRAIGO LA TABLA DEL PROCESO
+		t_list * tabla_proc = reg_tabla_tablas->direc_tabla_proc;
+
+		// TRAIGO LA PAGINA BUSCADA
+		process_pag * pagina_proc = list_find(tabla_proc, (void *)numeroDePaginaIgualA);
+
+		// SI LA DIRECCION = NULL ES PORQUE ESTA EN SWAP, SINO YA LA ENCONTRE EN MEMORIA
+		if (pagina_proc->direccion_fisica == NULL)
 		{
-			recv(serverSocket, contenido, sizeof(miContexto.tamanioMarco),0);
+			char * contenido = malloc(sizeof(miContexto.tamanioMarco));
+			flag = envioAlSwap(package, serverSocket, contenido );
+			//SI TODO SALIO BIEN, EL SWAP CARGO LA PAGINA A LEER EN "CONTENIDO"
+			if(flag)
+			{
+				log_info(logger, "Se hizo conexion con swap, se envio paquete a leer y este fue recibido correctamente");
+				lectura(package, tabla_adm, memoria_real, contenido, TLB);
+				// Como la transferencia con el swap fue exitosa, le envio la pagina al CPU
+				send(socketCliente,contenido,sizeof(miContexto.tamanioMarco),0);
+				return 1;
+			}
+			else
+			{
+				log_error(logger, "Hubo un problema con la conexion/envio al swap");
+				return 0;
+			}
+		}else // SI NO ESTA EN SWAP, YA CONOZCO LA DIRECCION DE SU MARCO //
+		{
+			/* ACA NO SE SI SE ENVIA CON UN POINTER SI QUIERO MANDAR EL CONTENIDO DESDE ESA DIRECCION,
+			 * HABRIA QUE PROBAR QUE ONDA
+			 */
+			send(socketCliente,*(pagina_proc->direccion_fisica),sizeof(miContexto.tamanioMarco),0);
+			return 1;
 		}
 	}
+	return 1;
+}
 
- return flag;
+void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_real, char * contenido, t_list * TLB)
+{
+	// BUSCO LA TABLA DEL PROCESO EN LA LISTA DE TABLAS DE PROCESOS POR EL NUMERO DE PID
+	numero_de_pid = proceso_entrante->PID;
+	t_tabla_adm * registro_tabla_proc = list_find(tabla_adm,(void*) elNodoTienePidIgualA);
+	t_list * lista_proceso = registro_tabla_proc->direc_tabla_proc;
+
+	// TRAIGO EL PRIMER MARCO VACIO DE MI MEMORIA PARA ALMACENAR EL CONTENIDO A LEER
+	printf ("LA LISTA DE FRAMES HUECOS TIENE %d ELEMENTOS \n", listaFramesHuecosMemR->elements_count);
+	t_marco_hueco * marco_vacio = listaFramesHuecosMemR->head;
+	printf("LA DIRECCION DE MI MARCO VACIO ES %p \n", marco_vacio->direccion_inicio);
+
+	// CREO LA ENTRADA DE LA PAGINA A LA TABLA DE PROCESO
+	process_pag * pagina_proceso = malloc(sizeof(process_pag));
+
+	pagina_proceso->pag = proceso_entrante->pagina_proceso;
+	pagina_proceso->direccion_fisica = marco_vacio->direccion_inicio;
+	list_add(lista_proceso,pagina_proceso);
+
+	// VERIFICO QUE HAYA AGREGADO LA PAGINA A LA TABLA
+	printf("LA CANTIDAD DE PAGINAS EN MI TABLA DE PAGINAS ES %d \n", lista_proceso->elements_count);
+
+	// PASO EL MARCO LIBRE A LA LISTA DE OCUPADOS
+	t_marco * marco_ocupado = marco_create(marco_vacio->direccion_inicio, marco_vacio->numero_marco);
+	list_add(listaFramesMemR, marco_ocupado);
+
+	// VERIFICO QUE SE HAYA PASADO MI MARCO A LA LISTA DE MARCOS "OCUPADOS" PARA LLENARLO
+	printf ("LA CANTIDAD DE NODOS EN MI LISTA DE FRAMES OCUPADOS ES %d \n", listaFramesMemR->elements_count);
+
+	// ESCRIBO EN EL MARCO LA PAGINA QUE RECIBI DEL SWAP
+	strcat(pagina_proceso->direccion_fisica, contenido);
+
+	printf("ESCRIBI EN LA PAGINA: %s", pagina_proceso->direccion_fisica);
+
+	// LIBERO EL NODO/MARCO DE LA LISTA DE MARCOS HUECOS PORQUE AHORA ESTA EN LA DE OCUPADOS.
+	list_remove(listaFramesHuecosMemR, 0);
+
+	// SI LA TLB ESTA HABILITADA Y NO ESTA LLENA, ENTONCES LE CREO LA ENTRADA DE LA PAGINA LEIDA
+	if( !strcmp(miContexto.tlbHabilitada, "SI") && !tlbLlena(TLB))
+	{
+	 	t_tlb * entrada_tlb = reg_tlb_create(proceso_entrante->PID, proceso_entrante->pagina_proceso, pagina_proceso->direccion_fisica);
+	 	// VERIFICO LA CANTIDAD DE ELEMENTOS, A VER SI LO ESTOY HACIENDO BIEN
+	 	printf("LA TLB TIENE %d ELEMENTOS \n", TLB->elements_count);
+	}
+
+}
+
+int meConectoAlSwap()
+{
+	int serverSocket;
+
+	conexionAlServer(&serverSocket, miContexto.puertoCliente);
+	printf("Conectado al servidor Swap\n. Bienvenido al sistema, ya puede enviar mensajes\n. Escriba 'exit' para salir\n");
+
+	return serverSocket;
+}
+
+int envioAlSwap ( t_header * header, int serverSocket, char * contenido)
+{
+		int flag;
+		send(serverSocket, header, sizeof(t_header), 0);
+
+		/*
+		 * Una vez enviado el registro, recibo la notificación por parte del swap.
+	  	 * 0 = Hubo un error.
+	  	 * 1 = Todo ok.
+ 	 	*/
+		recv(serverSocket, &flag, sizeof(int),0);
+
+		if(flag) //si no hubo error
+		{
+			if(header->type_ejecution==0) //si hice una lectura, devuelve la pag
+			{
+				recv(serverSocket, contenido, sizeof(miContexto.tamanioMarco),0);
+			}
+		}
+
+		close(serverSocket);
+
+	 return flag;
 }
 
 bool numeroDePaginaIgualA(int * pagina_number)
@@ -293,6 +375,11 @@ bool numeroDePaginaIgualA(int * pagina_number)
 	return (*pagina_number == numero_pagina);
 }
 
+bool elNodoTienePidIgualA(int * pid_number)
+{
+ return (*pid_number == numero_de_pid);
+
+}
 
 bool tlbLlena(t_list * TLB)
 {
@@ -305,38 +392,37 @@ bool tlbLlena(t_list * TLB)
 
 void matarProceso(t_header * proceso_entrante, t_list * tabla_adm)
 {
- int x = 0, a = 0;
- numero_de_pid = proceso_entrante->PID;
- t_tabla_adm * registro_tabla_proc = list_find(tabla_adm, elNodoTienePidIgualA);
+	numero_de_pid = proceso_entrante->PID;
+	t_tabla_adm * registro_tabla_proc = list_find(tabla_adm,(void*) elNodoTienePidIgualA);
 
- if (registro_tabla_proc != NULL)
- {
-	 printf("ENCONTRE UN PROCESO PARA MATAR\n");
+	if (registro_tabla_proc != NULL)
+	{
+		printf("ENCONTRE UN PROCESO PARA MATAR\n");
 
-	 printf ("LA TABLA DE TABLAS DE PROCESOS TIENE %d ELEMENTOS ANTES DE MATAR \n", tabla_adm->elements_count);
-	 t_list * tabla_proceso = registro_tabla_proc->direc_tabla_proc;
+		printf ("LA TABLA DE TABLAS DE PROCESOS TIENE %d ELEMENTOS ANTES DE MATAR \n", tabla_adm->elements_count);
+		t_list * tabla_proceso = registro_tabla_proc->direc_tabla_proc;
 
-	 if (tabla_proceso != NULL)
-	 {
-		 printf("ENCONTRE LA TABLA DEL PROCESO A MATAR \n");
+		if (tabla_proceso != NULL)
+		{
+			printf("ENCONTRE LA TABLA DEL PROCESO A MATAR \n");
+			list_destroy_and_destroy_elements(tabla_proceso, (void *)pag_destroy);
+			list_remove_by_condition(tabla_adm, (void*)elNodoTienePidIgualA);
 
-		 list_destroy_and_destroy_elements(tabla_proceso, pag_destroy);
+			printf ("LA TABLA DE TABLAS DE PROCESOS TIENE %d ELEMENTOS DESPUES DE MATAR \n", tabla_adm->elements_count);
 
-		 list_remove_by_condition(tabla_adm, elNodoTienePidIgualA);
+		}else
+		{
+			printf("NO SE ENCONTRO LA TABLA DEL PROCESO \n");
+		}
 
-		 printf ("LA TABLA DE TABLAS DE PROCESOS TIENE %d ELEMENTOS DESPUES DE MATAR \n", tabla_adm->elements_count);
-
-	 }else{
-		 printf("NO SE ENCONTRO LA TABLA DEL PROCESO \n");
-	 }
-
- }else{
-	 printf("ESTAS QUERIENDO MATAR UN PROCESO QUE NO ESTA NI INICIADO \n");
- }
+	}else
+	{
+		printf("ESTAS QUERIENDO MATAR UN PROCESO QUE NO ESTA NI INICIADO \n");
+	}
 
 }
 
-/* --------------ENTRADAS A LA TABLA DE PROCESO ------------ */
+// --------------ENTRADAS A LA TABLA DE PROCESO ------------ //
 process_pag * pag_proc_create (int pagina, char * direccion_fisica)
 {
  process_pag * reg_pagina = malloc(sizeof(process_pag));
@@ -349,4 +435,5 @@ static void pag_proc_destroy(process_pag * self)
 {
  free(self);
 }
-/* --------------------------------------------------------*/
+// --------------------------------------------------------//
+

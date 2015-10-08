@@ -17,7 +17,6 @@
 #include <unistd.h>
 #include <commons/config.h>
 #include <SharedLibs/sockets.h>
-#include <SharedLibs/manejoListas.h>
 #include "funcMemory.h"
 #include <errno.h>
 
@@ -31,8 +30,8 @@ void reciboDelCpu(char *, t_list *, t_list *);
 int main()
 {
  traigoContexto();
- creoLogger(1);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
- log_info(logger, "Inicio Log MEMORIA", NULL);
+ creoLogger(1);
+
  // RESERVO ESPACIO PARA LA MEMORIA REAL /
  int tamanio_memoria_real = miContexto.tamanioMarco * miContexto.cantidadMarcos;
  char * memoria_real = reservarMemoria(tamanio_memoria_real);
@@ -60,56 +59,83 @@ int main()
 }
 
 void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
-
 {
-	printf("RECIBO DEL CPU \n");
+	int serverSocket;
+	int listenningSocket, socketCliente, resultadoSelect;
+	fd_set readset;
+	t_header * package = malloc(sizeof(t_header));
+	char * mensaje;
+	int status = 1;
 
-	int listenningSocket, socketCliente, resultadoSelect, serverSocket;
- 	fd_set readset;
- 	t_header * package = malloc(sizeof(t_header));
- 	char * mensaje;
- 	int status = 1;
-
-	conexionAlServer(&serverSocket, miContexto.puertoCliente);
-	printf("Conectado al servidor Swap\n. Bienvenido al sistema, ya puede enviar mensajes\n.");
-
-	conexionAlCliente(&listenningSocket, &socketCliente, miContexto.puertoServidor);
+	//conexionAlCliente(&listenningSocket, &socketCliente, miContexto.puertoServidor);
 	printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
 	printf("El socket de conexión con el CPU es %d\n", socketCliente);
 
+	// ME CONECTO AL SWAP PARA ENVIARLE LO QUE VOY A RECIBIR DE LA CPU
+	serverSocket = meConectoAlSwap();
 
-  /* SELECT */
-  /* primera version no borrar */
+	/*PRUEBAS
 
-//  do {
-//     FD_ZERO(&readset); 	//esto abre y limpia la estructura cada vez q se reinicia el select luego de un error
-//     FD_SET(socketCliente, &readset);
-//     resultadoSelect = select(socketCliente + 1, &readset, NULL, NULL, NULL); //el 1ºparametro es el socket +1, 2º el conjunto de lecutra, 3º el de escritura, 4º no se, 5º el time out
-//  } while (resultadoSelect == -1 && errno == EINTR); //captura el error
-//
-//  if (resultadoSelect > 0) {	//>0 implica el nº de sockets disponibles para la lectura
-//     if (FD_ISSET(socketCliente, &readset)) {
-//        /* si estoy aca es que hay info para leer */
-//        resultadoSelect = recv(socketCliente, mensaje, package->tamanio_msj,0);
-//        if (resultadoSelect == 0) {
-//           /* si estoy aca es xq se cerro la conexion desde el otro lado */
-//           close(socketCliente);
-//        }
-//        else {
-//
-//       }
-//     }
-//  }
-//  else if (resultadoSelect < 0) {
-//     /* error, lo muestro */
-//     printf("Error con el select(): %s\n ", strerror(errno));
-//  }
- /* fin primera version */
+	while(status!=0)
+	{
+		//sem_wait(sem_1);
+		// RECIBO EL PAQUETE(t_header) ENVIADO POR LA CPU
+		status = recv(socketCliente, package, sizeof(t_header), 0);
 
-  /* tercera version */
+		printf ("l tipo de ejecucion recibido es %d \n", package->type_ejecution);
 
+		//
+	  	  if(package.tamanio_msj!=0)
+	  	  {
+		  mensaje = malloc(package.tamanio_msj);
+		  status = recv(socketCliente, mensaje, package.tamanio_msj,0);
+	  	  }
+		//
 
- /* iDEM ARRIBA, SE COMENTA PARA PRUEBAS
+		// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
+		ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCliente, serverSocket);
+	}
+FIN PRUEBAS
+*/
+
+	t_header * package1 = malloc(sizeof(t_header));
+	package1->type_ejecution=2;
+	package1->PID=1;
+	package1->pagina_proceso=3;
+
+	ejecutoInstruccion(package1, mensaje, memoria_real, TLB, tablaAdm, socketCliente, serverSocket);
+
+	package1->type_ejecution=0;
+	package1->PID=1;
+	package1->pagina_proceso=0;
+
+	ejecutoInstruccion(package1, mensaje, memoria_real, TLB, tablaAdm, socketCliente, serverSocket);
+  /* SELECT primera version no borrar
+  do {
+     FD_ZERO(&readset); 	//esto abre y limpia la estructura cada vez q se reinicia el select luego de un error
+     FD_SET(socketCliente, &readset);
+     resultadoSelect = select(socketCliente + 1, &readset, NULL, NULL, NULL); //el 1ºparametro es el socket +1, 2º el conjunto de lecutra, 3º el de escritura, 4º no se, 5º el time out
+  } while (resultadoSelect == -1 && errno == EINTR); //captura el error
+
+  if (resultadoSelect > 0) {	//>0 implica el nº de sockets disponibles para la lectura
+     if (FD_ISSET(socketCliente, &readset)) {
+        /* si estoy aca es que hay info para leer */
+    /*
+	resultadoSelect = recv(socketCliente, mensaje, package->tamanio_msj,0);
+    if (resultadoSelect == 0)
+    {
+       // si estoy aca es xq se cerro la conexion desde el otro lado //
+       close(socketCliente);
+    }
+    else if (resultadoSelect < 0)
+    {
+    	// error, lo muestro
+    	printf("Error con el select(): %s\n ", strerror(errno));
+    }
+    */
+    // fin primera version
+  /* tercera version
+  iDEM ARRIBA, SE COMENTA PARA PRUEBAS
 
   // inicializar el conjunto
   FD_ZERO(&readset); //esto abre y limpia la estructura cada vez q se reinicia el select luego de un error
@@ -135,9 +161,9 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
         }
      }
   }
-             FIN COMENTARIO DE PRUEBAS */
-  /* fin tercera version */
-  /* FIN SELECT */
+  FIN COMENTARIO DE PRUEBAS
+  fin tercera version */
+  //FIN SELECT
 
   //status = recv(socketCliente, mensaje, package.tamanio_msj,0);
   /*SWAP
@@ -145,24 +171,6 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
   conexionAlServer(&serverSocket, miContexto.puertoCliente);
    //FIN SWAP
     */
-  while(status!=0)
-  {
-	  //sem_wait(sem_1);
-	  //puts ("WHILE");
-	  status = recv(socketCliente, package, sizeof(t_header), 0);
-	  //puts ("RCV");
-	  //package->type_ejecution = 1;
-	  printf ("RECIBI EJECUCION TIPO: %d \n", package->type_ejecution);
-	  /*
-	  if(package.tamanio_msj!=0)
-	  {
-		  mensaje = malloc(package.tamanio_msj);
-		  status = recv(socketCliente, mensaje, package.tamanio_msj,0);
-	  }
-	   */
-
-	  ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCliente, serverSocket);
-
 
 /*
  t_header * package2 = package_create(1,4,0,2);
@@ -183,12 +191,11 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	  }
 	*/
 	  //sem_post(sem_2);
-  }
 
-  //meConectoAlSwap(package,mensaje);
+	//meConectoAlSwap(package,mensaje);
 
- close(listenningSocket);
- close(socketCliente);
- close(serverSocket); //SWAP
+	//close(listenningSocket);
+	//close(socketCliente);
+	//close(serverSocket); //SWAP
 
- }
+}
