@@ -102,12 +102,11 @@ void encolar (t_pcb *cabecera, t_pcb *valor);
 //Funcion que permite quitar un elemento de la cola
 t_pcb desencolar (t_pcb *cabecera);
 
-//inicio consola
-
-void procesarPCB (t_queue*, char *, int);
-
 
 void iniciarPlanificador();
-//fin consola
+
+void dispatcher(t_pcb *cola_ready, int CPU);
+
+t_pcb* procesarPCB(char * path);
 
 #endif /* SRC_LIBRERIAPLANIFICADOR_H_ */
