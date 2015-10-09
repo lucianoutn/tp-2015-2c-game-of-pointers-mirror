@@ -53,7 +53,8 @@ void *consola (void* arg)
 				}
 				break;
 			}
-			case iniciar:
+			case iniciar:  /*esto debe ser el comando correr path que cuando lo recibe debe enviar la ruta
+					*al planificador*/
 			{
 				//el hilo debe enviar una señal al planificador para que invoque la funcion
 				//iniciarPlanificador() ya que no es trabajo de la consola
