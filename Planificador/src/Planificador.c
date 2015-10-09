@@ -72,8 +72,10 @@ int main() {
 	PUNTODERETORNO:
 
 
-	switch (orden){
-		case 0:{  //orden correr path
+	switch (orden)
+	{
+		case 0: //orden correr path
+		{  
 			iniciarPlanificador();
 			puts("llegue");
 		}
