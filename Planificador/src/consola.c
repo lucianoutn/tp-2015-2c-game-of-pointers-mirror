@@ -28,7 +28,7 @@ void *consola (void* arg)
 	char *buffer;
 	int command;
 	int i,m;
-	t_msj msj;
+
 	CPUenUso=false;
 	pthread_t hCPU1;
 
@@ -46,11 +46,12 @@ void *consola (void* arg)
 		{
 			case ayuda:
 			{
-				printf("\n\nAyuda: Muestra todos los comandos disponibles\n");
+				printf("\n\nAyuda: Comandos disponibles: \n");
 				for (i = 0; i <= salir; i++)
 				{
 					printf("%02d:\t%s\n", i + 1, allCommands[i]);
 				}
+				sem_post(&semConsola);
 				break;
 			}
 			case iniciar:  /*esto debe ser el comando correr path que cuando lo recibe debe enviar la ruta
@@ -82,15 +83,19 @@ void *consola (void* arg)
 			}
 			case salir:
 			{
+				orden=1;
+
 				for(m=0;m<MAX_CPUS;m++)
 				{
 					msj.headMSJ.tipo_ejecucion = 0;
 					msj.headMSJ.tamanio_msj = 0;
 					send(conexiones.CPU[m], &msj,sizeof(t_msj),0);
 					sem_post(semProduccionMsjs);
+
 				}
 
 				sem_post(&semSalir);
+				sem_post(&ordenIngresada);
 				return -1;
 				break;
 			}
@@ -111,6 +116,7 @@ void *consola (void* arg)
 			// que se terminó de ingresar un comando y trataría de entenderlo. Para evitar eso al final de cada lectura
 			// vaciamos el contenido en el flujo stdin
 		}
+			sem_wait(&semConsola);
 			fflush(stdin);
 			printf("\nIngrese el comando deseado o ayuda para conocer los comandos posibles\n");
 			command = leeComando(); // read lee la palabra y me devuelve un comando del enum

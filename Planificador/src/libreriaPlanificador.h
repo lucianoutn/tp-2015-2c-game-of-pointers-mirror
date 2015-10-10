@@ -66,6 +66,8 @@ typedef struct MSJ {
 	//t_pcb  pcbMSJ;
 }t_msj;
 
+t_msj msj;
+
 //Estructura que almacena los datos del archivo de configuracion
 typedef struct{
 	char * puertoEscucha;
@@ -79,6 +81,7 @@ sem_t semSalir;
 sem_t semEsperaCPU;
 sem_t *semProduccionMsjs;
 sem_t ordenIngresada;
+sem_t semConsola;
 
 contexto miContexto;
 

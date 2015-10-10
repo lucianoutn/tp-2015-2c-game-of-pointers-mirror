@@ -65,21 +65,24 @@ int main() {
 	pthread_create(&hilo_consola, NULL, consola, NULL);
 
 
-
-
+	int recivoOrden=1;
+	while (recivoOrden){
 	sem_wait(&ordenIngresada);
 
-	PUNTODERETORNO:
-
-
-	switch (orden)
-	{
-		case 0: //orden correr path
-		{  
-			iniciarPlanificador();
-			puts("llegue");
+		switch (orden)
+		{
+			case 0: //orden correr path
+			{
+				iniciarPlanificador();
+			}
+			case 1: //orden salir
+			{
+				recivoOrden=0;
+				break;
+			}
 		}
 	}
+
 
 	pthread_join(hilo_consola, NULL);
 

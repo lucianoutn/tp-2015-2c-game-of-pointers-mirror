@@ -57,11 +57,13 @@ void iniciarPlanificador(t_queue* cola_ready)
 
 		//Permite el envio de paquetes, dependiendo si la opcion elegida es valida
 		printf("COMANDOS VALIDOS:\n"
-			   "'correr PATH':      Para correr un proceso en el CPU (la primera por defecto)\n"
+			   "'correr PATH':      Para correr un proceso en el CPU (la primera por defecto)\n");
+
 		while(enviar)
 		{
 			fflush(stdin);
 			fgets(message, 20, stdin);			// Lee una linea en el stdin (lo que escribimos en la consola) hasta encontrar un \n (y lo incluye) o llegar a PACKAGESIZE.
+			printf("muestra lo q obtubo fgets en message: %s", message);
 			if (!strcmp(message,"cpu\n"))
 			{
 				primeraVez = 0;
@@ -80,12 +82,14 @@ void iniciarPlanificador(t_queue* cola_ready)
 			 */
 			if (!strcmp(string_substring(message,0,7),"correr "))
 			{
+				puts("entre a correr");
 				primeraVez=1;
 				char *path = (char*)malloc(sizeof(string_substring_from(message, 7)));
 				//Tomo el path
 				path = string_substring_from(message, 7); //inclye el \n
+				printf("muestro la var path antes de mandarla para ver si no esta mandando basura: %s", path);
 				//PROCESO EL PCB
-				procesarPCB(cola_ready, path,socketCPU);
+				//procesarPCB(cola_ready, path,socketCPU);
 				puts("PCB Procesado\n");
 				//sem_wait(&semSalir); //es para pruebas
 				free(path);
@@ -122,6 +126,7 @@ t_pcb* procesarPCB(char * path)
 	pcb->ruta = malloc(20);//MODIFICAR
 
 	//header
+
 	msj.headMSJ.tipo_ejecucion = 1;
 	//tamaño a recibir igual tamaño total del msj menos el header que lo recibe de una
 	msj.headMSJ.tamanio_msj = (sizeof(t_msj) - sizeof(t_headcpu));
