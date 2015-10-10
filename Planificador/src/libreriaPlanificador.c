@@ -89,12 +89,15 @@ void iniciarPlanificador(t_queue* cola_ready)
 				//Tomo el path
 				path = string_substring_from(message, 7); //inclye el \n
 				printf("muestro la var path antes de mandarla para ver si no esta mandando basura: %s", path);
+
+				puts("PCB Procesado\n");
+				sem_post(&semConsola); // debe ir arriba del procesarPCB para que se aproveche el paralelismo
+
 				//PROCESO EL PCB
 				//procesarPCB(cola_ready, path,socketCPU);
-				puts("PCB Procesado\n");
+
 				//sem_wait(&semSalir); //es para pruebas
 				free(path);
-				sem_post(&semConsola);
 				break;
 			}
 			if (!strcmp(string_substring(message,0,5),"menu\n"))
