@@ -74,6 +74,7 @@ int main() {
 			case 0: //orden correr
 			{
 				iniciarPlanificador();
+				puts("prueba");
 				break;
 			}
 			case 1: //orden salir
