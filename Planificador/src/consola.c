@@ -14,7 +14,7 @@ const char* allCommands[] =
 	// lo que el usuario ingrese va a ser comparado con esto
 	// TODOS LOS COMANDOS deben estar en minúscula para que lo reconozca bien sin importar como lo ingrese el usuario
 	"ayuda",
-	"iniciar", // tendria q ser correr PATH directamente acá
+	"correr", // tendria q ser correr PATH directamente acá
 	"finalizar PID",
 	"ps",
 	"cpu",
@@ -54,7 +54,7 @@ void *consola (void* arg)
 				sem_post(&semConsola);
 				break;
 			}
-			case iniciar:  /*esto debe ser el comando correr path que cuando lo recibe debe enviar la ruta
+			case correr:  /*esto debe ser el comando correr path que cuando lo recibe debe enviar la ruta
 					*al planificador*/
 			{
 				//el hilo debe enviar una señal al planificador para que invoque la funcion

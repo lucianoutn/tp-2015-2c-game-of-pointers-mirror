@@ -57,7 +57,8 @@ void iniciarPlanificador(t_queue* cola_ready)
 
 		//Permite el envio de paquetes, dependiendo si la opcion elegida es valida
 		printf("COMANDOS VALIDOS:\n"
-			   "'correr PATH':      Para correr un proceso en el CPU (la primera por defecto)\n");
+			   "'correr PATH':      Para correr un proceso en el CPU (la primera por defecto)\n"
+			   "'menu':				Para volver al menú anterior\n");
 
 		while(enviar)
 		{
@@ -93,15 +94,19 @@ void iniciarPlanificador(t_queue* cola_ready)
 				puts("PCB Procesado\n");
 				//sem_wait(&semSalir); //es para pruebas
 				free(path);
+				sem_post(&semConsola);
 				break;
 			}
-			if (!strcmp(message,"menu\n"))
+			if (!strcmp(string_substring(message,0,5),"menu\n"))
 			{
 				//Salgo
+				sem_post(&semConsola);
+				enviar = 0;
 				break;
 			}
 		}
 	}
+	//puts("ya sali del while");//prueba
 }
 
 //Funcion despachador, que sacar un proceso de la cola de ready y enviarlo a la CPU para su ejecucion.

@@ -71,9 +71,10 @@ int main() {
 
 		switch (orden)
 		{
-			case 0: //orden correr path
+			case 0: //orden correr
 			{
 				iniciarPlanificador();
+				break;
 			}
 			case 1: //orden salir
 			{

@@ -26,7 +26,7 @@ enum Commands
 	// si se ingresa un nuevo comando o se modifica, se debe modificar también su representación
 	// del lado del usuario, en la lista de arriba.
 	ayuda = 0,
-	iniciar,	// tendria q ser correr PATH directamente acá
+	correr,	// tendria q ser correr PATH directamente acá
 	finalizar,
 	ps,
 	cpu,
