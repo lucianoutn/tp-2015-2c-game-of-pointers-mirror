@@ -54,11 +54,9 @@ void *consola (void* arg)
 				sem_post(&semConsola);
 				break;
 			}
-			case correr:  /*esto debe ser el comando correr path que cuando lo recibe debe enviar la ruta
-					*al planificador*/
+			case correr:
 			{
-				//el hilo debe enviar una señal al planificador para que invoque la funcion
-				//iniciarPlanificador() ya que no es trabajo de la consola
+				//el hilo debe enviar una señal al planificador para que solicite la ruta al usuario
 				//sem_post(semProduccionMsjs); //este sem hay q colocarlo adentro de inciarPlanificador();
 				orden=0;
 				sem_post(&ordenIngresada);
