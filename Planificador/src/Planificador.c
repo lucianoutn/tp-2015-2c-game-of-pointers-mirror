@@ -74,6 +74,13 @@ int main() {
 			case 0: //orden correr
 			{
 				iniciarPlanificador();
+				//dispatcher(cola_ready);
+				/*
+				 *si se acaba el quanto de tiempo vuelvo a encolar
+				 *si hay instruccion de entrada-salida (recibe orden del cpu) agrego el proceso a 
+				  cola_bloqueados, cuando termina vuelvo a encolar en la cola_ready
+				 *si termina de procesar el proceso no encolo y mato el pcb
+				*/
 				puts("prueba");
 				break;
 			}
