@@ -15,11 +15,10 @@
 int main() {
 	semSalir.__align =0;
 	semProduccionMsjs = sem_open("semPlani", O_CREAT, 0644, 0);//inicializo sem prod-consum, el 0_creat es para evitar q se inicialize en el otro proceso
-	max_PID=0;      //inicializo numero de pid
+	max_PID=0;      //inicializo numero de pid (yo le cambiaria el nombre a PID_actual)
 	puts("!!!!Planificador!!!!"); /* prints !!!Planificador!!! */
 
 	// El planificador debe recibir los resultados de la CPU.
-
 
 	traigoContexto(); //levanta el archivo de configuracion
 	creoLogger(0); //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
@@ -29,7 +28,6 @@ int main() {
 	 * Funcion que crea un socket nuevo y lo prepara para escuchar conexiones entrantes a travez del puerto PUERTO
 	 * y lo almacena en la variable conexiones del tipo struct Conexiones
 	 */
-
 	conexiones.socket_escucha=crearServer(miContexto.puertoEscucha);
 
 	//funcion que permite al programa ponerse a la espera de nuevas conexiones
@@ -48,15 +46,12 @@ int main() {
 	if(pthread_create(&hilo_conexiones, NULL, (void*)escuchar,&conexiones)<0)
 		perror("Error HILO ESCUCHAS!");
 
-	/*
-	 * REEMPLAZAR MAS ADELANTE (SINCRONIZACION)
-	 */
 	puts("ESPERANDO CONEXIONES....\n");
 	sem_wait(&semEsperaCPU); //semaforo espera conexiones
 
 
 	//Se crea la cola de readys
-	t_queue *  cola_ready = queue_create();
+	t_queue *cola_ready = queue_create();
 	//crear hilo de consola para que quede a la escucha de comandos por consola para el planificador
 
 	//consola(); //sin hilo
@@ -73,8 +68,9 @@ int main() {
 		{
 			case 0: //orden correr
 			{
-				iniciarPlanificador();
-				//dispatcher(cola_ready);
+				puts("case correr");
+				iniciarPlanificador(cola_ready);
+				dispatcher(cola_ready);
 				/*
 				 *si se acaba el quanto de tiempo vuelvo a encolar
 				 *si hay instruccion de entrada-salida (recibe orden del cpu) agrego el proceso a 
@@ -97,9 +93,6 @@ int main() {
 
 	//si entra el comando correr PATH desde el hilo consola:
 
-
-
-
 	//cierra los sockets
 
 	sem_wait(&semSalir);
@@ -108,7 +101,7 @@ int main() {
 	int i=0;
 	while(i<MAX_CPUS)
 	{
-		close(conexiones.CPU[i++]);
+		close(conexiones.CPUS[i++].socket);
 	}
 	
 

@@ -8,7 +8,7 @@
 #ifndef FUNCCPU_H_
 #define FUNCCPU_H_
 
-#include "SharedLibs/libreriaCliente.h" //SharedLibs/Debug
+#include "../../SharedLibs/SharedLibs/libreriaCliente.h" //SharedLibs/Debug
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -16,11 +16,12 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
-#include "SharedLibs/manejoListas.h"
-#include "SharedLibs/comun.h"
+#include "../../SharedLibs/SharedLibs/manejoListas.h"
+#include "../../SharedLibs/SharedLibs/comun.h"
 #include <commons/config.h>
 #include <semaphore.h>
 #include "mAnsisOp.h"
+#include <pthread.h>
 
 typedef int pid;
 
@@ -47,18 +48,6 @@ typedef struct PCB {
 	int permisos; // sin uso por ahora
 	char * ruta; //ruta del archivo mCod que tiene las instrucciones a procesar
 }t_pcb;
-
-typedef struct MSJ {
-	int PID;
-	//estado del proceso
-	unsigned int instructionPointer;
-	unsigned int numInstrucciones;
-	int prioridad;
-	int permisos;
-	char ruta[20];
-	struct PCB *sig;
-}t_msjRecibido;
-
 
 //Protocolo de envio Planificador->CPU
 typedef struct{
@@ -94,13 +83,13 @@ void cargoArchivoConfiguracion();
 
 void creoHeader(t_pcb *, t_header*,int,int);
 
-t_pcb* traduceMsj(t_msjRecibido * msj);
+//t_pcb* traduceMsj(t_msjRecibido * msj);
 
 int palabraAValor(char *palabra);
 
 int procesaInstruccion(char*,int *);
 
-void procesoMSJ(int,t_pcb *);
+void ejecutoPCB(int,t_pcb *);
 
 void iniciarCPU(t_sockets *);
 

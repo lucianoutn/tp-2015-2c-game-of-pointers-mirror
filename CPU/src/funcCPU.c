@@ -44,10 +44,13 @@ void creoHeader(t_pcb * pcb, t_header* header, int ejecucion, int pagina)
 	//ARMO HEADER SEGUN PROTOCOLO
 }
 
+
+//se hace directo ahora, no hace falta
+
 /* Recibe un MSJ y arma el PCB correspondiente
  * y lo devuelve (RESERVA MEMORIA)
  */
-t_pcb* traduceMsj(t_msjRecibido * msj){
+/*t_pcb* traduceMsj(t_msjRecibido * msj){
 	t_pcb* pcb = malloc(sizeof(t_pcb));
 	pcb->PID = msj->PID;
 	pcb->instructionPointer = msj->instructionPointer;
@@ -64,7 +67,7 @@ t_pcb* traduceMsj(t_msjRecibido * msj){
 				pcb->ruta[x] = '\0';
 		}
 	return pcb;
-}
+}*/
 
 /* Recibe una palabra y devuelve el valor
  * del tipo de instruccion correspondiente
@@ -139,7 +142,7 @@ int procesaInstruccion(char* instruccion, int *pagina){
 /* Procesa los MSJ recibidos
  * y envia el MSJ correspondiente a la memoria
  */
-void procesoMSJ(int socketMemoria, t_pcb *PCB){
+void ejecutoPCB(int socketMemoria, t_pcb *PCB){
 
 	int pagina = 0;
 	//reservo espacio para el header
@@ -217,6 +220,8 @@ void procesoMSJ(int socketMemoria, t_pcb *PCB){
 					else
 						puts("Error");
 					printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
+					//libero el PCB si ejecuto todas las instrucciones
+					free(PCB);
 					break;
 
 			default:
@@ -249,6 +254,7 @@ void procesoMSJ(int socketMemoria, t_pcb *PCB){
 
 
 void iniciarCPU(t_sockets *sockets){
+	//hay q ponerlos asi o se pueden usar directamente del sockets??
 	int socketPlanificador= sockets->socketPlanificador;
 	int socketMemoria= sockets -> socketMemoria;
 	pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
@@ -256,16 +262,16 @@ void iniciarCPU(t_sockets *sockets){
 	int status=1;		// Estructura que manjea el status de los recieve.
 
 	//Estructuras que manejan los datos recibidos
-	t_headcpu *headcpu = malloc(sizeof(t_headcpu));
-	t_msjRecibido msj;
+	t_headcpu * headcpu = (t_headcpu*)malloc(sizeof(t_headcpu));
 
 	while(status!=0)	//MIENTRAS NO QUIERA SALIR RECIBO INSTRUCCIONES
 	{
+		t_pcb * pcbRecibido = malloc(sizeof(t_pcb));
 		puts("\n\nEsperando Instrucciones...\n\n");
 		//CPU a la espera de nuevas instrucciones
 		sem_wait(semProduccionMsjs); //semaforo productor-consumidor
+		puts("RECIBO MSJ");//control
 		status = recv(socketPlanificador, headcpu, sizeof(t_headcpu),0);
-
 		if(status!=0)	//CONTROLA QUE NO SE PIERDA LA CONEXION
 		{
 			switch (headcpu->tipo_ejecucion){	//CONTROLA EL TIPO DE INSTRUCCION
@@ -280,11 +286,15 @@ void iniciarCPU(t_sockets *sockets){
 
 			case 1: 	//INSTRUCCION PARA RECIBIR MSJS
 
-				status = recv(socketPlanificador, &msj, headcpu->tamanio_msj, 0);	//Recibo el MSJ
-				t_pcb * PCB = traduceMsj(&msj);	//interpreta el MSJ (reserva memoria para el PCB)
+				//t_pcb * pcbRecibido = malloc(sizeof(t_pcb));
+				status = recv(socketPlanificador, pcbRecibido,headcpu->tamanio_msj,0);
+				t_pcb *PCB = malloc(sizeof(t_pcb));
+				//PCB->ruta = malloc(sizeof(pcbRecibido->ruta));
+				PCB = pcbRecibido;
+				free(pcbRecibido);
 				printf("PCB Recibido. PID:%d\n",PCB->PID);
-				PCB->instructionPointer=0;//inicializo el puntero de intruccion
-				procesoMSJ(socketMemoria,PCB);		//PROCESA EL PCB Y LO ENVIA A MEMORIA SI CORRESPONDE
+				ejecutoPCB(socketMemoria,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
+
 				break;
 
 			default:	//PARA ERRORES EN EL TIPO DE INSTRUCCION

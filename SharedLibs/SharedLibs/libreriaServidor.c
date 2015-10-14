@@ -15,11 +15,12 @@ void *escuchar (struct Conexiones* conexion){
 	while( i<MAX_CPUS ) //limite temporal de 1 CPUS conectada
 	{
 		//guarda las nuevas conexiones para acceder a ellas desde cualquier parte del codigo
-		conexion->CPU[i] = accept(conexion->socket_escucha, (struct sockaddr *) &conexion->direccion, &conexion->tamanio_direccion);
-		if(conexion->CPU[i]==-1)
+		conexion->CPUS[i].socket = accept(conexion->socket_escucha, (struct sockaddr *) &conexion->direccion, &conexion->tamanio_direccion);
+		if(conexion->CPUS[i].socket==-1)
 		{
 			perror("ACCEPT");	//control error
 		}
+		conexion->CPUS[i].enUso = false;
 		sem_post(&semEsperaCPU); //avisa que hay 1 CPU disponible
 		puts("NUEVO HILO ESCUCHA!\n");
 		log_info(logger, "CPU %d conectado", i);

@@ -33,7 +33,6 @@
 #define BACKLOG 10 //comentar
 #define PACKAGESIZE 1024 //comentar
 #define WORD_SIZE 35 //comentar
-#define MAX_CPUS 1
 
 //tipo de dato t_pcb que es una estructura que almacena el PCB de cada proceso
 typedef struct PCB {
@@ -47,7 +46,6 @@ typedef struct PCB {
 	//struct PCB *sig;
 }t_pcb;
 
-
 //Protocolo de envio Planificador->CPU
 typedef struct{
 	int tipo_ejecucion;
@@ -56,14 +54,7 @@ typedef struct{
 
 typedef struct MSJ {
 	t_headcpu headMSJ;
-	int PID;
-	//estado del proceso
-	unsigned int instructionPointer;
-	unsigned int numInstrucciones;
-	int prioridad;
-	int permisos;
-	char ruta[20];
-	//t_pcb  pcbMSJ;
+	t_pcb  pcbMSJ;
 }t_msj;
 
 t_msj msj;
@@ -100,16 +91,18 @@ void traigoContexto();
 //void crearSocket ();
 
 //Funcion que permite crear una cola
-void encolar (t_pcb *cabecera, t_pcb *valor);
+void encolar (t_pcb *, t_pcb *);
 
 //Funcion que permite quitar un elemento de la cola
-t_pcb desencolar (t_pcb *cabecera);
+t_pcb desencolar (t_pcb *);
 
 
-void iniciarPlanificador();
+void iniciarPlanificador(t_queue *);
 
-void dispatcher(t_pcb *cola_ready, int CPU);
+void dispatcher(t_queue *);
 
-t_pcb* procesarPCB(char * path);
+t_pcb* procesarPCB(char *);
+
+t_msj preparoMSJ(t_pcb *);
 
 #endif /* SRC_LIBRERIAPLANIFICADOR_H_ */

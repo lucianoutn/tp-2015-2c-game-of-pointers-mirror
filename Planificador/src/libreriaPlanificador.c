@@ -29,48 +29,30 @@ void traigoContexto()
 
 void iniciarPlanificador(t_queue* cola_ready)
 {
-	//int primeraVez = 1;
-	//int cpuElegida;
-	/*
-	if(!primeraVez)
-	{
-		//Muestra las conexiones con las CPUS disponibles
-		puts("Elija CPU: ¡¡¡SOLO NUMEROS!!!\n");
-		int j = 0;
-		while ( j < 1)
-		{
-			printf("CPU n°:%d, puerto: %d\n",j+1,conexiones.CPU[j]);
-			j++;
-		}
-		//Permite elegir la conexion con el CPU deseado
-		scanf("%d", &cpuElegida);
-		socketCPU = conexiones.CPU[cpuElegida];
-	}
-	*/	
-	//primeraVez=1;
-	
+	char ruta[20]; //la ruta es de 20?
 	puts("entre a correr");
+
 	//pido la ruta del archivo
-	puts("Ingrese el nombre del archivo que desea correr:\n");
+	puts("Ingrese el nombre del archivo que desea correr:");
 	fflush(stdin);
-	fgest(ruta, 20, stdin);
+	fgets(ruta, 20, stdin);
+
 	//imprimo tamaño de la ruta ingresada
-	printf("%d", sizeof(ruta));
+	printf("Tamaño ruta:%d\nPath:%s\n", sizeof(ruta),ruta);
 	//char *path = (char*)malloc(sizeof(string_substring_from(message, 7)));
+
 	//Se crea el PCB y se lo pone en la cola de ready
-	queue_push(cola_ready, procesarPCB(ruta));
-	puts("PCB procesado y encolado\n");
 	sem_post(&semConsola); // debe ir arriba del procesarPCB para que se aproveche el paralelismo
+	queue_push(cola_ready, procesarPCB(ruta));
+
+	puts("PCB procesado y encolado\n");
 
 	//sem_wait(&semSalir); //es para pruebas
-	free(path);
-	break;
-	}
-	//puts("ya sali del while");//prueba
+	//free(path);
 }
 
 //Funcion despachador, que sacar un proceso de la cola de ready y enviarlo a la CPU para su ejecucion.
-void dispatcher(t_pcb *cola_ready)
+void dispatcher(t_queue *cola_ready)
 {
 	/*
 	 * Protocolo de mensajes Planificador -CPU
@@ -81,35 +63,57 @@ void dispatcher(t_pcb *cola_ready)
 	 * 				   envia PCB
 	 * tamanio_mensaje: tamanio del char * o del PCB
 	 */
+
 	//busca la primer CPU que no este en uso
-	/*
-	while(!CPUenUso[I])
+	int I = 0;
+	while((conexiones.CPUS[I].enUso) && (I <= MAX_CPUS))
 	{
 		I++;
 	}
-	//¿Si no hay CPU disponible?
-	*/
-	//send(cola_ready, conexiones.CPU[I]); //envia el primer elemento de la cola
-	CPUenUSO[I]=false; //pone la CPU ocupada hasta que reciba los resultados de la CPU.
-	//ver en donde pongo la CPU como no ucupada.
-	//queue_pop(t_queue *cola_ready); //quita el primer elemento de la cola a la CPU disponible
 	
+	if(!conexiones.CPUS[I].enUso){
+		//bloqueo la cpu
+		conexiones.CPUS[I].enUso = true;
+		//CPU DISPONIBLE  saco de la cola y envio msj
+		t_pcb *pcb = queue_pop(cola_ready);
+		t_msj *msj = malloc(sizeof(t_msj));
+		*msj = preparoMSJ(pcb);
+		printf("Instruccion enviada:%d\nTamaño:%d\nSocket:%d\n",msj->headMSJ.tipo_ejecucion,msj->headMSJ.tamanio_msj,conexiones.CPUS[I].socket);
+		send(conexiones.CPUS[I].socket, msj, sizeof(t_msj),0);
+		free(msj);
+
+		sem_post(semProduccionMsjs);
+		puts("Mensaje enviado\n");
+		log_info(logger,"Comienzo ejecucion PID: %d Nombre: %s", pcb->PID, pcb->ruta);
+
+		//RECIBE RESPUESTA
+		//esta bien que reciba la respuesta el despachador???
+		//porque sino se bloquea habria que poner semaforos creo
+		/*flag recibi = false;
+		recv(conexiones.CPUS[I].socket, &recibi, sizeof(flag),0);
+		if(recibi)
+			puts("RECIBI OK");
+		else
+			puts("RECIBI FAIL");*/
+
+		//libero la cpu
+		conexiones.CPUS[I].enUso = false;
+	}else{
+		//sino hay cpu disponible no hago nada
+		puts("CPU ocupada");
+
+		//deberia volver a ejecutar el despachador o mandar algun aviso que esta ocupado???
+
+	}
+
 }
 
 //Funcion que permite procesar el PCB creado a partir del comando correr PATH
 t_pcb* procesarPCB(char *path)
 {
 	//inicializo las variables y reservo memoria (hay que ver donde hacer los free)
-	//t_msj msj;
-	t_pcb* pcb = malloc(sizeof(t_pcb));
-	pcb->ruta =(char*)malloc(sizeof(path);//MODIFICAR
-
-	//header
-	msj.headMSJ.tipo_ejecucion = 1;
-	//tamaño a recibir igual tamaño total del msj menos el header que lo recibe de una
-	msj.headMSJ.tamanio_msj = (sizeof(t_msj) - sizeof(t_headcpu));
-
-	//copio el path
+	t_pcb* pcb = (t_pcb*)malloc(sizeof(t_pcb));
+	pcb->ruta = (char*)malloc(sizeof(path));//MODIFICAR
 
 	//armo PCB y msj para enviar al CPU
 	pcb->PID = max_PID +1;
@@ -119,42 +123,15 @@ t_pcb* procesarPCB(char *path)
 	pcb->permisos=0;
 	strcpy(pcb->ruta, path);
 	
-	
-	//Comento esto, ya que esta funcion solo va a asignar los valores al PCB no enviarlos.
-	/*
-	msj.instructionPointer = pcb->instructionPointer;
-	msj.numInstrucciones = pcb->numInstrucciones;
-	msj.prioridad = pcb->prioridad;
-	msj.permisos = pcb->permisos;
-	msj.PID = pcb->PID;
-	*/
-	
-	/*ENVIO DE MSJS A LA CPU
-	 *	pcb->PID=contador;
-	 *	pcb->instructionPointer=0
-	 *	pcb->numInstrucciones=0;
-	 *	pcb->prioridad=0;
-	 *	pcb->permisos=0;
-	 *	pcb->ruta=(char*)malloc(sizeof(path));
-	 *	pcb.ruta=path;
-	 *	free(path);
-	 *	send(socketCPU, pcb, sizeof(t_pcb));
-	 */
-	/*RECIBE MSJS LA CPU
-	 * 	t_pcb pcb=(t_pcb*)malloc(sizeof(t_pcb));
-	 * 	recibo LA DIRECCION DE MEMORIA del pcb
-	 * 	pcb=msj;
-	 * 	imprimo a ver que onda
-	 */
-
-	
 	return pcb;
-	/*
-	esto lo tiene que hacer el despachador
-	send(socketCPU, &msj,sizeof(t_msj),0);
-	sem_post(semProduccionMsjs);
-	puts("Mensaje enviado\n");
-	log_info(logger,"Comienzo ejecucion PID: %d Nombre: %s", pcb->PID, pcb->ruta);
-	*/
 }
 
+t_msj preparoMSJ(t_pcb *pcb){
+	t_msj msj;
+	msj.pcbMSJ.ruta = malloc(sizeof(pcb->ruta));
+	msj.headMSJ.tipo_ejecucion = 1;	//Orden de envio de pcb
+	msj.headMSJ.tamanio_msj = sizeof(t_pcb);
+	msj.pcbMSJ = *pcb;
+	
+	return msj;
+}

@@ -21,12 +21,17 @@
 
 #define MAX_CPUS 1
 
+typedef struct{
+	int socket;
+	bool enUso;
+} t_cpu;
+
 //struct para conexiones
 struct Conexiones {
 	int socket_escucha;					// Socket de conexiones entrantes
 	struct sockaddr_in direccion;		// Datos de la direccion del servidor
 	socklen_t tamanio_direccion;		// Tamaño de la direccion
-	int CPU[MAX_CPUS];						// Sockets de conexiones ACEPTADAS
+	t_cpu CPUS[MAX_CPUS];						// Sockets de conexiones ACEPTADAS
 } conexiones;
 
 sem_t semEsperaCPU;

@@ -87,7 +87,7 @@ void *consola (void* arg)
 				{
 					msj.headMSJ.tipo_ejecucion = 0;
 					msj.headMSJ.tamanio_msj = 0;
-					send(conexiones.CPU[m], &msj,sizeof(t_msj),0);
+					send(conexiones.CPUS[m].socket, &msj,sizeof(t_msj),0);
 					sem_post(semProduccionMsjs);
 
 				}
