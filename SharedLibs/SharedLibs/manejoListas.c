@@ -10,6 +10,36 @@
 #include "manejoListas.h"
 
 
+/* MANEJO SWAP */
+t_pag * pag_create (int pid, int start, int paginas)
+{
+ t_pag * prueba = malloc(sizeof(t_pag));
+ prueba->pid = pid;
+ prueba->inicio = start;
+ prueba->paginas = paginas;
+ return prueba;
+}
+
+void pag_destroy(t_pag * self)
+{
+ free(self);
+}
+
+t_hueco * hueco_create ( int start, int paginas)
+{
+ t_hueco * prueba = malloc(sizeof(t_hueco));
+ prueba->inicio = start;
+ prueba->paginas = paginas;
+ return prueba;
+}
+
+void hueco_destroy(t_hueco * self)
+{
+ free(self);
+}
+/* -----------------------------------------*/
+
+
 /* ----------MANEJO DESDE CPU -> MEMORY -> SWAP-----*/
 
 t_header * package_create (int pid, int pagina, int tamanio, int tipo_ejecucion)
@@ -96,13 +126,10 @@ pag_proceso * pag_proc_create (int pagina, char * direccion_fisica)
  reg_pagina->direccion_fisica = direccion_fisica;
  return reg_pagina;
 }
-
 static void pag_proc_destroy(pag_proceso * self)
 {
  free(self);
 }
-
-
 /* ---------------- SWAP ---------------------*/
 t_list * crearListaPaginas()
 {
@@ -157,5 +184,3 @@ t_list * crearListaAdm()
 	 t_list * lista_administracion = list_create();
 	 return lista_administracion;
 }
-
-
