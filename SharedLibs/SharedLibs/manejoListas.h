@@ -17,18 +17,6 @@
 #include <unistd.h>
 #include <commons/collections/list.h>
 
-/* ------MANEJO EN SWAP----- */
-typedef struct {
- int pid;
- int inicio;
- int paginas;
-} t_pag;
-
-typedef struct {
- int inicio;
- int paginas;
-} t_hueco;
-/* ---------------------------*/
 
 // MANEJO DESDE CPU -> MEMORY -> SWAP /
 typedef struct
@@ -85,15 +73,6 @@ typedef struct
 } pag_proceso;
  ------------------------------------*/
 
-/* ---------- SWAP ----------------*/
-t_pag * pag_create(int,int, int);
-
-void pag_destroy(t_pag *);
-
-t_hueco * hueco_create(int, int);
-
-void hueco_destroy(t_hueco *);
-/* .................................*/
 
 /* ------MANEJO DESDE CPU -> MEMORY -> SWAP----*/
 t_header * package_create (int, int, int, int);

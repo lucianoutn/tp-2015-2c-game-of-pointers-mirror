@@ -10,36 +10,6 @@
 #include "manejoListas.h"
 
 
-/* MANEJO SWAP */
-t_pag * pag_create (int pid, int start, int paginas)
-{
- t_pag * prueba = malloc(sizeof(t_pag));
- prueba->pid = pid;
- prueba->inicio = start;
- prueba->paginas = paginas;
- return prueba;
-}
-
-void pag_destroy(t_pag * self)
-{
- free(self);
-}
-
-t_hueco * hueco_create ( int start, int paginas)
-{
- t_hueco * prueba = malloc(sizeof(t_hueco));
- prueba->inicio = start;
- prueba->paginas = paginas;
- return prueba;
-}
-
-void hueco_destroy(t_hueco * self)
-{
- free(self);
-}
-/* -----------------------------------------*/
-
-
 /* ----------MANEJO DESDE CPU -> MEMORY -> SWAP-----*/
 
 t_header * package_create (int pid, int pagina, int tamanio, int tipo_ejecucion)

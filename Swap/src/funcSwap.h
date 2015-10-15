@@ -37,7 +37,16 @@ typedef struct{
 	char* contenido;
 }t_devuelvo;
 
+typedef struct {
+ int pid;
+ int inicio;
+ int paginas;
+} t_pag;
 
+typedef struct {
+ int inicio;
+ int paginas;
+} t_hueco;
 //Declaro variables globales
 t_contexto * contexto;
 FILE* archivo;
@@ -120,4 +129,11 @@ t_hueco* buscarHueco(int);
  */
 bool numeroDePid(int *);
 
+t_pag * pag_create(int,int, int);
+
+void pag_destroy(t_pag *);
+
+t_hueco * hueco_create(int, int);
+
+void hueco_destroy(t_hueco *);
 #endif /* FUNCSWAP_H_ */
