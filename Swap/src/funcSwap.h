@@ -72,44 +72,51 @@ char * numero_de_pagina(char *);
 void analizoPaquete(t_header *, int );
 
 /*
- * Recibe el t_header con la info necesaria, y se la pasa
- * por parametro un char * donde se devuelve el contenido
- * Busca en la lista de paginas la que coincida con el numero de pid
- * para saber en que byte comienza esa pagina en el archivo y
- * posicionarse para leer
- * En caso de no encontrar en la lista de paginas, loggea error,
- * y devuelve nulo
+ * Recibe el t_header con la info necesaria, y se la pasa por parametro un
+ * char * donde se devuelve el contenido.
+ * Busca en la lista de paginas la que coincida con el numero de pid para saber en que
+ * byte comienza esa pagina en el archivo y posicionarse para leer.
+ * En caso de no encontrar en la lista de paginas, loggea error, y devuelve nulo.
  */
 void leerSwap(t_header*,char *);
-
+/*
+ * Recibe el t_header con la info necesaria, recibe por socket el mensaje que va a escribir.
+ * Busca en la lista de paginas la que coincida con el numero de pid para saber en que
+ * byte comienza esa pagina en el archivo y posicionarse para escribir.
+ * Rellena el resto de la pagina con \0.
+ * En caso de no encontrar en la lista de paginas, loggea error, y devuelve nulo.
+ */
 int escribirSwap(t_header*, int);
 
 /*
- * Recibe un t_header. Busca un hueco que coincida
- * con la cantidad que de paginas del t_header.
- * y agrega un nodo a la lista de paginas.
- * Luego actualiza la lista de huecos.
+ * Recibe un t_header. Busca un hueco que coincida con la cantidad que de paginas del t_header.
+ * y agrega un nodo a la lista de paginas. Luego actualiza la lista de huecos.
  * Retorna 1 si esta todo bien. 0 si hubo error.
  */
 int inicializarProc(t_header*);
 
 /*
- * Recibe un t_header. Busca en la lista de paginas
- * un nodo que coincida con ese PID.
- * Lo agrega a la lista de huecos y lo remueve
- * de la lista de paginas.
+ * Recibe un t_header. Busca en la lista de paginas un nodo que coincida con ese PID.
+ * Lo agrega a la lista de huecos y lo remueve de la lista de paginas.
  */
 int finalizarProc(t_header*);
+
+/*
+ * Toma un elemento de la lista, lo pone al principio de esta. Guarda el contenido de todas
+ * las paginas juntas. Calcula el nuevo inico en cuando al inicion del nodo que se guardo antes
+ * y la cantidad de paginas que ocupa, y escribe el contenido en la nueva poiscion.
+ * Luego, actualiza la lista de huecos, para dejar uno solo, al final de la particion.
+ */
+void compactarSwap();
 
 void rellenarParticion(int, int);
 
 /*
- * Recibe la cantidad de paginas que se esta
- * buscando ubicar. Recorre la lista de huecos
- * hasta encontrar un hueco cuya cantidad de
- * paginas que ocupa sea mayor o igual a la cantidad
- * que se necesita. Retorna el hueco en caso
- * de que se encuentre, si no NULL
+ * Recibe la cantidad de paginas que se esta buscando ubicar. Recorre la lista de huecos
+ * hasta encontrar un hueco cuya cantidad de paginas que ocupa sea mayor o igual a la cantidad
+ * que se necesita.
+ * Si no encuentra un hueco, chequea si es por falta de espacio o fragmentación externa
+ * y en caso de esta ultima, hace la compactacion, y devuelve el primer hueco, ya que es el unico.
  */
 t_hueco* buscarHueco(int);
 

@@ -146,14 +146,13 @@ void leerSwap(t_header * package,char * contenido)
 
 int escribirSwap(t_header * package, int socketCliente)
 {
-	int a = package->PID;
 	bool _numeroDePid (int p)
 	{
 		return (p == package->PID);
 	}
 	char * mensaje = malloc(package->tamanio_msj);
-	strcpy(mensaje,"Hola\0");
-	//status = recv(socketCliente, mensaje, package->tamanio_msj, 0);
+
+	recv(socketCliente, mensaje, package->tamanio_msj, 0);
 	t_pag * pag = list_find(lista_paginas, (void *)_numeroDePid);
 
 	if(pag!= NULL)
@@ -169,7 +168,7 @@ int escribirSwap(t_header * package, int socketCliente)
 		for(;relleno<=final_pagina;relleno++)
 		{
 			fseek(archivo,relleno,SEEK_SET);
-			fwrite("0", strlen("0") + 1, 1, archivo);
+			fwrite("\0", strlen("\0") + 1, 1, archivo);
 		}
 	}
 	else
@@ -199,11 +198,10 @@ int inicializarProc(t_header * package) {
 		//Actualizo huecos
 		hueco->inicio = hueco->inicio + (package->pagina_proceso * contexto->tam_pagina);
 		return 1;
-
-	} else {
-		puts("Final feliz");
-		log_error(logger, "No hay hueco para poder escribir");
-		return 0;
+	}
+	else
+	{
+		//Si no encontro hueco, es por falta de espacion, tengo que rechazar proceso
 	}
 
 }
@@ -233,9 +231,51 @@ int finalizarProc(t_header* package)
 
 }
 
+void compactarSwap()
+{
+	log_info(logger, "Se comenzo con la compactacion");
+	int inicio_ant = 0,pag_ant = 0;
+	int tamanio_lista= list_size(lista_paginas);
+	int inicio = 0,cant_pag = 0,i = 0;
+
+	for(i; i<tamanio_lista; i++)
+	{
+		t_pag * pagina = list_get(lista_paginas, i);
+		//calculo el nuevo inicio
+		inicio = inicio_ant + pag_ant * contexto->tam_pagina;
+		//guardo el nodo
+		inicio_ant = pagina->inicio;
+		pag_ant = pagina->paginas;
+		//busco el contenido de todas las paginas juntas
+		char * contenido=malloc(pagina->paginas*contexto->tam_pagina);
+		fseek(archivo,pagina->inicio,SEEK_SET);
+		fread(contenido, pagina->paginas*contexto->tam_pagina, 1, archivo);
+
+		cant_pag = cant_pag + pagina->paginas;
+
+		//actualizo la pagina y la particion
+		pagina->inicio= inicio;
+		fseek(archivo,pagina->inicio,SEEK_SET);
+		fwrite(contenido, strlen(contenido) + 1, 1, archivo);
+	}
+
+	//actualizo lista huecos
+	int tamanio_huecos = list_size(lista_huecos);
+	t_hueco * hueco = list_get(lista_huecos,0);
+	hueco->inicio = inicio_ant + pag_ant * contexto->tam_pagina;
+	hueco->paginas = contexto->cant_paginas - cant_pag;
+
+	int j= 0;
+	for(j; j<tamanio_huecos; j++)
+	{
+		list_remove_and_destroy_element(lista_huecos, j, (void *)hueco_destroy);
+	}
+	sleep(contexto->retardo_compac);
+	log_info(logger, "Se finalizo la compactacion");
+}
+
 t_hueco* buscarHueco(int tamanio) {
-	int status = 0;
-	int i = 0;
+	int status = 0,i = 0;
 	while (status == 0)
 	{
 		t_hueco * hueco = list_get(lista_huecos, i);
@@ -246,6 +286,29 @@ t_hueco* buscarHueco(int tamanio) {
 		}
 		i++;
 	}
+	//si no retorne ningun hueco es porque no hay espacio o porque hay fragmentacion externa
+	int pag_ocupadas=0,j = 0, pag_libres;
+	int tamanio_lista_paginas=list_size(lista_paginas);
+
+	for(j;j<tamanio_lista_paginas;j++)
+	{
+		t_pag * pag = list_get(lista_paginas, j);
+		pag_ocupadas = pag_ocupadas + pag->paginas;
+	}
+	pag_libres = contexto->cant_paginas - pag_ocupadas;
+
+	if (tamanio>pag_libres) //NO TENGO ESPACIO
+	{
+		log_error(logger, "No hay espacio disponible");
+		return NULL;
+	}
+	else //HAY FRAGMENTACION EXTERNA, COMPACTO Y DEVUELVO EL PRIMER HUECO
+	{
+		compactarSwap();
+		t_hueco * hueco = list_get(lista_huecos, 0);
+		return hueco;
+	}
+
 	return NULL;
 }
 
