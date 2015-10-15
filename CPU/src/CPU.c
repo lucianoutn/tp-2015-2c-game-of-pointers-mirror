@@ -17,10 +17,11 @@
 //Inicio de funcion principal
 int main()
 {
+	t_sockets *sockets = malloc(sizeof(t_sockets));
 	//int socketPlanificador, socketMemoria;
 	semSalir.__align =0;
 	semProduccionMsjs = sem_open("semPlani", 0);
-	if (configuroSocketsYLogs(&(sockets.socketPlanificador), &(sockets.socketMemoria)) == 1) //Preparo las configuraciones bascias para ejecutar la CPU
+	if (configuroSocketsYLogs(sockets) == 1) //Preparo las configuraciones bascias para ejecutar la CPU
 		puts("¡¡¡CPU!!!");
 	else
 		return EXIT_FAILURE;
@@ -33,7 +34,7 @@ int main()
 
 	int i, err;
 	for (i=0; i<configuracion.cantHilos; i++){
-		err= pthread_create(&(cpu[i]), NULL, (void*)iniciarCPU,&sockets);
+		err= pthread_create(&(cpu[i]), NULL, (void*)iniciarCPU,sockets);
 		//sleep(1);
 		if (err != 0)
 		printf("no se pudo crear el hilo de cpu :[%s]", strerror(err));

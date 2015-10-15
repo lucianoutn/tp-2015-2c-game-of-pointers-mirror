@@ -75,7 +75,7 @@ config configuracion;
 
 pthread_t cpu[0];
 
-t_sockets sockets;
+//t_sockets sockets;
 
 int numero_de_pid;
 
@@ -93,6 +93,6 @@ void ejecutoPCB(int,t_pcb *);
 
 void iniciarCPU(t_sockets *);
 
-int configuroSocketsYLogs (int *,int *);
+int configuroSocketsYLogs (t_sockets *);
 
 #endif /* FUNCCPU_H_ */

@@ -254,9 +254,7 @@ void ejecutoPCB(int socketMemoria, t_pcb *PCB){
 
 
 void iniciarCPU(t_sockets *sockets){
-	//hay q ponerlos asi o se pueden usar directamente del sockets??
-	int socketPlanificador= sockets->socketPlanificador;
-	int socketMemoria= sockets -> socketMemoria;
+
 	pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
 	printf("CPU ID: %d conectado", (pthread_t)id);
 	int status=1;		// Estructura que manjea el status de los recieve.
@@ -270,8 +268,7 @@ void iniciarCPU(t_sockets *sockets){
 		puts("\n\nEsperando Instrucciones...\n\n");
 		//CPU a la espera de nuevas instrucciones
 		sem_wait(semProduccionMsjs); //semaforo productor-consumidor
-		puts("RECIBO MSJ");//control
-		status = recv(socketPlanificador, headcpu, sizeof(t_headcpu),0);
+		status = recv(sockets->socketPlanificador, headcpu, sizeof(t_headcpu),0);
 		if(status!=0)	//CONTROLA QUE NO SE PIERDA LA CONEXION
 		{
 			switch (headcpu->tipo_ejecucion){	//CONTROLA EL TIPO DE INSTRUCCION
@@ -287,13 +284,13 @@ void iniciarCPU(t_sockets *sockets){
 			case 1: 	//INSTRUCCION PARA RECIBIR MSJS
 
 				//t_pcb * pcbRecibido = malloc(sizeof(t_pcb));
-				status = recv(socketPlanificador, pcbRecibido,headcpu->tamanio_msj,0);
+				status = recv(sockets->socketPlanificador, pcbRecibido,headcpu->tamanio_msj,0);
 				t_pcb *PCB = malloc(sizeof(t_pcb));
 				//PCB->ruta = malloc(sizeof(pcbRecibido->ruta));
 				PCB = pcbRecibido;
 				free(pcbRecibido);
 				printf("PCB Recibido. PID:%d\n",PCB->PID);
-				ejecutoPCB(socketMemoria,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
+				ejecutoPCB(sockets->socketMemoria,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
 
 				break;
 
@@ -315,21 +312,21 @@ void iniciarCPU(t_sockets *sockets){
 
 	//CIERRO LOS SOCKETS Y EL HEADER
 	free(headcpu);
-	close(socketPlanificador);
-	close(socketMemoria);
+	close(sockets->socketPlanificador);
+	close(sockets->socketMemoria);
 
 }
 
 /*Configuraciones basicas de los Sockets
  * y los Logs para el CPU
  */
-int configuroSocketsYLogs (int *socketPlanificador,int *socketMemoria){
+int configuroSocketsYLogs (t_sockets *sockets){
 	cargoArchivoConfiguracion(); //carga las configuraciones basicas
 	creoLogger(1);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
 	log_info(logger, "Inicio Log CPU", NULL);
 	puts("Conexion con el Planificador");
-	*socketPlanificador = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
-	if (*socketPlanificador==-1){	//controlo error
+	sockets->socketPlanificador = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
+	if (sockets->socketPlanificador==-1){	//controlo error
 			puts("No se pudo conectar con el Planificador");
 			perror("SOCKET PLANIFICADOR!");
 			log_error(logger,"No se pudo conectar con el Planificador");
@@ -337,8 +334,8 @@ int configuroSocketsYLogs (int *socketPlanificador,int *socketMemoria){
 	}
 
 	puts("Conexion con la Memoria");
-	*socketMemoria = crearCliente(configuracion.ipMemoria, configuracion.puertoMemoria);//conecta con la memoria
-	if (*socketMemoria==-1){		//controlo error
+	sockets->socketMemoria = crearCliente(configuracion.ipMemoria, configuracion.puertoMemoria);//conecta con la memoria
+	if (sockets->socketMemoria==-1){		//controlo error
 			puts("No se pudo concetar con el Adm. de Memoria");
 			perror("SOCKET MEMORIA!");
 			log_error(logger,"No se pudo conectar con el Adm. de Memoria");
