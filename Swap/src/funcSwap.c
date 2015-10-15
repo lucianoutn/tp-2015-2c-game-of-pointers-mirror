@@ -147,13 +147,14 @@ void leerSwap(t_header * package,char * contenido)
 int escribirSwap(t_header * package, int socketCliente)
 {
 	int a = package->PID;
+	int status;
 	bool _numeroDePid (int p)
 	{
 		return (p == package->PID);
 	}
 	char * mensaje = malloc(package->tamanio_msj);
-	strcpy(mensaje,"Hola\0");
-	//status = recv(socketCliente, mensaje, package->tamanio_msj, 0);
+
+	status = recv(socketCliente, mensaje, package->tamanio_msj, 0);
 	t_pag * pag = list_find(lista_paginas, (void *)_numeroDePid);
 
 	if(pag!= NULL)
@@ -169,7 +170,7 @@ int escribirSwap(t_header * package, int socketCliente)
 		for(;relleno<=final_pagina;relleno++)
 		{
 			fseek(archivo,relleno,SEEK_SET);
-			fwrite("0", strlen("0") + 1, 1, archivo);
+			fwrite("\0", strlen("\0") + 1, 1, archivo);
 		}
 	}
 	else
@@ -231,6 +232,50 @@ int finalizarProc(t_header* package)
 		return 0;
 	}
 
+}
+
+void compactarSwap()
+{
+	int inicio_ant = 0;
+	int pag_ant = 0;
+	int tamanio_lista= list_size(lista_paginas);
+	int inicio = 0;
+	int cant_pag = 0;
+	int i = 0;
+
+	for(i; i<tamanio_lista; i++)
+	{
+		t_pag * pagina = list_get(lista_paginas, i);
+		//calculo el nuevo inicio
+		inicio = inicio_ant + pag_ant * contexto->tam_pagina;
+		//guardo el nodo
+		inicio_ant = pagina->inicio;
+		pag_ant = pagina->paginas;
+		//busco el contenido de todas las paginas juntas
+		char * contenido=malloc(pagina->paginas*contexto->tam_pagina);
+		fseek(archivo,pagina->inicio,SEEK_SET);
+		fread(contenido, pagina->paginas*contexto->tam_pagina, 1, archivo);
+
+		cant_pag = cant_pag + pagina->paginas;
+
+		//actualizo la pagina y la particion
+		pagina->inicio= inicio;
+		fseek(archivo,pagina->inicio,SEEK_SET);
+		fwrite(contenido, strlen(contenido) + 1, 1, archivo);
+	}
+
+	//actualizo lista huecos
+	int tamanio_huecos = list_size(lista_huecos);
+	t_hueco * hueco = list_get(lista_huecos,0);
+	hueco->inicio = inicio_ant + pag_ant * contexto->tam_pagina;
+	hueco->paginas = contexto->cant_paginas - cant_pag;
+
+	int j= 0;
+	for(j; j<tamanio_huecos; j++)
+	{
+		list_remove_and_destroy_element(lista_huecos, j, (void *)hueco_destroy);
+	}
+	sleep(contexto->retardo_compac);
 }
 
 t_hueco* buscarHueco(int tamanio) {
