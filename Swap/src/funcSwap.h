@@ -112,12 +112,11 @@ void compactarSwap();
 void rellenarParticion(int, int);
 
 /*
- * Recibe la cantidad de paginas que se esta
- * buscando ubicar. Recorre la lista de huecos
- * hasta encontrar un hueco cuya cantidad de
- * paginas que ocupa sea mayor o igual a la cantidad
- * que se necesita. Retorna el hueco en caso
- * de que se encuentre, si no NULL
+ * Recibe la cantidad de paginas que se esta buscando ubicar. Recorre la lista de huecos
+ * hasta encontrar un hueco cuya cantidad de paginas que ocupa sea mayor o igual a la cantidad
+ * que se necesita.
+ * Si no encuentra un hueco, chequea si es por falta de espacio o fragmentación externa
+ * y en caso de esta ultima, hace la compactacion, y devuelve el primer hueco, ya que es el unico.
  */
 t_hueco* buscarHueco(int);
 
