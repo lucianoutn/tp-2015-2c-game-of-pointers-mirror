@@ -4,7 +4,6 @@
  *  Created on: 29/9/2015
  *      Author: utnso
  */
-
 #ifndef SRC_FUNCMEMORY_H_
 #define SRC_FUNCMEMORY_H_
 
@@ -39,16 +38,15 @@ typedef struct
 }process_pag;
 // ------------------------------------//
 
+typedef struct{
+	int status;
+	char* contenido;
+}t_devuelvo;
 // DECLARACIONES GLOBALES PARA USAR FUNCIONES DE CONDICION EN LISTFIND
 int numero_de_pid;
 int numero_pagina;
 // ESTRUCTURA QUE CONTIENE EL CONTEXTO DE LA MEMORIA
 contexto miContexto;
-
-sem_t * semConexion;
-
-
-
 /* DECLARACIONES GLOBAL PARA CONOCER EL ESTADO DE LOS FRAMES DESDE CALQUIER LADO Y NO ANDAR PASANDO LA LISTA
  * DE FUNCION EN FUNCION
  */
@@ -90,15 +88,32 @@ void matarProceso(t_header *, t_list*);
 /* ME DEVUELVE NULL SI LA PAGINA ESTA EN SWAP Y SINO ME DEVUELVE LA DIRECCION DEL MARCO */
 //direccionDePag();
 
-int buscarEnMemReal(t_list*,t_list *, t_header *, int,int, char *);
+int leerEnMemReal(t_list*,t_list *, t_header *, int,int, char *);
 
-int buscarEnCache(int , t_list * );
+/* VERIFICA SI LA TABLA ESTA CARGADA EN LA TABLA DE TABLAS DE PROCESOS Y LA DEVUELVE */
+t_list * obtenerTablaProceso(t_list*);
+
+/* DEVUELVE LA PAGINA DE LA TABLA DEL PROCESO */
+process_pag * obtenerPaginaProceso(t_list *);
+
+int leerEnCache(int , t_list * );
 
 /*
  * Unicamente crea las tablas para manejarlo
  * no le asigna marcos a las paginas
  */
 void iniciarProceso();
+
+/* BUSCA SI LA PAGINA A ESCRIBIR Y ESTA CARGADA EN TLB, SI LO ESTA LA ESCRIBE Y DEVUELVE 1, SINO DEVUELVE 0 */
+int verificarTlb (t_list *,int, char*);
+
+int swapeando(t_list* , t_list *, char *, char *, t_header *);
+
+// CUANDO TENGO QUE ESCRIBIR, Y TENGO ESPACIO PARA GUARDAR LA PAGINA (NO TENGO QUE SWAPEAR), SOLO LE MANDO UN T_HEADER DE TIPO LECTURA AL SWAP
+t_header * crearHeaderLectura(t_header*);
+
+
+t_header * crearHeaderEscritura(int, int, int);
 
 /* PASAR A MANEJOLISTAS */
 process_pag * pag_proc_create(int, char*);
