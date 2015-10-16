@@ -9,6 +9,8 @@
 
 
 
+
+
 //Funcion que permite cargar el archivo de configuracion en el programa.
 void traigoContexto()
 {
@@ -45,6 +47,7 @@ void iniciarPlanificador(t_queue* cola_ready)
 	sem_post(&semConsola); // debe ir arriba del procesarPCB para que se aproveche el paralelismo
 	queue_push(cola_ready, procesarPCB(ruta));
 
+
 	puts("PCB procesado y encolado\n");
 
 	//sem_wait(&semSalir); //es para pruebas
@@ -71,20 +74,32 @@ void dispatcher(t_queue *cola_ready)
 		I++;
 	}
 	
+
 	if(!conexiones.CPUS[I].enUso){
 		//bloqueo la cpu
 		conexiones.CPUS[I].enUso = true;
 		//CPU DISPONIBLE  saco de la cola y envio msj
 		t_pcb *pcb = queue_pop(cola_ready);
 		t_msj *msj = malloc(sizeof(t_msj));
+
 		*msj = preparoMSJ(pcb);
+		printf("%p\n", pcb);
+		printf("%p\n", msj->pcbMSJ);
+
 		printf("Instruccion enviada:%d\nTamaño:%d\nSocket:%d\n",msj->headMSJ.tipo_ejecucion,msj->headMSJ.tamanio_msj,conexiones.CPUS[I].socket);
-		send(conexiones.CPUS[I].socket, msj, sizeof(t_msj),0);
-		free(msj);
+		//send(conexiones.CPUS[I].socket, msj, sizeof(t_msj),0);
+		//free(msj);
 
 		sem_post(semProduccionMsjs);
+		//BLOQUEO HASTA QUE CAMBIE PARA COBRAR
+		while(pcb->PID==2)
+		{
+			printf("%d\n",pcb->PID);
+		}
+		printf("%d\n",pcb->PID); //CAMBIA!!
 		puts("Mensaje enviado\n");
 		log_info(logger,"Comienzo ejecucion PID: %d Nombre: %s", pcb->PID, pcb->ruta);
+
 
 		//RECIBE RESPUESTA
 		//esta bien que reciba la respuesta el despachador???
@@ -111,27 +126,31 @@ void dispatcher(t_queue *cola_ready)
 //Funcion que permite procesar el PCB creado a partir del comando correr PATH
 t_pcb* procesarPCB(char *path)
 {
-	//inicializo las variables y reservo memoria (hay que ver donde hacer los free)
-	t_pcb* pcb = (t_pcb*)malloc(sizeof(t_pcb));
+	int id_pcb = shmget(123, sizeof(t_pcb), 0644 | IPC_CREAT); //reservo espacio dentro de la seccion de memoria compartida
+	printf("%d \n", id_pcb); //imprimo el identificador de la seccion
+	t_pcb *pcb = (t_pcb*)shmat(id_pcb, NULL, 0); //creo la variable y la asocio al segmento
+	printf("%p", pcb); //imprimo la direccion de memoria del pcb
+
 	pcb->ruta = (char*)malloc(sizeof(path));//MODIFICAR
 
 	//armo PCB y msj para enviar al CPU
-	pcb->PID = max_PID +1;
+	pcb->PID= max_PID+1;
 	pcb->instructionPointer = 0;
 	pcb->numInstrucciones = 0;
 	pcb->prioridad=0;
 	pcb->permisos=0;
 	strcpy(pcb->ruta, path);
 	
+
+
 	return pcb;
 }
 
+//CAMBIAR PARA QUE SOLO SEA EL HEADER
 t_msj preparoMSJ(t_pcb *pcb){
 	t_msj msj;
-	msj.pcbMSJ.ruta = malloc(sizeof(pcb->ruta));
 	msj.headMSJ.tipo_ejecucion = 1;	//Orden de envio de pcb
 	msj.headMSJ.tamanio_msj = sizeof(t_pcb);
-	msj.pcbMSJ = *pcb;
 	
 	return msj;
 }

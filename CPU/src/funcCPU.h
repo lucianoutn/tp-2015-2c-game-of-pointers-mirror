@@ -22,6 +22,8 @@
 #include <semaphore.h>
 #include "mAnsisOp.h"
 #include <pthread.h>
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 typedef int pid;
 

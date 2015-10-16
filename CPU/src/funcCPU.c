@@ -8,6 +8,9 @@
 
 #include "funcCPU.h"
 
+#include <sys/ipc.h>
+#include <sys/shm.h>
+
 /* Cargo las configuraciones del archivo Config.cfg
  * y compruebo que no haya errores.
  */
@@ -264,12 +267,15 @@ void iniciarCPU(t_sockets *sockets){
 
 	while(status!=0)	//MIENTRAS NO QUIERA SALIR RECIBO INSTRUCCIONES
 	{
-		t_pcb * pcbRecibido = malloc(sizeof(t_pcb));
 		puts("\n\nEsperando Instrucciones...\n\n");
 		//CPU a la espera de nuevas instrucciones
 		sem_wait(semProduccionMsjs); //semaforo productor-consumidor
-		status = recv(sockets->socketPlanificador, headcpu, sizeof(t_headcpu),0);
+		//status = recv(sockets->socketPlanificador, headcpu, sizeof(t_headcpu),0);
+
+		headcpu->tipo_ejecucion=1; //PARA PROBAR NADA MAS
+
 		if(status!=0)	//CONTROLA QUE NO SE PIERDA LA CONEXION
+
 		{
 			switch (headcpu->tipo_ejecucion){	//CONTROLA EL TIPO DE INSTRUCCION
 
@@ -282,17 +288,20 @@ void iniciarCPU(t_sockets *sockets){
 				break;
 
 			case 1: 	//INSTRUCCION PARA RECIBIR MSJS
+			{
+				int id_pcb = shmget(123, sizeof(t_pcb), 0777); //reservo espacio dentro de la seccion de memoria compartida
+				printf("%d \n", id_pcb); //imprimo el identificador de la seccion(igual que el del plani)
+				t_pcb *PCB =(t_pcb*) shmat(id_pcb,(char*)0, 0); //creo la variable y la asocio al segmento
+				printf("%p", PCB); //imprimo la direccion de variable local (notese que es difente a la del plani)
+				printf("%d\n", PCB->PID);
+				PCB->PID=3; //modifico el valor (se ve reflejado en el plani
 
-				//t_pcb * pcbRecibido = malloc(sizeof(t_pcb));
-				status = recv(sockets->socketPlanificador, pcbRecibido,headcpu->tamanio_msj,0);
-				t_pcb *PCB = malloc(sizeof(t_pcb));
-				//PCB->ruta = malloc(sizeof(pcbRecibido->ruta));
-				PCB = pcbRecibido;
-				free(pcbRecibido);
+
 				printf("PCB Recibido. PID:%d\n",PCB->PID);
 				ejecutoPCB(sockets->socketMemoria,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
 
 				break;
+			}
 
 			default:	//PARA ERRORES EN EL TIPO DE INSTRUCCION
 			{

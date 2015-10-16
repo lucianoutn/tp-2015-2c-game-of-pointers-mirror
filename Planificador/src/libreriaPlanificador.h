@@ -27,7 +27,8 @@
 #include <commons/collections/queue.h>
 #include <fcntl.h>           /* para las constantes O_* de los semaforos ipc  */
 #include <sys/stat.h>        /* para las constantes de modo de los semaforos ipc */
-
+#include <sys/ipc.h>
+#include <sys/shm.h>
 
 
 #define BACKLOG 10 //comentar
@@ -54,10 +55,11 @@ typedef struct{
 
 typedef struct MSJ {
 	t_headcpu headMSJ;
-	t_pcb  pcbMSJ;
+	t_pcb  *pcbMSJ;
 }t_msj;
 
 t_msj msj;
+
 
 //Estructura que almacena los datos del archivo de configuracion
 typedef struct{
