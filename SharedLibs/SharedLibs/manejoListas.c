@@ -42,7 +42,7 @@ void hueco_destroy(t_hueco * self)
 
 /* ----------MANEJO DESDE CPU -> MEMORY -> SWAP-----*/
 
-t_header * package_create (int pid, int pagina, int tamanio, int tipo_ejecucion)
+t_header * package_create (int tipo_ejecucion, int pid, int pagina, int tamanio)
 {
 	t_header * prueba = malloc(sizeof(t_header));
 	prueba->PID = pid;
