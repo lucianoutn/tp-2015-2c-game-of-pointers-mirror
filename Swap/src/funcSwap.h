@@ -30,13 +30,6 @@ typedef struct{
 	int retardo_compac;
 }t_contexto;
 
-//Estructura para devolver al Admin Memoria, si esta todo ok
-//y en caso de corresponder, el contenido de la pagina.
-typedef struct{
-	int status;
-	char* contenido;
-}t_devuelvo;
-
 
 //Declaro variables globales
 t_contexto * contexto;
@@ -45,6 +38,7 @@ t_list * lista_paginas;
 t_list * lista_huecos;
 t_header * global;
 
+sem_t * semConexion;
 
 /*
  * Crea el archivo swap y devuelve un puntero al archivo abierto
@@ -127,4 +121,8 @@ t_hueco* buscarHueco(int);
  */
 bool numeroDePid(int *);
 
+//Manejo de listas
+t_list * crearListaPaginas();
+
+t_list * crearListaHuecos(int);
 #endif /* FUNCSWAP_H_ */

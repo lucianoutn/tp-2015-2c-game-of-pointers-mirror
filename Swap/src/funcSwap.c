@@ -84,14 +84,12 @@ void analizoPaquete(t_header * package, int socketCliente) {
 	{
 	case 0:
 		printf("Se recibio orden de lectura\n");
-		char * contenido = malloc(contexto->tam_pagina);
-		t_devuelvo  devuelvo;
+		char * contenido = malloc(contexto->tam_pagina)+1;
 		leerSwap(package,contenido);
 		if(contenido!=NULL){
-			devuelvo.status = 1;
-			devuelvo.contenido = contenido;
-			puts("Todo ok");
-			send(socketCliente,&devuelvo,sizeof(t_devuelvo),0);
+			status = 1;
+			send(socketCliente,&status,sizeof(int),0);
+			send(socketCliente,contenido,contexto->tam_pagina,0);
 		}
 		else{
 			puts("Todo mal");
@@ -202,6 +200,7 @@ int inicializarProc(t_header * package) {
 	else
 	{
 		//Si no encontro hueco, es por falta de espacion, tengo que rechazar proceso
+		return 0;
 	}
 
 }
@@ -324,4 +323,17 @@ void rellenarParticion(int inicio, int paginas) {
 
 bool numeroDePid(int * pid) {
 	return (*pid == global->PID);
+}
+
+t_list * crearListaPaginas()
+{
+ t_list * lista_paginas= list_create();
+ return lista_paginas;
+}
+
+t_list * crearListaHuecos(int cant)
+{
+ t_list * lista_huecos = list_create();
+ int a = list_add(lista_huecos, hueco_create(0,cant));
+ return lista_huecos;
 }

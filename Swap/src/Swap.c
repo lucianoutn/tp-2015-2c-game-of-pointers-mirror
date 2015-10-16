@@ -21,6 +21,8 @@
 #include "funcSwap.h"
 #include <semaphore.h>
 #include <pthread.h>
+#include <fcntl.h>           // para las constantes O_* de los semaforos ipc
+#include <sys/stat.h>        // para las constantes de modo de los semaforos ipc
 
 #define BACKLOG 10
 
@@ -34,6 +36,7 @@ int main()
 	log_info(logger, "Inicio Log SWAP", NULL);
 	//------Fin Contexto----------------------//
 
+	//sem_t * semPrueba = sem_open("semPrueba", O_CREAT, 0644, 3);
 	//Creo particion y listas
 	archivo = crearParticion();
 	lista_paginas = crearListaPaginas();
@@ -71,40 +74,41 @@ int main()
 
 void reciboDelAdminMem()
 {
-  int listenningSocket=crearServer(contexto->puerto);
+	semConexion = sem_open("semConexion", O_CREAT, 0644, 1);
+	sem_wait(semConexion); //hasta que no cree el server, que no opere la memoria
+	int listenningSocket=crearServer(contexto->puerto);
 
-  //Estructura que tendra los datos de la conexion del cliente MEMORIA
-  struct sockaddr_in addr;
-  socklen_t addrlen = sizeof(addr);
+	//Estructura que tendra los datos de la conexion del cliente MEMORIA
+	struct sockaddr_in addr;
+	socklen_t addrlen = sizeof(addr);
 
-  int L = listen(listenningSocket, BACKLOG);
-  if (L==-1)
-	  perror("LISTEN");
+	int L = listen(listenningSocket, BACKLOG);
+	if (L==-1)
+		perror("LISTEN");
 
-  int socketCliente = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen);
-  printf("Conexion aceptada Socket= %d \n",socketCliente);
+	sem_post(semConexion);
+	int socketCliente = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen);
+	printf("Conexion aceptada Socket= %d \n",socketCliente);
 
-  t_header * package = malloc(sizeof(t_header));
-  int status = 2; // Estructura que maneja el status de los receive.
+	t_header * package = malloc(sizeof(t_header));
+	int status = 2; // Estructura que maneja el status de los receive.
 
-  printf("Cliente conectado. Esperando mensajes:\n");
+	printf("Cliente conectado. Esperando mensajes:\n");
+
+	while(status>0)
+		//Una vez conectado el cliente..
+	{
+		status = recv(socketCliente, package, sizeof(t_header), 0);
+		//Recibido el paquete lo proceso..
+		if(status > 0){
+			analizoPaquete(package,socketCliente);
+			sleep(contexto->retardo_swap);
+		}
+	}
 
 
-  while(status>0)
-  //Una vez conectado el cliente..
-  {
-	  status = recv(socketCliente, package, sizeof(t_header), 0);
-	  //Recibido el paquete lo proceso..
-	  if(status > 0){
-		  analizoPaquete(package,socketCliente);
-		  sleep(contexto->retardo_swap);
-	  }
-  }
-
-
-  //Cierro conexiones
-  close(socketCliente);
-  close(listenningSocket);
-  status = 0;
-
+	//Cierro conexiones
+	close(socketCliente);
+	close(listenningSocket);
+	status = 0;
 }

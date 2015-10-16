@@ -266,7 +266,7 @@ int buscarEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int se
 		// SI LA DIRECCION = NULL ES PORQUE ESTA EN SWAP, SINO YA LA ENCONTRE EN MEMORIA
 		if (pagina_proc->direccion_fisica == NULL)
 		{
-			char * contenido = malloc(sizeof(miContexto.tamanioMarco));
+			char * contenido = malloc(miContexto.tamanioMarco);
 			flag = envioAlSwap(package, serverSocket, contenido );
 			//SI TODO SALIO BIEN, EL SWAP CARGO LA PAGINA A LEER EN "CONTENIDO"
 			if(flag)
@@ -359,19 +359,15 @@ int envioAlSwap ( t_header * header, int serverSocket, char * contenido)
 	  	 * 0 = Hubo un error.
 	  	 * 1 = Todo ok.
  	 	*/
-		//t_devuelvo * devuelvo = malloc(sizeof(t_devuelvo));
-		//recv(serverSocket,(void*)devuelvo,sizeof(t_devuelvo),0);
 		recv(serverSocket, &flag, sizeof(int),0);
 
 		if(flag) //si no hubo error
 		{
 			if(header->type_ejecution==0) //si hice una lectura, devuelve la pag
 			{
-				recv(serverSocket, (void *)contenido, sizeof(miContexto.tamanioMarco),0);
+				recv(serverSocket, contenido, miContexto.tamanioMarco,0);
 			}
 		}
-
-		//close(serverSocket);
 
 	 return flag;
 }

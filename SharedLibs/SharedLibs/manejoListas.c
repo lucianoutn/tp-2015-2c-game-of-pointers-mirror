@@ -130,20 +130,6 @@ static void pag_proc_destroy(pag_proceso * self)
 {
  free(self);
 }
-/* ---------------- SWAP ---------------------*/
-t_list * crearListaPaginas()
-{
- t_list * lista_paginas= list_create();
- return lista_paginas;
-}
-
-t_list * crearListaHuecos(int cant)
-{
- t_list * lista_huecos = list_create();
- int a = list_add(lista_huecos, hueco_create(0,cant));
- return lista_huecos;
-}
-/* ---------------------------------------------*/
 
 /* ----------------------MEMORIA -----------------*/
 t_list * crearListaFrames()

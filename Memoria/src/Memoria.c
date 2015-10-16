@@ -20,6 +20,8 @@
 #include <SharedLibs/libreriaServidor.h>
 #include "funcMemory.h"
 #include <errno.h>
+#include <fcntl.h>           // para las constantes O_* de los semaforos ipc
+#include <sys/stat.h>        // para las constantes de modo de los semaforos ipc
 
 #define IP "127.0.0.1"
 #define BACKLOG 10
@@ -35,6 +37,8 @@ int main()
  traigoContexto();
  creoLogger(1);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
  log_info(logger, "Inicio Log MEMORIA", NULL);
+
+ //sem_t * semPrueba= sem_open("semPrueba", 0);
 
  // RESERVO ESPACIO PARA LA MEMORIA REAL /
  int tamanio_memoria_real = miContexto.tamanioMarco * miContexto.cantidadMarcos;
@@ -68,8 +72,9 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	int resultadoSelect;
 	fd_set readset;
 	t_header * package = malloc(sizeof(t_header));
-	char * mensaje;
+	char * mensaje=malloc(11);
 	int status = 1;
+	semConexion= sem_open("semConexion", 0);
 
 	//CONEXION AL CPU
 	int listenningSocket=crearServer(miContexto.puertoServidor);
@@ -87,13 +92,13 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	printf("Conexion aceptada Socket= %d \n",socketCPU);
 
 
+	sem_wait(semConexion);
 	// ME CONECTO AL SWAP PARA ENVIARLE LO QUE VOY A RECIBIR DE LA CPU
 	int serverSocket = crearCliente(IP,miContexto.puertoCliente);
-
+	sem_post(semConexion);
 
 	while(status!=0)
 	{
-		//sem_wait(sem_1);
 		// RECIBO EL PAQUETE(t_header) ENVIADO POR LA CPU
 		status = recv(socketCPU, package, sizeof(t_header), 0);
 
@@ -124,6 +129,11 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 
 	ejecutoInstruccion(package1, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 
+	package1->type_ejecution=0;
+	package1->PID=1;
+	package1->pagina_proceso=1;
+
+	ejecutoInstruccion(package1, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 */
   /* SELECT primera version no borrar
   do {

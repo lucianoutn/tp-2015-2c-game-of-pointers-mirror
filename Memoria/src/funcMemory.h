@@ -8,8 +8,6 @@
 #ifndef SRC_FUNCMEMORY_H_
 #define SRC_FUNCMEMORY_H_
 
-
-
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -41,15 +39,16 @@ typedef struct
 }process_pag;
 // ------------------------------------//
 
-typedef struct{
-	int status;
-	char* contenido;
-}t_devuelvo;
 // DECLARACIONES GLOBALES PARA USAR FUNCIONES DE CONDICION EN LISTFIND
 int numero_de_pid;
 int numero_pagina;
 // ESTRUCTURA QUE CONTIENE EL CONTEXTO DE LA MEMORIA
 contexto miContexto;
+
+sem_t * semConexion;
+
+
+
 /* DECLARACIONES GLOBAL PARA CONOCER EL ESTADO DE LOS FRAMES DESDE CALQUIER LADO Y NO ANDAR PASANDO LA LISTA
  * DE FUNCION EN FUNCION
  */
