@@ -109,6 +109,9 @@ int verificarTlb (t_list *,int, char*);
 
 int swapeando(t_list* , t_list *, char *, char *, t_header *);
 
+// LE MANDO LA TABLA DEL PROCESO Y ME DEVUELVE 1 SI YA TIENE TODOS SUS MARCOS DISPONIBLES OCUPADOS
+int marcosProcesoLlenos(t_list *);
+
 // CUANDO TENGO QUE ESCRIBIR, Y TENGO ESPACIO PARA GUARDAR LA PAGINA (NO TENGO QUE SWAPEAR), SOLO LE MANDO UN T_HEADER DE TIPO LECTURA AL SWAP
 t_header * crearHeaderLectura(t_header*);
 

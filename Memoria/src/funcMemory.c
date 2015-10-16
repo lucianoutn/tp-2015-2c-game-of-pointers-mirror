@@ -94,6 +94,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			numero_de_pid = registro_prueba->PID;
 			numero_pagina = registro_prueba->pagina_proceso;
 			int tamanio_mensaje = registro_prueba->tamanio_msj;
+			printf ("DECLARO LAS VARIABLES \n");
 
 			// DECLARO UN FLAG PARA SABER SI ESTABA EN LA TLB
 			int okTlb = 0;	//verificarTlb(TLB,tamanio_mensaje, mensaje);
@@ -101,45 +102,55 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			// SI ESTABA EN LA TLB, YA LA FUNCION ESCRIBIO Y LISTO (HACER)
 			if(okTlb == 1)
 			{
-				// SE ESCRIBIO CORRECTAMENTE EN TLB PORQUE YA ESTABA CARGADA
+				// SE ESCRIBIO CORRECTAMENTE PORQUE YA ESTABA CARGADA EN TLB
 			}
 			// SI NO ESTABA EN LA TLB, AHORA ME FIJO SI ESTA EN LA TABLA DE TABLAS
 			else
 			{
+				printf("ENTRO AL ELSE \n");
 				// EN ESTAS DOS TENDRIA QUE MANDAR EL PID Y LA PAGINA RESPECTIVAMENTE, POR AHORA LO TENGO DECLARADO GLOBALMENTE
 
 				// SI ESTA EN SWAP
 				if (obtenerPaginaProceso(obtenerTablaProceso(tabla_adm))->direccion_fisica == NULL)
 				{
-					printf("ENTRO AL IF \n");
+					printf("ESTA EN SWAP \n");
 					/*SI NO TENGO ESPACIO PARA TRAERLA, SWAPEO LA PRIMER PAGINA CARGADA (FIFO)
 					* Y ESCRIBO LA QUE RECIBO DEL SWAP AL FINAL DE LA LISTA
 					*/
-					if (obtenerTablaProceso(tabla_adm)->elements_count == miContexto.maxMarcos)
+
+					// ME FIJO SI TODOS LOS MARCOS DISPONIBLES POR PROCESO EN MEMORIA ESTAN OCUPADOS
+					if ( marcosProcesoLlenos(obtenerTablaProceso(tabla_adm)))
 					{
-						printf("ENTRO AL SEGUNDO IF \n");
+						printf("NO TENGO LUGAR PARA GUARDARLA \n");
 						// TRAIGO LA PRIMER PAGINA DE LA TABLA, LA ELIMINO DE LA MISMA Y SE LA ENVIO AL SWAP
 						process_pag * paginaASwapear = list_remove(obtenerTablaProceso(tabla_adm), 0);
+						printf("HIZO EL REMOVE DE pagina->%d \n", paginaASwapear->pag);
+
 						t_header * header_escritura = crearHeaderEscritura( registro_prueba->PID, paginaASwapear->pag, sizeof(paginaASwapear->direccion_fisica));
-						int status = send(serverSocket, paginaASwapear, sizeof(t_header), 0);
+						printf("CREO EL HEADER ESCRITURA: pid->%d, ejecucion->%d \n", header_escritura->PID, header_escritura->type_ejecution);
+
+						int * status_escritura = envioAlSwap(header_escritura, serverSocket, NULL);
+						if (status_escritura == 1)
+							printf("ESCRITURA - SE LO ENVIO AL SWAP CORRECTAMENTE \n");
+						else
+							printf ("ESCRITURA - NO SE LO ENVIO CORRECTAMENTE");
 
 						// LE PIDO LA PAGINA QUE QUIERO ESCRIBIR, LA AGREGO AL FINAL DE LA LISTA Y LA ESCRIBO
-						t_header * regLectura = crearHeaderLectura(registro_prueba);
-						status = send(serverSocket, regLectura, sizeof(t_header), 0);
-						// RESIBO EL FLAG PARA SABER SI RECIBIO LA ORDEN DE LECTURA BIEN
-						status = recv(serverSocket, status, sizeof(int), 0);
-						// SI LA RECIBIO BIEN, ENTONCES ESPERO QUE ME MANDE EL CONTENIDO
+						t_header * header_lectura = crearHeaderLectura(registro_prueba);
+						printf("CREO EL HEADER LECTURA, pid->%d, ejecucion->%d \n", header_lectura->PID, header_lectura->type_ejecution);
 						char * contenido = malloc(miContexto.tamanioMarco);
-						if (status == 1)
-						{
-							// char * PARA GUARDAR LO QUE YA TENIA LA PAGINA DE ANTES
+						int * status_lectura = envioAlSwap(header_lectura, serverSocket, contenido);
 
-							status = recv(serverSocket, contenido, miContexto.tamanioMarco, 0 );
-						}
+						if (*status_lectura == 1)
+							printf ("LECTURA - RECIBI FLAG TODO OK \n");
+						else
+							printf ("LECTURA - RECIBI FLAG TODO MAL \n;");
+
+						/*
 						// CONTATENO LO QUE YA TENIA + LO QUE TENGO QUE ESCRIBIR
 						strcpy(paginaASwapear->direccion_fisica, contenido);
 						strcat(paginaASwapear->direccion_fisica, mensaje );
-
+						*/
 						//process_pag * paginaASwapear
 						//ENVIO AL SWAP LA PAGINA A ESCRIBIR
 						//int status = send(serverSocket, registro_prueba, sizeof(t_header), 0);
@@ -148,19 +159,31 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 					//SI TENGO ESPACIO PARA TRAERLA, LA TRAIGO Y LA ESCRIBO
 					else
 					{
-						printf("TENGO ESPACIO PARA TRAERLA");
+						printf("TENGO ESPACIO PARA TRAERLA \n");
 						// Creo la peticion de lectura de una pagina y se lo mando al swap
-						t_header * peticionASwap = crearHeaderLectura(registro_prueba);
-						int status = send(serverSocket, peticionASwap, sizeof(t_header), 0 );
-						// Creo un t_header para recibir la pagina a escribir
-						t_header * paginaAEscribir = malloc(sizeof(t_header));
-						status = recv(serverSocket, paginaAEscribir, sizeof(t_header), 0 );
-						memcpy ( obtenerPaginaProceso(obtenerTablaProceso(tabla_adm))->direccion_fisica, mensaje, tamanio_mensaje);
+						t_header * lectura_swap = crearHeaderLectura(registro_prueba);
+
+						char * contenido_a_escribir = malloc(miContexto.tamanioMarco);
+
+						int * status_lectura2 = envioAlSwap(lectura_swap, serverSocket, contenido_a_escribir);
+
+						if(status_lectura2 == 1)
+							printf("OK \n");
+						else
+							printf("NO OK \n");
+
+						// TENGO QUE ASIGNARLE UNA DIRECCION PARA ESCRIBIR AHI
+						 t_marco_hueco * marco_a_llenar = list_remove(listaFramesHuecosMemR, 0);
+						memcpy ( marco_a_llenar->direccion_inicio, contenido_a_escribir, miContexto.tamanioMarco);
+
+						list_add(listaFramesMemR, marco_a_llenar);
+
 					}
 				}
 				// SI NO ESTA EN SWAP, ENTONCES okMem TIENE LA DIRECCION DEL MARCO PARA ESCRIBIR EL MENSAJE
 				else
 				{
+					printf("NO ESTA EN SWAP \n");
 					memcpy ( obtenerPaginaProceso(obtenerTablaProceso(tabla_adm))->direccion_fisica, mensaje, tamanio_mensaje);
 					printf ("ESCRIBI EN LA PAGINA: %s \n", obtenerPaginaProceso(obtenerTablaProceso(tabla_adm))->direccion_fisica);
 				}
@@ -352,11 +375,7 @@ t_list * obtenerTablaProceso(t_list * tabla_adm)
 	// SI ENCONTRO UN REGISTRO CON ESE PID
 	if (reg_tabla_tablas != NULL)
 	{
-
-		printf("Encontro la tabla \n");
-		printf ( "El pid es: %d \n", reg_tabla_tablas->pid);
-		printf( " Y la direccion es: %p \n", reg_tabla_tablas->direc_tabla_proc);
-		printf(" PASO LOS PRINT \n");
+		printf("Encontro la tabla, el pid es %d, la direccion %p \n", reg_tabla_tablas->pid, reg_tabla_tablas->direc_tabla_proc);
 		int c =(reg_tabla_tablas->direc_tabla_proc)->elements_count;
 		printf ("cantidad de elementos: %d \n", c);
 		// TRAIGO LA TABLA DEL PROCESO Y LA DEVUELVO
@@ -598,6 +617,37 @@ int swapeando(t_list* tabla_adm , t_list * TLB, char * mensaje, char * serverSoc
 
 }
 
+int marcosProcesoLlenos(t_list * lista_proceso)
+{
+	printf("ENTRO A VERIFICAR LOS MARCOS DISPONIBLES \n");
+	int x = 0;
+	int paginas_ocupadas = 0;
+	int paginas_disponibles = 0;
+	int cantidad_paginas = lista_proceso->elements_count;
+	printf ("CANTIDAD DE PAGINAS: %d \n", cantidad_paginas);
+	while ( paginas_ocupadas+paginas_disponibles < cantidad_paginas )
+	{
+		process_pag * reg = list_get(lista_proceso, x);
+		if ( reg->direccion_fisica != NULL)
+			paginas_ocupadas++;
+		else
+			paginas_disponibles++;
+
+		x++;
+
+	}
+	if (paginas_ocupadas == miContexto.maxMarcos)
+	{
+		printf("ENTRO A RETORNAR 1 \n");
+		return 1;
+	}
+	else
+	{
+		printf("ENTRO A RETORNAR 0 \n");
+		return 0;
+
+	}
+}
 t_header* crearHeaderLectura(t_header * package)
 {
 	t_header * package_lectura = package_create(0, package->PID, package->pagina_proceso, package->tamanio_msj);
