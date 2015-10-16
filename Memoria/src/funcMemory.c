@@ -43,24 +43,6 @@ void liberarMemoria(char * memoria_a_liberar)
  printf ("Memoria Liberada");
 }
 
-/*
-char * crear_tlb()
-
-{
- char * arreglo = (char *) malloc(4*3*sizeof(char*));
- int k = 0,i,j;
-
- for(i=0;i<4;i++) {
-  for(j=0;j<3;j++) {
-   arreglo[k] = i*3 + j;
-   k++;
-  }
- }
- printf ("La TLB se ha creado satisfactoriamente");
- return arreglo;
-}
-*/
-
 void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memoria_real, t_list * TLB, t_list * tabla_adm, int socketCliente, int serverSocket)
 {
 	int flag;
@@ -92,9 +74,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 
 	 	case 1:
 			printf ("Se recibio orden de escritura\n");
-			/* CAMBIAR ESTO QUE ESTA DEFINIDO GLOBALMENTE */
-			numero_de_pid = registro_prueba->PID;
-			numero_pagina = registro_prueba->pagina_proceso;
+
 			int tamanio_mensaje = registro_prueba->tamanio_msj;
 
 			// DECLARO UN FLAG PARA SABER SI ESTABA EN LA TLB
@@ -554,32 +534,47 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm)
 
 int verificarTlb (t_list * TLB, int tamanio_msg, char * message, t_header * pagina)
 {
-	printf ("ENTRO A VERIFICAR LA TLB \n");
-	t_list * subListaPid = list_filter(TLB, elNodoTienePidIgualA);
+	bool _numeroDePid (void * p)
+	{
+		return(*(int *)p == pagina->PID);
+	}
+
+	bool _numeroDePagina (void * p)
+	{
+		return(*(int*)p == pagina->pagina_proceso);
+	}
+
+	/* SOLO PARA PROBAR QUE ANDE LA VERIFICACION DE LA TLB
+	* char * p = malloc(sizeof(char));
+	* t_tlb * entrada_tlb = reg_tlb_create(0, 3, p);
+	* list_add(TLB, entrada_tlb);
+	*/
+
+	t_list * subListaPid = list_filter(TLB,(void *)_numeroDePid);
 	printf("HICE EL FILTER, SUBLISTA CON %d ELEMENTOS \n", subListaPid->elements_count);
 	// SI NO ENCONTRO NINGUNA ENTRADA CON ESE PID
 	if (subListaPid->elements_count == 0)
 	{
-		printf (" No HAY NINGUNA PAGINA CON ESE PID CARGADA EN TLB \n");
+		printf (" NO HAY NINGUNA PAGINA CON ESE PID CARGADA EN TLB \n");
 		return 0;
 	}
 	//SI ENCONTRO ALGUNA ENTRADA EN LA TLB CON ESE PID
 	else
 	{
-
 		printf (" HAY ALGUNA/S PAGINA/S CON ESE PID EN LA TLB \n");
 		// VERIFICO QUE ALGUNA DE LAS ENTRADAS TENGA LA PAGINA QUE BUSCO
-		t_tlb * registro_tlb = list_find(subListaPid, (void *)numeroDePaginaIgualA);
-		printf ("ENCONTRE LA PAGINA  %d EN LA SUBLISTA \n", registro_tlb->pagina);
+		t_tlb * registro_tlb = list_filter(TLB, (void *)_numeroDePagina);
 		// SI LA ENCONTRO LA ESCRIBO
 		if (registro_tlb != NULL)
 		{
+			printf ("ENCONTRE LA PAGINA EN LA SUBLISTA \n");
 			memcpy (registro_tlb->direccion_fisica, message, tamanio_msg + 1);
 			printf( "ESCRIBI : %s EN LA MEMORIA \n", registro_tlb->direccion_fisica);
 			return 1;
 		// SI NO LA ENCONTRO RETORNO 0
 		}else
 		{
+			printf ("PARECE NO HABER NINGUNA CON ESA PAGINA \n");
 			return 0;
 		}
 
