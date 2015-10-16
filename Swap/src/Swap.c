@@ -43,13 +43,8 @@ int main()
 	lista_huecos = crearListaHuecos(contexto->cant_paginas);
 
 /*
+ *
 	t_header * package1 = malloc(sizeof(t_header));
-	package1->type_ejecution=2;
-	package1->PID=1;
-	package1->pagina_proceso=3;
-	analizoPaquete(package1,0);
-
-
 	package1->type_ejecution=1;
 	package1->PID=1;
 	package1->pagina_proceso=0;
@@ -59,10 +54,10 @@ int main()
 	package1->type_ejecution=0;
 	package1->PID=1;
 	package1->pagina_proceso=0;
-	package1->tamanio_msj=strlen("Hola\0")+1;
-	analizoPaquete(package1,0);
 
+	analizoPaquete(package1,0);
 */
+
 	reciboDelAdminMem();
 
 	//Cierro particion

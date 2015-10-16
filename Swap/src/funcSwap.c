@@ -120,13 +120,12 @@ void analizoPaquete(t_header * package, int socketCliente) {
 
 void leerSwap(t_header * package,char * contenido)
 {
-	/*
-	bool _numeroDePid(void * p)
+	bool _numeroDePid (void * p)
 	{
-		return (p == package->PID);
+		return (*(int *)p == package->PID);
 	}
-	*/
-	t_pag * pag = list_find(lista_paginas, (void *)numeroDePid);
+
+	t_pag * pag = list_find(lista_paginas, (void *)_numeroDePid);
 	if(pag!=NULL)
 	{
 		fseek(archivo,pag->inicio + (package->pagina_proceso * contexto->tam_pagina),SEEK_SET);
@@ -144,15 +143,16 @@ void leerSwap(t_header * package,char * contenido)
 
 int escribirSwap(t_header * package, int socketCliente)
 {
-	bool _numeroDePid (int p)
+	bool _numeroDePid (void * p)
 	{
-		return (p == package->PID);
+		return (*(int *)p == package->PID);
 	}
+
 	char * mensaje = malloc(package->tamanio_msj);
 
 	recv(socketCliente, mensaje, package->tamanio_msj, 0);
 	t_pag * pag = list_find(lista_paginas, (void *)_numeroDePid);
-
+	//strcpy(mensaje,"Holasir");
 	if(pag!= NULL)
 	{
 		fseek(archivo,pag->inicio + ((package->pagina_proceso) * contexto->tam_pagina),SEEK_SET);
@@ -177,7 +177,6 @@ int escribirSwap(t_header * package, int socketCliente)
 	}
 
 	free(mensaje);
-	pag_destroy(pag);
 	return 1;
 
 }
@@ -192,14 +191,16 @@ int inicializarProc(t_header * package) {
 		list_add(lista_paginas,pag_create(package->PID, hueco->inicio, package->pagina_proceso));
 		log_info(logger, "Se recibio orden de inicializacion: PID: %d Inicio: %d Bytes: %d"
 				,package->PID, hueco->inicio,package->pagina_proceso * contexto->tam_pagina);
-		//rellenarParticion(hueco->inicio, package->pagina_proceso);
+		rellenarParticion(hueco->inicio, package->pagina_proceso);
 		//Actualizo huecos
 		hueco->inicio = hueco->inicio + (package->pagina_proceso * contexto->tam_pagina);
+		hueco->paginas = hueco->paginas - package->pagina_proceso;
 		return 1;
 	}
 	else
 	{
 		//Si no encontro hueco, es por falta de espacion, tengo que rechazar proceso
+		log_error(logger, "Rechazo proceso por falta de espacio");
 		return 0;
 	}
 
@@ -207,9 +208,12 @@ int inicializarProc(t_header * package) {
 
 int finalizarProc(t_header* package)
 {
-
+	bool _numeroDePid (void * p)
+	{
+		return (*(int *)p == package->PID);
+	}
 	//Actualizo lista huecos
-	t_pag * pag = list_find(lista_paginas, (void*)numeroDePid);
+	t_pag * pag = list_find(lista_paginas, (void*)_numeroDePid);
 
 	if(pag!= NULL)
 	{
@@ -243,7 +247,7 @@ void compactarSwap()
 		//calculo el nuevo inicio
 		inicio = inicio_ant + pag_ant * contexto->tam_pagina;
 		//guardo el nodo
-		inicio_ant = pagina->inicio;
+		inicio_ant = inicio;
 		pag_ant = pagina->paginas;
 		//busco el contenido de todas las paginas juntas
 		char * contenido=malloc(pagina->paginas*contexto->tam_pagina);
@@ -275,7 +279,9 @@ void compactarSwap()
 
 t_hueco* buscarHueco(int tamanio) {
 	int status = 0,i = 0;
-	while (status == 0)
+	int tamanio_huecos = list_size(lista_huecos);
+
+	while ((status == 0)&& (i<tamanio_huecos))
 	{
 		t_hueco * hueco = list_get(lista_huecos, i);
 		if (hueco->paginas >= tamanio)
@@ -313,11 +319,10 @@ t_hueco* buscarHueco(int tamanio) {
 
 void rellenarParticion(int inicio, int paginas) {
 	int i;
-	char * var = "0";
 
 	for (i = 0; i < (paginas * contexto->tam_pagina); i++) {
 		fseek(archivo, inicio + i, SEEK_SET);
-		fwrite(var, strlen(var), 1, archivo);
+		fwrite("\0", strlen("\0"), 1, archivo);
 	}
 }
 
