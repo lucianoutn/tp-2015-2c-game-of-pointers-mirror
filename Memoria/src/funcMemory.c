@@ -172,11 +172,16 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 						else
 							printf("NO OK \n");
 
-						// TENGO QUE ASIGNARLE UNA DIRECCION PARA ESCRIBIR AHI
+						// TENGO QUE ASIGNARLE UNA DIRECCION PARA ESCRIBIR AHI, TRAIGO UN MARCO HUECO Y ESCRIBO
 						 t_marco_hueco * marco_a_llenar = list_remove(listaFramesHuecosMemR, 0);
 						memcpy ( marco_a_llenar->direccion_inicio, contenido_a_escribir, miContexto.tamanioMarco);
-
+						printf("MEMCPY OK \n");
+						//AGREGO EL MARCO AHORA ESCRITO, A LA LISTA DE MARCOS ESCRITOS
 						list_add(listaFramesMemR, marco_a_llenar);
+						printf("AGREGE MARCO LLENO \n");
+						//AGREGO LA PAGINA A LA TLB
+						//actualizarTlb(lectura_swap->PID, marco_a_llenar->numero_marco, marco_a_llenar->direccion_inicio, TLB);
+						printf("ACTUALICE TLB \n");
 
 					}
 				}
@@ -648,6 +653,18 @@ int marcosProcesoLlenos(t_list * lista_proceso)
 
 	}
 }
+
+void actualizarTlb (int pid, int marco, char * direccion_memoria, t_list * TLB)
+{
+	// pid
+	// marco
+	// direccion de memoria
+	printf("ANTES - CANTIDAD DE ELEMENTOS TLB---> %d", TLB->elements_count);
+	//t_tlb * registro_tlb = reg_tlb_create(pid, marco, direccion_memoria);
+	list_add(TLB, reg_tlb_create(pid, marco, direccion_memoria));
+	printf("DESPUES - CANTIDAD DE ELEMENTOS TLB---> %d", TLB->elements_count);
+}
+
 t_header* crearHeaderLectura(t_header * package)
 {
 	t_header * package_lectura = package_create(0, package->PID, package->pagina_proceso, package->tamanio_msj);
