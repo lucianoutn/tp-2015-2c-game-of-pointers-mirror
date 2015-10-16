@@ -42,6 +42,7 @@ void liberarMemoria(char * memoria_a_liberar)
  free (memoria_a_liberar);
  printf ("Memoria Liberada");
 }
+
 /*
 char * crear_tlb()
 
@@ -59,6 +60,7 @@ char * crear_tlb()
  return arreglo;
 }
 */
+
 void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memoria_real, t_list * TLB, t_list * tabla_adm, int socketCliente, int serverSocket)
 {
 	int flag;
@@ -94,10 +96,9 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			numero_de_pid = registro_prueba->PID;
 			numero_pagina = registro_prueba->pagina_proceso;
 			int tamanio_mensaje = registro_prueba->tamanio_msj;
-			printf ("DECLARO LAS VARIABLES \n");
 
 			// DECLARO UN FLAG PARA SABER SI ESTABA EN LA TLB
-			int okTlb = 0;	//verificarTlb(TLB,tamanio_mensaje, mensaje);
+			int okTlb = verificarTlb(TLB,tamanio_mensaje, mensaje, registro_prueba);
 
 			// SI ESTABA EN LA TLB, YA LA FUNCION ESCRIBIO Y LISTO (HACER)
 			if(okTlb == 1)
@@ -249,27 +250,6 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 		break;
 	 	}
 }
-/*
-void iniciarEnCache(t_header registro_prueba, char * TLB, char * memoria_cache)
-{
- int cant_paginas = registro_prueba.pagina_proceso;
- int x = 0, bytes = 0, a = 0;
- printf ("CANTIDAD DE PAGINAS: %d \n", cant_paginas);
- // MIENTRAS HAYA PAGINAS DEL PROCESO PARA INICIAR /
- while (x != cant_paginas)
- {
-  printf("Entre %d veces + 1 \n", x);
-  t_tlb * reg_input = malloc(sizeof(t_tlb));
-  reg_input->pid = registro_prueba.PID;
-  reg_input->pagina = x+1;
-  reg_input->direccion_fisica = memoria_cache + bytes;
-  bytes = bytes + miContexto.tamanioMarco;
-  printf ("LA DIRECCION DE MEMORIA DEL PROCESO ES: %p \n", reg_input->direccion_fisica);
-  a=list_add(TLB,reg_input);
-  x++;
- }
-}
-*/
 
 void iniciarProceso(t_list* tabla_adm, t_header * proceso)
 {
@@ -429,7 +409,6 @@ t_list * obtenerTablaProceso(t_list * tabla_adm)
 	return NULL;
 }
 
-
  process_pag * obtenerPaginaProceso(t_list * tabla_proceso)
  {
  	 // TRAIGO LA PAGINA BUSCADA
@@ -573,48 +552,38 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm)
 
 }
 
-int verificarTlb (t_list * TLB, int tamanio_msg, char * message)
+int verificarTlb (t_list * TLB, int tamanio_msg, char * message, t_header * pagina)
 {
-
-	printf (" 1 \n");
-
-	  t_tlb * reg_input = malloc(sizeof(t_tlb));
-	  reg_input->pid = 1;
-	  reg_input->pagina = 1;
-	  reg_input->direccion_fisica = NULL;
-
-	  int a=list_add(TLB,reg_input);
-
-	/*
-	if ( list_get(TLB,1) == NULL)
-		printf("ASD");
-	else
-		printf("ASDASDASD");
-	*/
-	/*
-	if (list_filter(TLB, elNodoTienePidIgualA)== NULL)
-		printf (" 2 \n");
-	else
-		printf (" 3 \n");
-
-	// SI ENCONTRE ALGUNA ENTRADA CON ESE PID
-	if (subListaProceso != NULL)
+	printf ("ENTRO A VERIFICAR LA TLB \n");
+	t_list * subListaPid = list_filter(TLB, elNodoTienePidIgualA);
+	printf("HICE EL FILTER, SUBLISTA CON %d ELEMENTOS \n", subListaPid->elements_count);
+	// SI NO ENCONTRO NINGUNA ENTRADA CON ESE PID
+	if (subListaPid->elements_count == 0)
 	{
-		printf (" 3 \n");
+		printf (" No HAY NINGUNA PAGINA CON ESE PID CARGADA EN TLB \n");
+		return 0;
+	}
+	//SI ENCONTRO ALGUNA ENTRADA EN LA TLB CON ESE PID
+	else
+	{
+
+		printf (" HAY ALGUNA/S PAGINA/S CON ESE PID EN LA TLB \n");
 		// VERIFICO QUE ALGUNA DE LAS ENTRADAS TENGA LA PAGINA QUE BUSCO
-		t_tlb * registro_tlb = list_find(subListaProceso, (void *)numeroDePaginaIgualA);
-			// SI LA ENCONTRO LA LEO Y SE LA ENVIO AL CPU
+		t_tlb * registro_tlb = list_find(subListaPid, (void *)numeroDePaginaIgualA);
+		printf ("ENCONTRE LA PAGINA  %d EN LA SUBLISTA \n", registro_tlb->pagina);
+		// SI LA ENCONTRO LA ESCRIBO
 		if (registro_tlb != NULL)
 		{
 			memcpy (registro_tlb->direccion_fisica, message, tamanio_msg + 1);
 			printf( "ESCRIBI : %s EN LA MEMORIA \n", registro_tlb->direccion_fisica);
 			return 1;
+		// SI NO LA ENCONTRO RETORNO 0
 		}else
+		{
 			return 0;
+		}
+
 	}
-	else
-	*/
-		return 0;
 }
 
 int swapeando(t_list* tabla_adm , t_list * TLB, char * mensaje, char * serverSocket, t_header * header)
