@@ -99,12 +99,13 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				if (paginaProceso->direccion_fisica == NULL)
 				{
 					printf("LA ENCONTRE EN SWAP \n");
-					/*SI NO TENGO ESPACIO PARA TRAERLA, SWAPEO LA PRIMER PAGINA CARGADA (FIFO)
+					/*SI NO TENGO ESPACIO PARA TRAERLA (TODOS LOS MARCOS DISPONIBLES PARA ESE
+					 * PROCESO YA ESTAN LLENOS), SWAPEO LA PRIMER PAGINA CARGADA (FIFO)
 					* Y ESCRIBO LA QUE RECIBO DEL SWAP AL FINAL DE LA LISTA
 					*/
 					if ( marcosProcesoLlenos(tablaProceso))
 					{
-						printf("NO TENGO LUGAR PARA GUARDARLA \n");
+						printf("NO TENGO LUGAR PARA GUARDARLA, TENGO QUE SWAPEAR \n");
 						int verific = swapeando(tablaProceso,tabla_adm ,TLB, mensaje, serverSocket, registro_prueba);
 
 					}
@@ -134,6 +135,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 						printf("AGREGE MARCO LLENO, AHORA TENGO ---> %d MARCOS LLENOS Y ----> %d VACIOS \n", listaFramesMemR->elements_count, listaFramesHuecosMemR->elements_count);
 						//AGREGO LA PAGINA A LA TLB (VERIFICO SI ESTA LLENA Y REEMPLAZO)
 						actualizarTlb(lectura_swap->PID, marco_a_llenar->numero_marco, marco_a_llenar->direccion_inicio, TLB);
+						// ACTUALIZO LA TABLA DEL PROCESO CON LA DRIECCION FISICA
+						actualizarTablaProceso(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio);
 					}
 				}
 				// SI NO ESTA EN SWAP, ENTONCES okMem TIENE LA DIRECCION DEL MARCO PARA ESCRIBIR EL MENSAJE
@@ -561,7 +564,8 @@ int verificarTlb (t_list * TLB, int tamanio_msg, char * message, t_header * pagi
 
 int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mensaje, char * serverSocket, t_header * header)
 {
-	// TRAIGO LA PRIMER PAGINA DE LA TABLA, LA ELIMINO DE LA MISMA Y SE LA ENVIO AL SWAP
+	// TRAIGO LA PRIMER PAGINA QUE SE HAYA CARGADO EN MEMORIA, LA ELIMINO Y SE LA ENVIO AL SWAP
+	// primerPaginaCargada();
 	process_pag * paginaASwapear = list_remove(tablaProceso, 0);
 	printf("HIZO EL REMOVE DE pagina->%d \n", paginaASwapear->pag);
 
@@ -595,6 +599,21 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	//ENVIO AL SWAP LA PAGINA A ESCRIBIR
 	//int status = send(serverSocket, registro_prueba, sizeof(t_header), 0);
 	//swapear
+}
+
+void actualizarTablaProceso(t_list * tabla_proceso, int num_pagina, char * direccion_marco)
+{
+	bool _numeroDePagina (void * p)
+	{
+		return(*(int*)p == num_pagina);
+	}
+
+	printf("ANTES -CANTIDAD DE ELEMENTOS DE LA TABLA DEL PROCESO ---> %d \n", tabla_proceso->elements_count);
+	list_remove_by_condition(tabla_proceso, _numeroDePagina);
+	process_pag * pagina = pag_proc_create(num_pagina, direccion_marco);
+	printf("DESPUES - CANTIDAD DE ELEMENTOS DE LA TABLA DEL PROCESO ---> %d \n", tabla_proceso->elements_count);
+	list_add(tabla_proceso,pagina);
+	printf("MAS DESPUES - CANTIDAD DE ELEMENTOS DE LA TABLA DEL PROCESO ---> %d \n", tabla_proceso->elements_count);
 }
 
 int marcosProcesoLlenos(t_list * lista_proceso)
@@ -631,19 +650,18 @@ int marcosProcesoLlenos(t_list * lista_proceso)
 
 void actualizarTlb (int pid, int marco, char * direccion_memoria, t_list * TLB)
 {
-	// pid
-	// marco
-	// direccion de memoria
+	// SI TENGO ESPACIO EN LA TLB, AGREGO UNA ENTRADA
 	if (miContexto.entradasTlb != TLB->elements_count)
 	{
 		printf("ANTES - CANTIDAD DE ELEMENTOS TLB---> %d \n", TLB->elements_count);
 		list_add(TLB, reg_tlb_create(pid, marco, direccion_memoria));
 		printf("DESPUES - CANTIDAD DE ELEMENTOS TLB---> %d \n", TLB->elements_count);
+	// SI ESTA LLENA, REMUEVO EL ULTIMO ELEMENTO Y AGREGO EL RECIEN USADO AL PRINCIPIO
 	}else
 	{
 		list_remove_and_destroy_element(TLB, 0, free); // ESTA BIEN USADO EL FREE AHI?
-		printf("DESPUES DEL REMOVE - CANTIDAD DE ELEMENTOS TLB -----> %d \n", TLB->elements_count);
 		list_add(TLB, reg_tlb_create(pid, marco, direccion_memoria));
+		printf("DESPUES ADD REMOVE - CANTIDAD DE ELEMENTOS TLB -----> %d \n", TLB->elements_count);
 	}
 
 }
