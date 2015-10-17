@@ -115,7 +115,7 @@ int swapeando(t_list*, t_list* , t_list *, char *, char *, t_header *);
 int marcosProcesoLlenos(t_list *);
 
 /*CUANDO LLEGA UN REGISTRO PARA LEER O ESCRIBIR
- * 1. SI LA TLB ESTA LLENA, SE ELIMINA EL QUE ESTA HACE MAS TIEMPO Y SE AGREGA EL REGISTRO RECIEN LLEGADO
+ * 1. SI LA TLB ESTA LLENA, SE ELIMINA EL QUE ESTA HACE MAS TIEMPO (EL ULTIMO) Y SE AGREGA EL REGISTRO RECIEN LLEGADO
  * 2. SI LA TLB TIENE ESPACIO, SE AGREGA
  */
 void actualizarTlb(int, int, char*, t_list *);

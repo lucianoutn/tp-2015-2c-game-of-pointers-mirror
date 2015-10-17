@@ -82,10 +82,10 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 
 			int tamanio_mensaje = registro_prueba->tamanio_msj;
 
-			// DECLARO UN FLAG PARA SABER SI ESTABA EN LA TLB
+			// DECLARO UN FLAG PARA SABER SI ESTABA EN LA TLB Y SE ESCRIBIO, O SI NO ESTABA
 			int okTlb = verificarTlb(TLB,tamanio_mensaje, mensaje, registro_prueba);
 
-			// SI ESTABA EN LA TLB, YA LA FUNCION ESCRIBIO Y LISTO (HACER)
+			// SI ESTABA EN LA TLB, YA LA FUNCION ESCRIBIO Y LISTO
 			if(okTlb == 1)
 			{
 				// SE ESCRIBIO CORRECTAMENTE PORQUE YA ESTABA CARGADA EN TLB
@@ -112,29 +112,28 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 					else
 					{
 						printf("TENGO ESPACIO PARA TRAERLA \n");
-						// Creo la peticion de lectura de una pagina y se lo mando al swap
+						// Creo el header de lectura de una pagina y se lo mando al swap
 						t_header * lectura_swap = crearHeaderLectura(registro_prueba);
-
+						/* char para guardar el contenido de la pagina que tengo que traer del swap para escribir
+						 * (Entendiendo que tengo que traer el contenido y escribir a continuacion)
+						 */
 						char * contenido_a_escribir = malloc(miContexto.tamanioMarco);
 
 						int * status_lectura2 = envioAlSwap(lectura_swap, serverSocket, contenido_a_escribir);
-
 						if(status_lectura2 == 1)
-							printf("OK \n");
+							printf("SE TRAJO CORRECTAMENTE EL CONTENIDO DEL SWAP Y ES ---> %s \n", contenido_a_escribir);
 						else
-							printf("NO OK \n");
+							printf("NO SE PUDO TRAER LA PAGINA \n");
 
 						// TENGO QUE ASIGNARLE UNA DIRECCION PARA ESCRIBIR AHI, TRAIGO UN MARCO HUECO Y ESCRIBO
 						 t_marco_hueco * marco_a_llenar = list_remove(listaFramesHuecosMemR, 0);
 						memcpy ( marco_a_llenar->direccion_inicio, contenido_a_escribir, miContexto.tamanioMarco);
-						printf("MEMCPY OK \n");
+						printf("ESCRIBI EN EL MARCO ---> %s \n", contenido_a_escribir);
 						//AGREGO EL MARCO AHORA ESCRITO, A LA LISTA DE MARCOS ESCRITOS
 						list_add(listaFramesMemR, marco_a_llenar);
-						printf("AGREGE MARCO LLENO \n");
-						//AGREGO LA PAGINA A LA TLB
-						//actualizarTlb(lectura_swap->PID, marco_a_llenar->numero_marco, marco_a_llenar->direccion_inicio, TLB);
-						printf("ACTUALICE TLB \n");
-
+						printf("AGREGE MARCO LLENO, AHORA TENGO ---> %d MARCOS LLENOS Y ----> %d VACIOS \n", listaFramesMemR->elements_count, listaFramesHuecosMemR->elements_count);
+						//AGREGO LA PAGINA A LA TLB (VERIFICO SI ESTA LLENA Y REEMPLAZO)
+						actualizarTlb(lectura_swap->PID, marco_a_llenar->numero_marco, marco_a_llenar->direccion_inicio, TLB);
 					}
 				}
 				// SI NO ESTA EN SWAP, ENTONCES okMem TIENE LA DIRECCION DEL MARCO PARA ESCRIBIR EL MENSAJE
@@ -635,10 +634,18 @@ void actualizarTlb (int pid, int marco, char * direccion_memoria, t_list * TLB)
 	// pid
 	// marco
 	// direccion de memoria
-	printf("ANTES - CANTIDAD DE ELEMENTOS TLB---> %d", TLB->elements_count);
-	//t_tlb * registro_tlb = reg_tlb_create(pid, marco, direccion_memoria);
-	list_add(TLB, reg_tlb_create(pid, marco, direccion_memoria));
-	printf("DESPUES - CANTIDAD DE ELEMENTOS TLB---> %d", TLB->elements_count);
+	if (miContexto.entradasTlb != TLB->elements_count)
+	{
+		printf("ANTES - CANTIDAD DE ELEMENTOS TLB---> %d \n", TLB->elements_count);
+		list_add(TLB, reg_tlb_create(pid, marco, direccion_memoria));
+		printf("DESPUES - CANTIDAD DE ELEMENTOS TLB---> %d \n", TLB->elements_count);
+	}else
+	{
+		list_remove_and_destroy_element(TLB, 0, free); // ESTA BIEN USADO EL FREE AHI?
+		printf("DESPUES DEL REMOVE - CANTIDAD DE ELEMENTOS TLB -----> %d \n", TLB->elements_count);
+		list_add(TLB, reg_tlb_create(pid, marco, direccion_memoria));
+	}
+
 }
 
 t_header* crearHeaderLectura(t_header * package)
