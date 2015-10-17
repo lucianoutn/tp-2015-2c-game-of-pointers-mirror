@@ -15,7 +15,7 @@
 FILE* crearParticion() {
 	FILE *archivo;
 	char * comando = malloc(200);
-
+/*
 	strcpy(comando,"dd if=/home/utnso/git/tp-2015-2c-game-of-pointers/Swap/");
 	strcat(comando, contexto->nombre);
 	strcat(comando," of=/home/utnso/git/tp-2015-2c-game-of-pointers/Swap/aux.txt");
@@ -26,15 +26,17 @@ FILE* crearParticion() {
 	system(comando);
 
 	strcpy(comando,"dd if=/home/utnso/git/tp-2015-2c-game-of-pointers/Swap/aux.txt");
+	*/
+	strcpy(comando,"dd if=/dev/zero");
 	strcat(comando," of=/home/utnso/git/tp-2015-2c-game-of-pointers/Swap/");
 	strcat(comando, contexto->nombre);
-	strcat(comando, " bs=");
-	strcat(comando,  string_itoa(contexto->tam_pagina));
 	strcat(comando, " count=");
 	strcat(comando,  string_itoa(contexto->cant_paginas));
+	strcat(comando, " bs=");
+	strcat(comando,  string_itoa(contexto->tam_pagina));
 	system(comando);
 
-	system("rm /home/utnso/git/tp-2015-2c-game-of-pointers/Swap/aux.txt");
+	//system("rm /home/utnso/git/tp-2015-2c-game-of-pointers/Swap/aux.txt");
 
 	archivo = fopen(contexto->nombre, "rb+");
 	if (archivo)
@@ -152,7 +154,7 @@ int escribirSwap(t_header * package, int socketCliente)
 
 	recv(socketCliente, mensaje, package->tamanio_msj, 0);
 	t_pag * pag = list_find(lista_paginas, (void *)_numeroDePid);
-	//strcpy(mensaje,"Holasir");
+	strcpy(mensaje,"Holasir");
 	if(pag!= NULL)
 	{
 		fseek(archivo,pag->inicio + ((package->pagina_proceso) * contexto->tam_pagina),SEEK_SET);
