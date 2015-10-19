@@ -93,10 +93,10 @@ void matarProceso(t_header *, t_list*);
 int leerEnMemReal(t_list*,t_list *, t_header *, int,int, char *);
 
 /* VERIFICA SI LA TABLA ESTA CARGADA EN LA TABLA DE TABLAS DE PROCESOS Y LA DEVUELVE */
-t_list * obtenerTablaProceso(t_list*);
+t_list * obtenerTablaProceso(t_list*, int);
 
 /* DEVUELVE LA PAGINA DE LA TABLA DEL PROCESO */
-process_pag * obtenerPaginaProceso(t_list *);
+process_pag * obtenerPaginaProceso(t_list *, int);
 
 int leerEnCache(int , t_list * );
 
@@ -109,16 +109,23 @@ void iniciarProceso();
 /* BUSCA SI LA PAGINA A ESCRIBIR YA ESTA CARGADA EN TLB, SI LO ESTA LA ESCRIBE Y DEVUELVE 1, SINO DEVUELVE 0 */
 int verificarTlb (t_list *,int, char*, t_header *);
 
-int swapeando(t_list* , t_list *, char *, char *, t_header *);
+int swapeando(t_list*, t_list* , t_list *, char *, char *, t_header *);
 
 // LE MANDO LA TABLA DEL PROCESO Y ME DEVUELVE 1 SI YA TIENE TODOS SUS MARCOS DISPONIBLES OCUPADOS
 int marcosProcesoLlenos(t_list *);
 
 /*CUANDO LLEGA UN REGISTRO PARA LEER O ESCRIBIR
- * 1. SI LA TLB ESTA LLENA, SE ELIMINA EL QUE ESTA HACE MAS TIEMPO Y SE AGREGA EL REGISTRO RECIEN LLEGADO
+ * 1. SI LA TLB ESTA LLENA, SE ELIMINA EL QUE ESTA HACE MAS TIEMPO (EL ULTIMO) Y SE AGREGA EL REGISTRO RECIEN LLEGADO
  * 2. SI LA TLB TIENE ESPACIO, SE AGREGA
  */
 void actualizarTlb(int, int, char*, t_list *);
+
+/* ACTUALIZA LA TABLA PARA ALGORITMO FIFO, AGREGANDO LA DIRECCION DE MEMORIA DEL MARCO A LA PAGINA
+ * PERO A LA VEZ, LA ELIMINA DE LA TABLA Y LA PONE AL FINAL, PARA SEGUIR LA LOGICA
+ * DE QUE SE VAYAN ELIMINANDO LAS PRIMERAS QUE SE CARGARON CUANDO ESTE LLENA (CANTIDAD DE MARCOS
+ * PARA EL PROCESO)
+ */
+void actualizarTablaProceso(t_list *, int ,char*);
 
 // CUANDO TENGO QUE ESCRIBIR, Y TENGO ESPACIO PARA GUARDAR LA PAGINA (NO TENGO QUE SWAPEAR), SOLO LE MANDO UN T_HEADER DE TIPO LECTURA AL SWAP
 t_header * crearHeaderLectura(t_header*);
