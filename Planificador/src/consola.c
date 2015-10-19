@@ -84,11 +84,12 @@ void *consola (void* arg)
 				orden=1;
 
 				for(m=0;m<MAX_CPUS;m++)
-				{
+				{/*
 					msj.headMSJ.tipo_ejecucion = 0;
 					msj.headMSJ.tamanio_msj = 0;
 					send(conexiones.CPUS[m].socket, &msj,sizeof(t_msj),0);
 					sem_post(semProduccionMsjs);
+				 */
 
 				}
 

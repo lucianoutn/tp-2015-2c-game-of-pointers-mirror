@@ -35,6 +35,7 @@
 #define PACKAGESIZE 1024 //comentar
 #define WORD_SIZE 35 //comentar
 
+
 //tipo de dato t_pcb que es una estructura que almacena el PCB de cada proceso
 typedef struct PCB {
 	int PID; //numero del proceso
@@ -50,15 +51,10 @@ typedef struct PCB {
 //Protocolo de envio Planificador->CPU
 typedef struct{
 	int tipo_ejecucion;
-	int tamanio_msj;
+	//int tamanio_msj;
+	key_t clave;
 }t_headcpu;
 
-typedef struct MSJ {
-	t_headcpu headMSJ;
-	t_pcb  *pcbMSJ;
-}t_msj;
-
-t_msj msj;
 
 
 //Estructura que almacena los datos del archivo de configuracion
@@ -105,6 +101,6 @@ void dispatcher(t_queue *);
 
 t_pcb* procesarPCB(char *);
 
-t_msj preparoMSJ(t_pcb *);
+void preparoHeader(t_headcpu *);
 
 #endif /* SRC_LIBRERIAPLANIFICADOR_H_ */
