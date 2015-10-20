@@ -285,7 +285,7 @@ void iniciarCPU(t_sockets *sockets){
 			case 0:		//INSTRUCCION PARA SALIR
 
 				//FINALIZO CONEXIONES
-				puts("Recibi salir, cierro conexiones");
+				puts("Recibi salir, cierro conexiones\n");
 				puts("FINALIZANDO PROGRAMA\n");
 				status=0;	//Salgo del while
 				sem_post(&semSalir);	//Semaforo que controla la finalizacion de la CPU
@@ -293,15 +293,22 @@ void iniciarCPU(t_sockets *sockets){
 
 			case 1: 	//INSTRUCCION PARA RECIBIR MSJS
 			{
-				printf("clave: %d", header->clave);
-				int id_pcb = shmget(123, sizeof(t_pcb), 0644); //reservo espacio dentro de la seccion de memoria compartida
+				printf("clave: %d \n", header->clave);
+				int id_pcb = shmget(header->clave, sizeof(t_pcb), 0644); //reservo espacio dentro de la seccion de memoria compartida
 				printf("id: %d \n", id_pcb); //imprimo el identificador de la seccion(igual que el del plani)
-				t_pcb *PCB =(t_pcb*) shmat(id_pcb,(char*)0, 0); //creo la variable y la asocio al segmento
+				t_pcb *PCB;
+				PCB = shmat(id_pcb,0, 0); //creo la variable y la asocio al segmento
+				if (PCB == (t_pcb *)(-1))		//capturo error del shmat
+				    perror("shmat");
+
 				printf("%p\n", PCB); //imprimo la direccion de variable local (notese que es difente a la del plani)
 				printf("%d\n", PCB->PID);
-				printf("ruta %s",PCB->ruta);
+				printf("%d\n", PCB->instructionPointer);
+				printf("%d\n", PCB->numInstrucciones);
 
-				PCB->PID=4; //modifico el valor (se ve reflejado en el plani
+				printf("ruta %s\n",PCB->ruta);
+
+				//PCB->PID=4; //modifico el valor (se ve reflejado en el plani
 
 
 				printf("PCB Recibido. PID:%d\n",PCB->PID);

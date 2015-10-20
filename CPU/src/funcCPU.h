@@ -48,13 +48,13 @@ typedef struct PCB {
 	unsigned int numInstrucciones; //numero total de instrucciones
 	int prioridad; // prioridad (usar mas adelante)
 	int permisos; // sin uso por ahora
-	char * ruta; //ruta del archivo mCod que tiene las instrucciones a procesar
+	char *ruta; //ruta del archivo mCod que tiene las instrucciones a procesar
 }t_pcb;
 
 //Protocolo de envio Planificador->CPU
 typedef struct{
 	int tipo_ejecucion;
-	int clave;
+	key_t clave;
 }t_headcpu;
 
 //empaqueto los sockets para poder pasarle al hilo mas de un parametro (lucho)

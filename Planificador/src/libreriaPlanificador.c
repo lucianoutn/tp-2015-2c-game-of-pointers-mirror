@@ -124,13 +124,15 @@ void dispatcher(t_queue *cola_ready)
 //Funcion que permite procesar el PCB creado a partir del comando correr PATH
 t_pcb* procesarPCB(char *path)
 {
-	int id_pcb = shmget(123, sizeof(t_pcb), 0644 | IPC_CREAT);//reservo espacio dentro de la seccion de memoria compartida
+	//key = ftok("key","a");
+	printf("key: %d \n",key);
+	int id_pcb = shmget(key, sizeof(t_pcb),(0644 | IPC_CREAT));//reservo espacio dentro de la seccion de memoria compartida
 	printf("%d \n", id_pcb); //imprimo el identificador de la seccion
 	t_pcb *pcb = (t_pcb*)shmat(id_pcb, NULL, 0); //creo la variable y la asocio al segmento
-	printf("%p", pcb); //imprimo la direccion de memoria del pcb
-
-	pcb->ruta = (char*)malloc(sizeof(path));//MODIFICAR
-
+	printf("%p \n", pcb); //imprimo la direccion de memoria del pcb
+	printf("path: %s \n", path);
+	pcb->ruta = strdup(path);//hace un malloc de path con el /0
+	printf("path: %s \n", pcb->ruta);
 	//armo PCB y msj para enviar al CPU
 	pcb->PID= max_PID+1;
 	pcb->instructionPointer = 0;
@@ -139,7 +141,7 @@ t_pcb* procesarPCB(char *path)
 	pcb->permisos=0;
 	strcpy(pcb->ruta, path);
 
-
+	puts("hasta aca");
 	return pcb;
 }
 
@@ -148,6 +150,7 @@ void preparoHeader(t_headcpu *header)
 {
 	header->tipo_ejecucion = 1;	//Orden de envio de pcb
 	header->clave=key;
-	key++;
+	printf("clave: %d \n",header->clave);
+	//key++;
 	
 }
