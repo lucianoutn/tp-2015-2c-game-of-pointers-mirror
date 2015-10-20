@@ -137,8 +137,7 @@ void leerSwap(t_header * package,char * contenido)
 	}
 	else
 	{
-		strcpy(contenido,NULL);
-		puts("Final feliz, pagina no encontrada");
+		contenido=NULL;
 		log_error(logger, "No se encontro la pagina solicitada");
 	}
 }
@@ -157,9 +156,8 @@ int escribirSwap(t_header * package, int socketCliente)
 	//strcpy(mensaje,"Holasir");
 	if(pag!= NULL)
 	{
-		int stat;
-		stat=fseek(archivo,pag->inicio + ((package->pagina_proceso) * contexto->tam_pagina),SEEK_SET);
-		stat=fwrite(mensaje, strlen(mensaje), 1, archivo);
+		fseek(archivo,pag->inicio + ((package->pagina_proceso) * contexto->tam_pagina),SEEK_SET);
+		fwrite(mensaje, strlen(mensaje), 1, archivo);
 		log_info(logger, "Se recibio orden de escritura: PID: %d Byte Inicial: %d Contenido: %s"
 										,package->PID, pag->inicio+(package->pagina_proceso * contexto->tam_pagina),mensaje);
 		//Relleno pagina
@@ -168,13 +166,12 @@ int escribirSwap(t_header * package, int socketCliente)
 
 		for(;relleno<=final_pagina;relleno++)
 		{
-			stat=fseek(archivo,relleno,SEEK_SET);
-			stat=fwrite("\0", strlen("\0"), 1, archivo);
+			fseek(archivo,relleno,SEEK_SET);
+			fwrite("\0", strlen("\0"), 1, archivo);
 		}
 	}
 	else
 	{
-		puts("Final feliz, pagina no encontrada");
 		log_error(logger, "No se encontro la pagina solicitada");
 		return 0;
 	}
@@ -224,7 +221,7 @@ int finalizarProc(t_header* package)
 		log_info(logger, "Se recibio orden de finalizacion: PID: %d Inicio: %d Bytes: %d"
 						,package->PID, pag->inicio,pag->paginas * contexto->tam_pagina);
 		//Actualizo lista paginas
-		list_remove_and_destroy_by_condition(lista_paginas, (void *)numeroDePid, (void *)pag_destroy);
+		list_remove_and_destroy_by_condition(lista_paginas, (void *)_numeroDePid, (void *)pag_destroy);
 
 		return 1;
 	}
@@ -244,7 +241,7 @@ void compactarSwap()
 	int tamanio_lista= list_size(lista_paginas);
 	int inicio = 0,cant_pag = 0,i = 0;
 
-	for(i; i<tamanio_lista; i++)
+	for(; i<tamanio_lista; i++)
 	{
 		t_pag * pagina = list_get(lista_paginas, i);
 		//calculo el nuevo inicio
@@ -259,7 +256,7 @@ void compactarSwap()
 		char * contenido=malloc(contexto->tam_pagina);
 		int k=0;
 
-		for(k;k<=pagina->paginas;k++)
+		for(;k<=pagina->paginas;k++)
 		{
 			//leo donde estaba
 			fseek(archivo,pagina->inicio+k*contexto->cant_paginas,SEEK_SET);
@@ -281,7 +278,7 @@ void compactarSwap()
 	hueco->paginas = contexto->cant_paginas - cant_pag;
 
 	int j= 1;
-	for(j; j<tamanio_huecos; j++)
+	for(; j<tamanio_huecos; j++)
 	{
 		list_remove_and_destroy_element(lista_huecos, j, (void *)hueco_destroy);
 	}
@@ -308,7 +305,7 @@ t_hueco* buscarHueco(int tamanio) {
 	int pag_ocupadas=0,j = 0, pag_libres;
 	int tamanio_lista_paginas=list_size(lista_paginas);
 
-	for(j;j<tamanio_lista_paginas;j++)
+	for(;j<tamanio_lista_paginas;j++)
 	{
 		t_pag * pag = list_get(lista_paginas, j);
 		pag_ocupadas = pag_ocupadas + pag->paginas;
@@ -339,19 +336,16 @@ void rellenarParticion(int inicio, int paginas) {
 	}
 }
 
-bool numeroDePid(int * pid) {
-	return (*pid == global->PID);
-}
 
 t_list * crearListaPaginas()
 {
- t_list * lista_paginas= list_create();
- return lista_paginas;
+	t_list * lista_paginas= list_create();
+	return lista_paginas;
 }
 
 t_list * crearListaHuecos(int cant)
 {
- t_list * lista_huecos = list_create();
- int a = list_add(lista_huecos, hueco_create(0,cant));
- return lista_huecos;
+	t_list * lista_huecos = list_create();
+	list_add(lista_huecos, hueco_create(0,cant));
+	return lista_huecos;
 }
