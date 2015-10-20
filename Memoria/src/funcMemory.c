@@ -451,6 +451,7 @@ int envioAlSwap ( t_header * header, int serverSocket, char * contenido)
 		//t_devuelvo * devuelvo = malloc(sizeof(t_devuelvo));
 		//recv(serverSocket,(void*)devuelvo,sizeof(t_devuelvo),0);
 		recv(serverSocket, &flag, sizeof(int),0);
+		printf ("RECIBI FLAG--> %d \n", flag);
 
 		if(flag) //si no hubo error
 		{
@@ -564,18 +565,19 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 {
 	// TRAIGO LA PRIMER PAGINA QUE SE HAYA CARGADO EN MEMORIA, LA ELIMINO Y SE LA ENVIO AL SWAP
 	// primerPaginaCargada();
+
 	process_pag * paginaASwapear = list_remove(tablaProceso, 0);
 	printf("HIZO EL REMOVE DE pagina->%d \n", paginaASwapear->pag);
 
 	t_header * header_escritura = crearHeaderEscritura( header->PID, paginaASwapear->pag, sizeof(paginaASwapear->direccion_fisica));
-	printf("CREO EL HEADER ESCRITURA: pid->%d, ejecucion->%d \n", header_escritura->PID, header_escritura->type_ejecution);
+	printf("CREO EL HEADER ESCRITURA: pid->%d, ejecucion->%d pagina-> \n", header_escritura->PID, header_escritura->type_ejecution, paginaASwapear->pag);
 
-	int * status_escritura = envioAlSwap(header_escritura, serverSocket, NULL);
+	int status_escritura = envioAlSwap(header_escritura, serverSocket, "KOLO");
 
 	if (status_escritura == 1)
 		printf("ESCRITURA - SE LO ENVIO AL SWAP CORRECTAMENTE \n");
 	else
-		printf ("ESCRITURA - NO SE LO ENVIO CORRECTAMENTE");
+		printf ("ESCRITURA - NO SE LO ENVIO CORRECTAMENTE \n");
 
 	// LE PIDO LA PAGINA QUE QUIERO ESCRIBIR, LA AGREGO AL FINAL DE LA LISTA Y LA ESCRIBO
 	t_header * header_lectura = crearHeaderLectura(header);
