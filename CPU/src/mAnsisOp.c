@@ -27,7 +27,7 @@ char* leerInstruccion(FILE *fd)
 	return buffer;
 }
 
-char** leermCod(char* ruta, int * num)
+char** leermCod(const char* ruta, int * num)
 {
 	//El archivo tiene q estar en la ruta blahblah/CPU/archivo.algo
 	printf("la ruta es: %s",ruta);

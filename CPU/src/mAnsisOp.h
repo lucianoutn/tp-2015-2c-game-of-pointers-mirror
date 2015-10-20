@@ -16,7 +16,7 @@
  * cada puntero es una instruccion del archivo. El parametro num indica la cantidad de instrucciones
  * que tiene el archivo.
 */
-char** leermCod(char* ruta, int * num);
+char** leermCod(const char* ruta, int * num);
 
 //Funcion que permite leer instruccion por instruccion en un archivo
 char* leerInstruccion(FILE *fd);
