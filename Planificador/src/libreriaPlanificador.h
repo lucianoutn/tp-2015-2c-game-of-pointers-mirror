@@ -44,7 +44,7 @@ typedef struct PCB {
 	unsigned int numInstrucciones; //numero total de instrucciones
 	int prioridad; // prioridad (usar mas adelante)
 	int permisos; // sin uso por ahora
-	char * ruta; //ruta del archivo mCod que tiene las instrucciones a procesar
+	char *ruta; //ruta del archivo mCod que tiene las instrucciones a procesar
 	//struct PCB *sig;
 }t_pcb;
 
@@ -52,7 +52,8 @@ typedef struct PCB {
 typedef struct{
 	int tipo_ejecucion;
 	//int tamanio_msj;
-	key_t clave;
+	key_t clave_pcb;
+	key_t clave_ruta;
 }t_headcpu;
 
 

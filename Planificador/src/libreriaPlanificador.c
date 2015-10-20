@@ -7,8 +7,8 @@
 
 #include "libreriaPlanificador.h"
 
-key_t key=1235;
-
+key_t key_pcb=1235; //clave de la seccion memoria pcb
+key_t key_ruta=3212; //cable de la seccion memoria ruta
 
 
 //Funcion que permite cargar el archivo de configuracion en el programa.
@@ -125,14 +125,17 @@ void dispatcher(t_queue *cola_ready)
 t_pcb* procesarPCB(char *path)
 {
 	//key = ftok("key","a");
-	printf("key: %d \n",key);
-	int id_pcb = shmget(key, sizeof(t_pcb),(0644 | IPC_CREAT));//reservo espacio dentro de la seccion de memoria compartida
+	//printf("key: %d \n",key);
+	int id_pcb = shmget(key_pcb, sizeof(t_pcb),(0666 | IPC_CREAT));//reservo espacio dentro de la seccion de memoria compartida
 	printf("%d \n", id_pcb); //imprimo el identificador de la seccion
 	t_pcb *pcb = (t_pcb*)shmat(id_pcb, NULL, 0); //creo la variable y la asocio al segmento
 	printf("%p \n", pcb); //imprimo la direccion de memoria del pcb
-	printf("path: %s \n", path);
-	pcb->ruta = strdup(path);//hace un malloc de path con el /0
-	printf("path: %s \n", pcb->ruta);
+
+	int id_ruta = shmget(key_ruta, sizeof(path),(0666 | IPC_CREAT)); //reservo espacio dentro de la seccion de memoria compartida
+	pcb->ruta = (char*)shmat(id_ruta, NULL, 0); //creo la variable y la asocio al segmento
+	printf("id_ruta: %d \n", id_ruta); //imprimo la direccion de memoria de la ruta
+
+
 	//armo PCB y msj para enviar al CPU
 	pcb->PID= max_PID+1;
 	pcb->instructionPointer = 0;
@@ -140,6 +143,8 @@ t_pcb* procesarPCB(char *path)
 	pcb->prioridad=0;
 	pcb->permisos=0;
 	strcpy(pcb->ruta, path);
+	printf("Ruta: %p\n", pcb->ruta);
+	printf("Ruta: %s\n", pcb->ruta);
 
 	puts("hasta aca");
 	return pcb;
@@ -149,8 +154,9 @@ t_pcb* procesarPCB(char *path)
 void preparoHeader(t_headcpu *header)
 {
 	header->tipo_ejecucion = 1;	//Orden de envio de pcb
-	header->clave=key;
-	printf("clave: %d \n",header->clave);
+	header->clave_pcb=key_pcb;
+	header->clave_ruta=key_ruta;
+	//printf("clave: %d \n",header->clave);
 	//key++;
 	
 }

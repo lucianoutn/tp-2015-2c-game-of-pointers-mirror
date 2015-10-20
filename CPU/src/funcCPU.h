@@ -54,7 +54,8 @@ typedef struct PCB {
 //Protocolo de envio Planificador->CPU
 typedef struct{
 	int tipo_ejecucion;
-	key_t clave;
+	key_t clave_pcb;
+	key_t clave_ruta;
 }t_headcpu;
 
 //empaqueto los sockets para poder pasarle al hilo mas de un parametro (lucho)
