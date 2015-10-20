@@ -678,7 +678,61 @@ t_header * crearHeaderEscritura(int pid, int pagina, int tamanio)
 	return header_escritura;
 }
 
+//------SEÑALES QUE TIENE QUE RECIBIR LA MEMORIA-------------//
+/*
+ * Cuando la memoria recibe esta señal, debe limpiar la TLB.
+ */
+void tlbFlush(t_list * TLB)
+{
+	puts("Recibi SIGUSR1\n");
+	if(TLB!= NULL)
+	{
+		puts("Recibi la TLB\n");
+	}
+	else
+	{
+		puts("No recibi nada men \n");
+	}
+	if (!strcmp(miContexto.tlbHabilitada,"SI"))
+	{
+		puts("Uy, voy a vaciar la TLB\n");
+		int a=list_size(TLB);
+		printf("La TLB tiene %d elementos", a);
+		int tamanioTLB = list_size(TLB);
+		int i=0;
+		for(;i<tamanioTLB;i++)
+		{
+			list_remove_and_destroy_element(TLB, i, (void *)reg_tlb_destroy);
+		}
+	}
+	else
+	{
+		puts("La TLB NO esta habilitada campeon.\n");
+	}
 
+	printf("La TLB tiene %d elementos", list_size(TLB));
+}
+
+/*
+ * Cuando se recibe esta señal, se debe limpiar completamente la memoria principal,
+ * actualizando los bits que sean necesarios en las tablas de páginas de los diferentes procesos
+ */
+void limpiarMemoria()
+{
+	puts("Recibi SIGUSR2");
+
+}
+
+/*
+ * Cuando recibe esta señal se deberá realizar un volcado (dump) del contenido de la memoria principal,
+ * en el archivo log de Administrador de Memoria, creando para tal fin un proceso nuevo.
+ * Se recomienda usar fork().
+ */
+void dumpEnLog()
+{
+	puts("Recibi SIGPOLL");
+}
+//-----------------------------------------------------------//
 // --------------ENTRADAS A LA TABLA DE PROCESO ------------ //
 process_pag * pag_proc_create (int pagina, char * direccion_fisica)
 {

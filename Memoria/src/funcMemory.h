@@ -127,11 +127,21 @@ void actualizarTlb(int, int, char*, t_list *);
  */
 void actualizarTablaProceso(t_list *, int ,char*);
 
+
 // CUANDO TENGO QUE ESCRIBIR, Y TENGO ESPACIO PARA GUARDAR LA PAGINA (NO TENGO QUE SWAPEAR), SOLO LE MANDO UN T_HEADER DE TIPO LECTURA AL SWAP
 t_header * crearHeaderLectura(t_header*);
 
 
 t_header * crearHeaderEscritura(int, int, int);
+
+//------SEÑALES QUE TIENE QUE RECIBIR LA MEMORIA-------------//
+void tlbFlush();
+
+void limpiarMemoria();
+
+void dumpEnLog();
+//-----------------------------------------------------------//
+
 
 /* PASAR A MANEJOLISTAS */
 process_pag * pag_proc_create(int, char*);

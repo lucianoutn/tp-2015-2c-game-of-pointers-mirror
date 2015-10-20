@@ -112,7 +112,7 @@ t_tlb * reg_tlb_create (int pid, int pagina, char * direccion_fisica)
  return prueba;
 }
 
-static void reg_tlb_destroy(t_tlb * self)
+void reg_tlb_destroy(t_tlb * self)
 {
  free(self);
 }

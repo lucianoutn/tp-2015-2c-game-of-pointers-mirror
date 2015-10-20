@@ -112,7 +112,7 @@ static void marco_hueco_destroy(t_marco_hueco * self);
 
 t_tlb * reg_tlb_create (int pid, int marco, char * direc_mem);
 
-static void reg_tlb_destroy(t_tlb * self);
+void reg_tlb_destroy(t_tlb * self);
 
 t_tabla_adm * tabla_adm_create(int, t_list*);
 
