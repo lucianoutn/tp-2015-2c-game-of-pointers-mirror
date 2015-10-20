@@ -55,9 +55,10 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			 * RECIENTEMENTE, EN CASO CONTRARIO SE ENVIA AL SWAP, ESTE ME VA A DEVOLVER LA PAGINA A LEER,
 			 * LA MEMORIA LA ALMACENA EN UN MARCO DISPONIBLE PARA EL PROCESO DE LA PAGINA Y ACTUALIZA SUS TABLAS
 			 */
-			numero_pagina = registro_prueba->pagina_proceso;
-			numero_de_pid = registro_prueba->PID;
-			// PRIMER VERIFICO QUE LA TLB ESTE HABILITADA*/
+			//numero_pagina = registro_prueba->pagina_proceso;
+			//numero_de_pid = registro_prueba->PID;
+
+			// PRIMERO VERIFICO QUE LA TLB ESTE HABILITADA*/
 			if (!strcmp(miContexto.tlbHabilitada, "SI"))
 			{
 				flag=leerEnCache(socketCliente,TLB);
@@ -77,8 +78,10 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 
 			// TRAIGO LA TABLA DEL PROCESO
 			t_list * tablaProceso = obtenerTablaProceso(tabla_adm, registro_prueba->PID);
+			printf("OBTUVE TABLA PROCESO DE DIRECCION ---> %p \n", tablaProceso);
 			// TRAIGO LA PAGINA A ESCRIBIR ( SOLO EL NODO DE LA TABLA DEL PROCESO )
 			process_pag * paginaProceso = obtenerPaginaProceso(tablaProceso, registro_prueba->pagina_proceso);
+			printf("OBTUVE PAGINA DEL PROCESO NUMERO -----> %d \n", paginaProceso->pag);
 
 			int tamanio_mensaje = registro_prueba->tamanio_msj;
 
@@ -128,13 +131,13 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 
 						// TENGO QUE ASIGNARLE UNA DIRECCION PARA ESCRIBIR AHI, TRAIGO UN MARCO HUECO Y ESCRIBO
 						 t_marco_hueco * marco_a_llenar = list_remove(listaFramesHuecosMemR, 0);
-						memcpy ( marco_a_llenar->direccion_inicio, contenido_a_escribir, miContexto.tamanioMarco);
+						memcpy ( marco_a_llenar->direccion_inicio, contenido_a_escribir, sizeof(contenido_a_escribir));
 						printf("ESCRIBI EN EL MARCO ---> %s \n", contenido_a_escribir);
 						//AGREGO EL MARCO AHORA ESCRITO, A LA LISTA DE MARCOS ESCRITOS
 						list_add(listaFramesMemR, marco_a_llenar);
-						printf("AGREGE MARCO LLENO, AHORA TENGO ---> %d MARCOS LLENOS Y ----> %d VACIOS \n", listaFramesMemR->elements_count, listaFramesHuecosMemR->elements_count);
+						printf("AGREGE MARCO LLENO NUMERO %d, AHORA TENGO ---> %d MARCOS LLENOS Y ----> %d VACIOS \n",marco_a_llenar->numero_marco, listaFramesMemR->elements_count, listaFramesHuecosMemR->elements_count);
 						//AGREGO LA PAGINA A LA TLB (VERIFICO SI ESTA LLENA Y REEMPLAZO)
-						actualizarTlb(lectura_swap->PID, marco_a_llenar->numero_marco, marco_a_llenar->direccion_inicio, TLB);
+						actualizarTlb(lectura_swap->PID, lectura_swap->pagina_proceso, marco_a_llenar->direccion_inicio, TLB);
 						// ACTUALIZO LA TABLA DEL PROCESO CON LA DRIECCION FISICA
 						actualizarTablaProceso(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio);
 					}
@@ -209,6 +212,7 @@ void iniciarProceso(t_list* tabla_adm, t_header * proceso)
 		printf("PRINCIPIO - La tabla de admimistracion de tablas tiene %d nodos \n", tabla_adm->elements_count);
 		// PRIMERO CREO LA TABLA DEL PROCESO Y LA AGREGO A LA LISTA DE LISTAS DE PROCESOS JUNTO CON EL PID
 		t_list * lista_proceso = crearListaProceso();
+
 		// AGREGO UN NODO PARA CADA PAGINA A INICIALIZAR, OBVIAMENTE APUNTANDO A NULL PORQUE NO ESTAN EN MEMORIA TODAVIA
 		int x = 0;
 
@@ -222,7 +226,7 @@ void iniciarProceso(t_list* tabla_adm, t_header * proceso)
 			x++;
 		}
 
-		printf("FINAL - La tabla del proceso tiene %d nodos \n", lista_proceso->elements_count);
+		printf("FINAL - La tabla del proceso tiene %d nodos y su direccion sigue siendo %p \n", lista_proceso->elements_count, lista_proceso);
 
 		list_add(tabla_adm,tabla_adm_create(proceso->PID, lista_proceso) );
 		printf("FINAL - La tabla de admimistracion de tablas tiene %d nodos \n", tabla_adm->elements_count);
@@ -313,7 +317,7 @@ t_list * obtenerTablaProceso(t_list * tabla_adm, int pid)
 	}
 
 	int flag;
-	t_tabla_adm * reg_tabla_tablas = list_find(tabla_adm, elNodoTienePidIgualA);
+	t_tabla_adm * reg_tabla_tablas = list_find(tabla_adm, (void*)_numeroDePid);
 
 	// SI ENCONTRO UN REGISTRO CON ESE PID
 	if (reg_tabla_tablas != NULL)
@@ -324,6 +328,8 @@ t_list * obtenerTablaProceso(t_list * tabla_adm, int pid)
 		// TRAIGO LA TABLA DEL PROCESO Y LA DEVUELVO
 		return reg_tabla_tablas->direc_tabla_proc;
 	}
+
+	return NULL;
 /*
 		// SI LA DIRECCION = NULL ES PORQUE ESTA EN SWAP, SINO YA LA ENCONTRE EN MEMORIA
 		if (pagina_proc->direccion_fisica == NULL)
@@ -364,7 +370,6 @@ t_list * obtenerTablaProceso(t_list * tabla_adm, int pid)
 		}
 	}
 */
-	return NULL;
 }
 
  process_pag * obtenerPaginaProceso(t_list * tabla_proceso, int pagina)
@@ -462,7 +467,7 @@ int envioAlSwap ( t_header * header, int serverSocket, char * contenido)
 
 bool numeroDePaginaIgualA(int * pagina_number)
 {
-	return (*pagina_number == numero_pagina);
+	return (*pagina_number == numero_de_pagina);
 }
 
 bool elNodoTienePidIgualA(int * pid_number)
@@ -514,52 +519,45 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm)
 
 }
 
+t_tlb * buscarTablaProcesoEnTlb (t_list * TLB, t_header * pagina)
+{
+	printf("ENTRO A BUSCARTABLAPROCESOENTLB \n");
+	int x = 0;
+	int tamanio_tlb = list_size(TLB);
+
+	while ( x < tamanio_tlb)
+	{
+		t_tlb * reg_tlb = list_get(TLB, x);
+		if (  reg_tlb->pid == pagina->PID)
+		{
+			printf("ENCONTRE EL PID %d EN LA TLB \n", reg_tlb->pid);
+			if ( reg_tlb->pagina == pagina->pagina_proceso)
+			{
+				printf("ENCONTRE LA PAGINA %d \n ", reg_tlb->pagina);
+				return reg_tlb;
+			}
+		}
+		x++;
+	}
+	return NULL;
+}
+
 int verificarTlb (t_list * TLB, int tamanio_msg, char * message, t_header * pagina)
 {
-	bool _numeroDePid (void * p)
-	{
-		return(*(int *)p == pagina->PID);
-	}
+	t_tlb * registro_tlb = buscarTablaProcesoEnTlb(TLB, pagina);
 
-	bool _numeroDePagina (void * p)
+	if (registro_tlb != NULL)
 	{
-		return(*(int*)p == pagina->pagina_proceso);
-	}
-
-	/* SOLO PARA PROBAR QUE ANDE LA VERIFICACION DE LA TLB
-	* char * p = malloc(sizeof(char));
-	* t_tlb * entrada_tlb = reg_tlb_create(0, 3, p);
-	* list_add(TLB, entrada_tlb);
-	*/
-
-	t_list * subListaPid = list_filter(TLB,(void *)_numeroDePid);
-	// SI NO ENCONTRO NINGUNA ENTRADA CON ESE PID
-	if (subListaPid->elements_count == 0)
+		memcpy (registro_tlb->direccion_fisica, message, tamanio_msg + 1);
+		printf( "ESCRIBI : %s EN LA PAGINA %d PID %d Y DIRECCION %p \n", registro_tlb->direccion_fisica, registro_tlb->pagina, registro_tlb->pid, registro_tlb->direccion_fisica);
+		return 1;
+		// SI NO LA ENCONTRO RETORNO 0
+	}else
 	{
-		printf (" NO HAY NINGUNA PAGINA CON ESE PID CARGADA EN TLB \n");
+		printf ("NO LO ENCONTRE EN LA TLB\n");
 		return 0;
 	}
-	//SI ENCONTRO ALGUNA ENTRADA EN LA TLB CON ESE PID
-	else
-	{
-		printf (" HAY ALGUNA/S PAGINA/S CON ESE PID EN LA TLB \n");
-		// VERIFICO QUE ALGUNA DE LAS ENTRADAS TENGA LA PAGINA QUE BUSCO
-		t_tlb * registro_tlb = list_filter(TLB, (void *)_numeroDePagina);
-		// SI LA ENCONTRO LA ESCRIBO
-		if (registro_tlb != NULL)
-		{
-			printf ("ENCONTRE LA PAGINA EN LA SUBLISTA \n");
-			memcpy (registro_tlb->direccion_fisica, message, tamanio_msg + 1);
-			printf( "ESCRIBI : %s EN LA MEMORIA \n", registro_tlb->direccion_fisica);
-			return 1;
-		// SI NO LA ENCONTRO RETORNO 0
-		}else
-		{
-			printf ("PARECE NO HABER NINGUNA CON ESA PAGINA \n");
-			return 0;
-		}
 
-	}
 }
 
 int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mensaje, char * serverSocket, t_header * header)
@@ -609,7 +607,7 @@ void actualizarTablaProceso(t_list * tabla_proceso, int num_pagina, char * direc
 	}
 
 	printf("ANTES -CANTIDAD DE ELEMENTOS DE LA TABLA DEL PROCESO ---> %d \n", tabla_proceso->elements_count);
-	list_remove_by_condition(tabla_proceso, _numeroDePagina);
+	list_remove_by_condition(tabla_proceso, _numeroDePagina); // ¿ ME DEVUELVE LO QUE REMUEVE ESTA FUNCION?
 	process_pag * pagina = pag_proc_create(num_pagina, direccion_marco);
 	printf("DESPUES - CANTIDAD DE ELEMENTOS DE LA TABLA DEL PROCESO ---> %d \n", tabla_proceso->elements_count);
 	list_add(tabla_proceso,pagina);
@@ -637,12 +635,12 @@ int marcosProcesoLlenos(t_list * lista_proceso)
 	}
 	if (paginas_ocupadas == miContexto.maxMarcos)
 	{
-		printf("ENTRO A RETORNAR 1 \n");
+		printf("LA CANTIDAD MAXIMA DE PAGINAS DE ESTE PROCESO ESTA CARGADA EN MEMORIA \n");
 		return 1;
 	}
 	else
 	{
-		printf("ENTRO A RETORNAR 0 \n");
+		printf("TODAVIA TENGO ESPACIO PARA GUARDAR UNA PAGINA \n");
 		return 0;
 
 	}
