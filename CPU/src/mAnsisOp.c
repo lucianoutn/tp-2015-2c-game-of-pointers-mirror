@@ -27,10 +27,12 @@ char* leerInstruccion(FILE *fd)
 	return buffer;
 }
 
-char** leermCod(const char* ruta, int * num)
+char** leermCod(char* ruta, int * num)
 {
 	//El archivo tiene q estar en la ruta blahblah/CPU/archivo.algo
+	printf("la ruta es: %s",ruta);
 	FILE *fd = fopen(ruta,"r"); //abro el archivo mCod
+
 	if(fd == NULL) printf("Error al abrir el mCod. Path: %s.\n",ruta);
 	char **instruccion= (char**)malloc(sizeof(char*)); //solicito espacio en la memoria para el buffer
 	int nu=0;

@@ -155,7 +155,9 @@ void ejecutoPCB(int socketMemoria, t_pcb *PCB){
 	flag recibi=false;
 
 	//reservo espacio en la memoria para guardar todas las instrucciones del archivo mCod
-	leermCod(PCB->ruta,&PCB->numInstrucciones);	//primero leo para saber el numero de instrucciones
+	printf("la ruta era: %s", PCB->ruta);
+	leermCod(PCB->ruta,PCB->numInstrucciones);	//primero leo para saber el numero de instrucciones
+	puts("llega");
 	char **instrucciones= (char**)malloc(sizeof(char**) * (PCB->numInstrucciones));
 
 	//guardo las intrucciones
@@ -259,7 +261,7 @@ void ejecutoPCB(int socketMemoria, t_pcb *PCB){
 void iniciarCPU(t_sockets *sockets){
 
 	pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
-	printf("CPU ID: %d conectado", (pthread_t)id);
+	printf("CPU hilo ID: %d conectado", (pthread_t)id);
 	int status=1;		// Estructura que manjea el status de los recieve.
 
 	//Estructuras que manejan los datos recibidos
@@ -295,12 +297,17 @@ void iniciarCPU(t_sockets *sockets){
 				int id_pcb = shmget(123, sizeof(t_pcb), 0644); //reservo espacio dentro de la seccion de memoria compartida
 				printf("id: %d \n", id_pcb); //imprimo el identificador de la seccion(igual que el del plani)
 				t_pcb *PCB =(t_pcb*) shmat(id_pcb,(char*)0, 0); //creo la variable y la asocio al segmento
-				printf("%p", PCB); //imprimo la direccion de variable local (notese que es difente a la del plani)
+				printf("%p\n", PCB); //imprimo la direccion de variable local (notese que es difente a la del plani)
 				printf("%d\n", PCB->PID);
+				printf("ruta %s",PCB->ruta);
+
 				PCB->PID=4; //modifico el valor (se ve reflejado en el plani
 
 
 				printf("PCB Recibido. PID:%d\n",PCB->PID);
+
+				puts("hasta aca anda bien");
+
 				ejecutoPCB(sockets->socketMemoria,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
 
 				break;

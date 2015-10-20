@@ -83,7 +83,7 @@ void dispatcher(t_queue *cola_ready)
 		t_headcpu *header = malloc(sizeof(t_headcpu));
 		preparoHeader(header);
 		printf("%p\n", pcb);
-
+		printf("ruta enviada: %s", pcb->ruta);
 		printf("Instruccion enviada:%d\nSocket:%d\n",header->tipo_ejecucion,conexiones.CPUS[I].socket);
 		send(conexiones.CPUS[I].socket, header, sizeof(t_headcpu),0);
 		//free(msj);
