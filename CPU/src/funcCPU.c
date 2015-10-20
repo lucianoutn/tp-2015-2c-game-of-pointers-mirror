@@ -284,6 +284,7 @@ void iniciarCPU(t_sockets *sockets){
 
 				//FINALIZO CONEXIONES
 				puts("Recibi salir, cierro conexiones");
+				puts("FINALIZANDO PROGRAMA\n");
 				status=0;	//Salgo del while
 				sem_post(&semSalir);	//Semaforo que controla la finalizacion de la CPU
 				break;
