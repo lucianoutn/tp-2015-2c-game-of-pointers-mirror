@@ -157,8 +157,9 @@ int escribirSwap(t_header * package, int socketCliente)
 	strcpy(mensaje,"Holasir");
 	if(pag!= NULL)
 	{
-		fseek(archivo,pag->inicio + ((package->pagina_proceso) * contexto->tam_pagina),SEEK_SET);
-		fwrite(mensaje, strlen(mensaje) + 1, 1, archivo);
+		int stat;
+		stat=fseek(archivo,pag->inicio + ((package->pagina_proceso) * contexto->tam_pagina),SEEK_SET);
+		stat=fwrite(mensaje, strlen(mensaje), 1, archivo);
 		log_info(logger, "Se recibio orden de escritura: PID: %d Byte Inicial: %d Contenido: %s"
 										,package->PID, pag->inicio+(package->pagina_proceso * contexto->tam_pagina),mensaje);
 		//Relleno pagina
@@ -167,8 +168,8 @@ int escribirSwap(t_header * package, int socketCliente)
 
 		for(;relleno<=final_pagina;relleno++)
 		{
-			fseek(archivo,relleno,SEEK_SET);
-			fwrite("\0", strlen("\0") + 1, 1, archivo);
+			stat=fseek(archivo,relleno,SEEK_SET);
+			stat=fwrite("\0", strlen("\0"), 1, archivo);
 		}
 	}
 	else
@@ -261,7 +262,7 @@ void compactarSwap()
 		//actualizo la pagina y la particion
 		pagina->inicio= inicio;
 		fseek(archivo,pagina->inicio,SEEK_SET);
-		fwrite(contenido, strlen(contenido) + 1, 1, archivo);
+		fwrite(contenido, strlen(contenido), 1, archivo);
 	}
 
 	//actualizo lista huecos
