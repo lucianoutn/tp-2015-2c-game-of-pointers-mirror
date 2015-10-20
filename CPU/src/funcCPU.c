@@ -263,21 +263,22 @@ void iniciarCPU(t_sockets *sockets){
 	int status=1;		// Estructura que manjea el status de los recieve.
 
 	//Estructuras que manejan los datos recibidos
-	t_headcpu * headcpu = (t_headcpu*)malloc(sizeof(t_headcpu));
+	t_headcpu * header = (t_headcpu*)malloc(sizeof(t_headcpu));
 
 	while(status!=0)	//MIENTRAS NO QUIERA SALIR RECIBO INSTRUCCIONES
 	{
 		puts("\n\nEsperando Instrucciones...\n\n");
 		//CPU a la espera de nuevas instrucciones
 		sem_wait(semProduccionMsjs); //semaforo productor-consumidor
-		//status = recv(sockets->socketPlanificador, headcpu, sizeof(t_headcpu),0);
+		status = recv(sockets->socketPlanificador, header, sizeof(t_headcpu),0);
+		printf("clave: %d", header->clave);
 
-		headcpu->tipo_ejecucion=1; //PARA PROBAR NADA MAS
+		//headcpu->tipo_ejecucion=1; //PARA PROBAR NADA MAS
 
 		if(status!=0)	//CONTROLA QUE NO SE PIERDA LA CONEXION
 
 		{
-			switch (headcpu->tipo_ejecucion){	//CONTROLA EL TIPO DE INSTRUCCION
+			switch (header->tipo_ejecucion){	//CONTROLA EL TIPO DE INSTRUCCION
 
 			case 0:		//INSTRUCCION PARA SALIR
 
@@ -289,12 +290,13 @@ void iniciarCPU(t_sockets *sockets){
 
 			case 1: 	//INSTRUCCION PARA RECIBIR MSJS
 			{
+				printf("clave: %d", header->clave);
 				int id_pcb = shmget(123, sizeof(t_pcb), 0777); //reservo espacio dentro de la seccion de memoria compartida
-				printf("%d \n", id_pcb); //imprimo el identificador de la seccion(igual que el del plani)
+				printf("id: %d \n", id_pcb); //imprimo el identificador de la seccion(igual que el del plani)
 				t_pcb *PCB =(t_pcb*) shmat(id_pcb,(char*)0, 0); //creo la variable y la asocio al segmento
 				printf("%p", PCB); //imprimo la direccion de variable local (notese que es difente a la del plani)
 				printf("%d\n", PCB->PID);
-				PCB->PID=3; //modifico el valor (se ve reflejado en el plani
+				PCB->PID=4; //modifico el valor (se ve reflejado en el plani
 
 
 				printf("PCB Recibido. PID:%d\n",PCB->PID);
@@ -320,7 +322,7 @@ void iniciarCPU(t_sockets *sockets){
 	}	//FIN DEL WHILE
 
 	//CIERRO LOS SOCKETS Y EL HEADER
-	free(headcpu);
+	free(header);
 	close(sockets->socketPlanificador);
 	close(sockets->socketMemoria);
 

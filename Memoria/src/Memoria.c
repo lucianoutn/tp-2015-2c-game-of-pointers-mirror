@@ -74,7 +74,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	t_header * package = malloc(sizeof(t_header));
 	char * mensaje=malloc(11);
 	int status = 1;
-	semConexion= sem_open("semConexion", 0);
+	sem_t *semConexion= sem_open("semConexion", 0);
 
 	//CONEXION AL CPU
 	int listenningSocket=crearServer(miContexto.puertoServidor);

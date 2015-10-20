@@ -7,7 +7,7 @@
 
 #include "libreriaPlanificador.h"
 
-
+key_t key=1235;
 
 
 
@@ -80,14 +80,12 @@ void dispatcher(t_queue *cola_ready)
 		conexiones.CPUS[I].enUso = true;
 		//CPU DISPONIBLE  saco de la cola y envio msj
 		t_pcb *pcb = queue_pop(cola_ready);
-		t_msj *msj = malloc(sizeof(t_msj));
-
-		*msj = preparoMSJ(pcb);
+		t_headcpu *header = malloc(sizeof(t_headcpu));
+		preparoHeader(header);
 		printf("%p\n", pcb);
-		printf("%p\n", msj->pcbMSJ);
 
-		printf("Instruccion enviada:%d\nTamaño:%d\nSocket:%d\n",msj->headMSJ.tipo_ejecucion,msj->headMSJ.tamanio_msj,conexiones.CPUS[I].socket);
-		//send(conexiones.CPUS[I].socket, msj, sizeof(t_msj),0);
+		printf("Instruccion enviada:%d\nSocket:%d\n",header->tipo_ejecucion,conexiones.CPUS[I].socket);
+		send(conexiones.CPUS[I].socket, header, sizeof(t_headcpu),0);
 		//free(msj);
 
 		sem_post(semProduccionMsjs);
@@ -126,7 +124,7 @@ void dispatcher(t_queue *cola_ready)
 //Funcion que permite procesar el PCB creado a partir del comando correr PATH
 t_pcb* procesarPCB(char *path)
 {
-	int id_pcb = shmget(123, sizeof(t_pcb), 0644 | IPC_CREAT); //reservo espacio dentro de la seccion de memoria compartida
+	int id_pcb = shmget(123, sizeof(t_pcb), 0644 | IPC_CREAT);//reservo espacio dentro de la seccion de memoria compartida
 	printf("%d \n", id_pcb); //imprimo el identificador de la seccion
 	t_pcb *pcb = (t_pcb*)shmat(id_pcb, NULL, 0); //creo la variable y la asocio al segmento
 	printf("%p", pcb); //imprimo la direccion de memoria del pcb
@@ -140,17 +138,16 @@ t_pcb* procesarPCB(char *path)
 	pcb->prioridad=0;
 	pcb->permisos=0;
 	strcpy(pcb->ruta, path);
-	
 
 
 	return pcb;
 }
 
 //CAMBIAR PARA QUE SOLO SEA EL HEADER
-t_msj preparoMSJ(t_pcb *pcb){
-	t_msj msj;
-	msj.headMSJ.tipo_ejecucion = 1;	//Orden de envio de pcb
-	msj.headMSJ.tamanio_msj = sizeof(t_pcb);
+void preparoHeader(t_headcpu *header)
+{
+	header->tipo_ejecucion = 1;	//Orden de envio de pcb
+	header->clave=key;
+	key++;
 	
-	return msj;
 }
