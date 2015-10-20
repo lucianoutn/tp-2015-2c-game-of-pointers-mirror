@@ -292,7 +292,7 @@ void iniciarCPU(t_sockets *sockets){
 			case 1: 	//INSTRUCCION PARA RECIBIR MSJS
 			{
 				printf("clave: %d", header->clave);
-				int id_pcb = shmget(123, sizeof(t_pcb), 0777); //reservo espacio dentro de la seccion de memoria compartida
+				int id_pcb = shmget(123, sizeof(t_pcb), 0644); //reservo espacio dentro de la seccion de memoria compartida
 				printf("id: %d \n", id_pcb); //imprimo el identificador de la seccion(igual que el del plani)
 				t_pcb *PCB =(t_pcb*) shmat(id_pcb,(char*)0, 0); //creo la variable y la asocio al segmento
 				printf("%p", PCB); //imprimo la direccion de variable local (notese que es difente a la del plani)
