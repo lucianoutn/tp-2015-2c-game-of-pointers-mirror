@@ -154,7 +154,7 @@ int escribirSwap(t_header * package, int socketCliente)
 
 	recv(socketCliente, mensaje, package->tamanio_msj, 0);
 	t_pag * pag = list_find(lista_paginas, (void *)_numeroDePid);
-	strcpy(mensaje,"Holasir");
+	//strcpy(mensaje,"Holasir");
 	if(pag!= NULL)
 	{
 		int stat;
@@ -252,17 +252,26 @@ void compactarSwap()
 		//guardo el nodo
 		inicio_ant = inicio;
 		pag_ant = pagina->paginas;
-		//busco el contenido de todas las paginas juntas
-		char * contenido=malloc(pagina->paginas*contexto->tam_pagina);
-		fseek(archivo,pagina->inicio,SEEK_SET);
-		fread(contenido, pagina->paginas*contexto->tam_pagina, 1, archivo);
 
 		cant_pag = cant_pag + pagina->paginas;
 
-		//actualizo la pagina y la particion
-		pagina->inicio= inicio;
-		fseek(archivo,pagina->inicio,SEEK_SET);
-		fwrite(contenido, strlen(contenido), 1, archivo);
+		//actualizo el archivo
+		char * contenido=malloc(contexto->tam_pagina);
+		int k=0;
+
+		for(k;k<=pagina->paginas;k++)
+		{
+			//leo donde estaba
+			fseek(archivo,pagina->inicio+k*contexto->cant_paginas,SEEK_SET);
+			fread(contenido, contexto->tam_pagina, 1, archivo);
+
+			//escribo donde debe estar
+			fseek(archivo,inicio+k*contexto->cant_paginas,SEEK_SET);
+			fwrite(contenido, strlen(contenido), 1, archivo);
+		}
+
+		//actualizo el inicio en el nodo.
+		pagina->inicio=inicio;
 	}
 
 	//actualizo lista huecos
@@ -271,11 +280,12 @@ void compactarSwap()
 	hueco->inicio = inicio_ant + pag_ant * contexto->tam_pagina;
 	hueco->paginas = contexto->cant_paginas - cant_pag;
 
-	int j= 0;
+	int j= 1;
 	for(j; j<tamanio_huecos; j++)
 	{
 		list_remove_and_destroy_element(lista_huecos, j, (void *)hueco_destroy);
 	}
+
 	sleep(contexto->retardo_compac);
 	log_info(logger, "Se finalizo la compactacion");
 }

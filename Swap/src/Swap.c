@@ -41,6 +41,7 @@ int main()
 	archivo = crearParticion();
 	lista_paginas = crearListaPaginas();
 	lista_huecos = crearListaHuecos(contexto->cant_paginas);
+
 /*
 	// PARA PROBAR COMPACTACION CON 8 PAGINAS
 	t_header * package1 = malloc(sizeof(t_header));
@@ -73,7 +74,7 @@ int main()
 	analizoPaquete(package1,0);
 
 	package1->type_ejecution=1;
-	package1->PID=2;
+	package1->PID=1;
 	package1->pagina_proceso=1;
 	package1->tamanio_msj=strlen("Holasir")+1;
 	analizoPaquete(package1,0);
@@ -89,6 +90,12 @@ int main()
 	package1->pagina_proceso=3;
 	analizoPaquete(package1,0);
 
+	package1->type_ejecution=1;
+	package1->PID=3;
+	package1->pagina_proceso=0;
+	package1->tamanio_msj=strlen("Holasir")+1;
+	analizoPaquete(package1,0);
+
 	package1->type_ejecution=0;
 	package1->PID=0;
 	package1->pagina_proceso=0;
@@ -96,6 +103,16 @@ int main()
 
 	package1->type_ejecution=0;
 	package1->PID=2;
+	package1->pagina_proceso=1;
+	analizoPaquete(package1,0);
+
+	package1->type_ejecution=0;
+	package1->PID=3;
+	package1->pagina_proceso=0;
+	analizoPaquete(package1,0);
+
+	package1->type_ejecution=0;
+	package1->PID=3;
 	package1->pagina_proceso=1;
 	analizoPaquete(package1,0);
 */
