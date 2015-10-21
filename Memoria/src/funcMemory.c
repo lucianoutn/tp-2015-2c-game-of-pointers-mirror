@@ -92,6 +92,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			if(okTlb == 1)
 			{
 				// SE ESCRIBIO CORRECTAMENTE PORQUE YA ESTABA CARGADA EN TLB
+				actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
 				printf ("SE ESCRIBIO CORRECTAMENTE PORQUE ESTABA EN LA TLB \n");
 			}
 			// SI NO ESTABA EN LA TLB, AHORA ME FIJO SI ESTA EN LA TABLA DE TABLAS
@@ -174,8 +175,9 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 		break;
 	 	case 3:
 			printf ("Se recibio orden de finalizacion de proceso :) \n");
-			matarProceso(registro_prueba, tabla_adm);
-			/*
+			matarProceso(registro_prueba, tabla_adm, TLB);
+			int flag = envioAlSwap(registro_prueba, serverSocket, NULL );
+
 			if(flag)
 			{
 				log_info(logger, "Se hizo conexion con swap, se envio proceso a matar y este fue recibido correctamente");
@@ -184,22 +186,6 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			{
 				log_error(logger, "Hubo un problema con la conexion/envio al swap");
 			}
-
-			numero_de_pid = registro_prueba->PID;
-			t_tlb * reg_tlb = list_find(TLB, elNodoTienePidIgualA);
-
-			printf("La TLB TIENE %d ELEMENTOS ANTES DE DESTRUIR\n", TLB->elements_count);
-			// DIRECCION TABLA PROCESO A ELIMINAR
-			list_destroy(reg_tlb->direccion_fisica);
-		//	printf("LA DIRECCION DE LA TABLA DEL PROCESO A ELIMINAR ES %s \n", direccion_tabla_proc);
-
-			// NO ME RECONOCE EL INPUT_DESTROY DEFINIDO EN MANEJOLISTAS
-		//	list_remove_and_destroy_by_condition(TLB, elNodoTienePidIgualA, input_destroy);
-
-			list_remove_by_condition(TLB, elNodoTienePidIgualA);
-			printf("LA TLB TIENE %d ELEMENTOS DESPUES DE DESTRUIR\n", TLB->elements_count);
-			//list_remove_by_condition(TLB, elNodoTienePidIgualA);
-			 */
 	 		break;
 	 	default:
 			printf ("El tipo de ejecucion recibido no es valido\n");
@@ -486,12 +472,17 @@ bool tlbLlena(t_list * TLB)
 	return false;
 }
 
-void matarProceso(t_header * proceso_entrante, t_list * tabla_adm)
-
-
+void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB)
 {
 	numero_de_pid = proceso_entrante->PID;
-	t_tabla_adm * registro_tabla_proc = list_find(tabla_adm, elNodoTienePidIgualA);
+
+	bool _numeroDePid (void * p)
+	{
+		return(*(int *)p == numero_de_pid);
+	}
+
+	int flag;
+	t_tabla_adm * registro_tabla_proc = list_find(tabla_adm, (void*)_numeroDePid);
 
 	if (registro_tabla_proc != NULL)
 	{
@@ -503,10 +494,14 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm)
 		if (tabla_proceso != NULL)
 		{
 			printf("ENCONTRE LA TABLA DEL PROCESO A MATAR \n");
+			// ELIMINO TODOS LOS ELEMENTOS DE LA TABLA Y LA TABLA
 			list_destroy_and_destroy_elements(tabla_proceso, (void *)pag_destroy);
+			//ELIMINO LA REFERENCIA DE ESA TABLA DE PROCESO, DESDE LA TABLA DE PROCESOS
 			list_remove_by_condition(tabla_adm, (void*)elNodoTienePidIgualA);
-
 			printf ("LA TABLA DE TABLAS DE PROCESOS TIENE %d ELEMENTOS DESPUES DE MATAR \n", tabla_adm->elements_count);
+			// ME FIJO SI EN LA TLB HABIA ALGUNA REFERENCIA A ALGUNA DE SUS PAGINAS Y LAS ELIMINO
+			removerEntradasTlb(TLB, proceso_entrante);
+
 
 		}else
 		{
@@ -520,9 +515,25 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm)
 
 }
 
-t_tlb * buscarTablaProcesoEnTlb (t_list * TLB, t_header * pagina)
+int removerEntradasTlb(t_list * TLB, t_header * header)
 {
-	printf("ENTRO A BUSCARTABLAPROCESOENTLB \n");
+	int pid_a_eliminar =  header->PID;
+
+	bool _numeroDePid (void * p)
+	{
+		return(*(int *)p == pid_a_eliminar);
+	}
+	while ( list_find(TLB,(void*)_numeroDePid) != NULL )
+	{
+		printf("ELEMENTOS DE LA TLB ANTES DE MATAR -> %d \n", TLB->elements_count);
+		t_tlb * entrada_tlb = list_remove_by_condition(TLB,(void*)_numeroDePid);
+		printf("ELEMENTOS DE LA TLB DESPUES DE MATAR -> %d \n", TLB->elements_count);
+	}
+
+}
+
+t_tlb * buscarEntradaProcesoEnTlb (t_list * TLB, t_header * pagina)
+{
 	int x = 0;
 	int tamanio_tlb = list_size(TLB);
 
@@ -545,7 +556,7 @@ t_tlb * buscarTablaProcesoEnTlb (t_list * TLB, t_header * pagina)
 
 int verificarTlb (t_list * TLB, int tamanio_msg, char * message, t_header * pagina)
 {
-	t_tlb * registro_tlb = buscarTablaProcesoEnTlb(TLB, pagina);
+	t_tlb * registro_tlb = buscarEntradaProcesoEnTlb(TLB, pagina);
 
 	if (registro_tlb != NULL)
 	{
@@ -555,10 +566,9 @@ int verificarTlb (t_list * TLB, int tamanio_msg, char * message, t_header * pagi
 		// SI NO LA ENCONTRO RETORNO 0
 	}else
 	{
-		printf ("NO LO ENCONTRE EN LA TLB\n");
+		printf ("NO ENCONTRE ESA PAGINA EN LA TLB\n");
 		return 0;
 	}
-
 }
 
 int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mensaje, char * serverSocket, t_header * header)
@@ -671,20 +681,30 @@ int marcosProcesoLlenos(t_list * lista_proceso)
 	}
 }
 
-void actualizarTlb (int pid, int marco, char * direccion_memoria, t_list * TLB)
+void actualizarTlb (int pid, int pagina, char * direccion_memoria, t_list * TLB)
 {
-	// SI TENGO ESPACIO EN LA TLB, AGREGO UNA ENTRADA
-	if (miContexto.entradasTlb != TLB->elements_count)
+	t_tlb * entrada_tlb = buscarEntradaProcesoEnTlb(TLB, package_create(0,pid,pagina,0));
+	if( entrada_tlb != NULL )
 	{
-		printf("ANTES - CANTIDAD DE ELEMENTOS TLB---> %d \n", TLB->elements_count);
-		list_add(TLB, reg_tlb_create(pid, marco, direccion_memoria));
-		printf("DESPUES - CANTIDAD DE ELEMENTOS TLB---> %d \n", TLB->elements_count);
-	// SI ESTA LLENA, REMUEVO EL ULTIMO ELEMENTO Y AGREGO EL RECIEN USADO AL PRINCIPIO
-	}else
+
+		printf("YA ESTABA EN TLB, LA VOY A MANDAR A LO ULTIMO AHORA");
+	}
+	// SI NO ESTA CARGADA EN LA TLB
+	else
 	{
-		list_remove_and_destroy_element(TLB, 0, free); // ESTA BIEN USADO EL FREE AHI?
-		list_add(TLB, reg_tlb_create(pid, marco, direccion_memoria));
-		printf("DESPUES ADD & REMOVE - CANTIDAD DE ELEMENTOS TLB -----> %d \n", TLB->elements_count);
+		// SI TENGO ESPACIO EN LA TLB, AGREGO UNA ENTRADA
+		if (miContexto.entradasTlb != TLB->elements_count)
+		{
+			printf("ANTES - CANTIDAD DE ELEMENTOS TLB---> %d \n", TLB->elements_count);
+			list_add(TLB, reg_tlb_create(pid, pagina, direccion_memoria));
+			printf("DESPUES - CANTIDAD DE ELEMENTOS TLB---> %d \n", TLB->elements_count);
+			// SI ESTA LLENA, REMUEVO EL PRIMER ELEMENTO Y AGREGO EL RECIEN USADO AL FINAL
+		}else
+		{
+			list_remove_and_destroy_element(TLB, 0, free); // ESTA BIEN USADO EL FREE AHI?
+			list_add(TLB, reg_tlb_create(pid, pagina, direccion_memoria));
+			printf("DESPUES ADD & REMOVE - CANTIDAD DE ELEMENTOS TLB -----> %d \n", TLB->elements_count);
+		}
 	}
 
 }
@@ -756,6 +776,7 @@ void dumpEnLog()
 	puts("Recibi SIGPOLL");
 }
 //-----------------------------------------------------------//
+
 // --------------ENTRADAS A LA TABLA DE PROCESO ------------ //
 process_pag * pag_proc_create (int pagina, char * direccion_fisica)
 {

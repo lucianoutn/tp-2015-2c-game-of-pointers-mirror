@@ -86,7 +86,7 @@ int envioAlSwap(t_header *, int, char *);
 // PREGUNTO SI LA TLB ESTA LLENA, DEVUELVE TRUE SI ESTA LLENA
 bool tlbLlena(t_list *);
 // FUNCION PARA FINALIZAR PROCESOS
-void matarProceso(t_header *, t_list*);
+void matarProceso(t_header *, t_list*, t_list *);
 /* ME DEVUELVE NULL SI LA PAGINA ESTA EN SWAP Y SINO ME DEVUELVE LA DIRECCION DEL MARCO */
 //direccionDePag();
 
@@ -128,7 +128,7 @@ void actualizarTlb(int, int, char*, t_list *);
 void actualizarTablaProceso(t_list *, int ,char*);
 
 // BUSCO Y RETORNO EL REGISTRO DE LA TLB BUSCADO EN EL CASO DE ENCONTRARLO, SINO RETORNO NULL
-t_tlb * buscarTablaProcesoEnTlb (t_list*, t_header *);
+t_tlb * buscarEntradaProcesoEnTlb (t_list*, t_header *);
 
 
 // CUANDO TENGO QUE ESCRIBIR, Y TENGO ESPACIO PARA GUARDAR LA PAGINA (NO TENGO QUE SWAPEAR), SOLO LE MANDO UN T_HEADER DE TIPO LECTURA AL SWAP
@@ -141,6 +141,8 @@ t_header * crearHeaderEscritura(int, int, int);
 // OBTENGO LA PRIMER PAGINA QUE FUE CARGADA EN MEMORIA
 // SI POR ALGUN MOTIVO NO LA ENCONTRO, RETORNO NULL
 process_pag * primerPaginaCargada(t_list*);
+
+int removerEntradasTlb(t_list *, t_header*);
 
 //------SEÑALES QUE TIENE QUE RECIBIR LA MEMORIA-------------//
 void tlbFlush();
