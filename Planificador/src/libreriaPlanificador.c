@@ -126,13 +126,22 @@ t_pcb* procesarPCB(char *path)
 {
 	//key = ftok("key","a");
 	//printf("key: %d \n",key);
-	int id_pcb = shmget(key_pcb, sizeof(t_pcb),(0666 | IPC_CREAT));//reservo espacio dentro de la seccion de memoria compartida
+	long id_pcb = shmget(key_pcb, sizeof(t_pcb),(0644 | IPC_CREAT));//reservo espacio dentro de la seccion de memoria compartida
 	printf("%d \n", id_pcb); //imprimo el identificador de la seccion
-	t_pcb *pcb = (t_pcb*)shmat(id_pcb, NULL, 0); //creo la variable y la asocio al segmento
-	printf("%p \n", pcb); //imprimo la direccion de memoria del pcb
+	t_pcb *pcb;
+	pcb = (t_pcb*)shmat(id_pcb, NULL, 0); //creo la variable y la asocio al segmento
 
-	int id_ruta = shmget(key_ruta, sizeof(path),(0666 | IPC_CREAT)); //reservo espacio dentro de la seccion de memoria compartida
+	if (pcb == (t_pcb*)(-1))		//capturo error del shmat
+		perror("shmat");
+
+	printf("%p \n", pcb); //imprimo la direccion de memoria del pcb
+	printf("pido %d bytes de memoria para la ruta",  sizeof(char)*20);
+	long id_ruta = shmget(key_ruta, 4,(0644 | IPC_CREAT)); //reservo espacio dentro de la seccion de memoria compartida
 	pcb->ruta = (char*)shmat(id_ruta, NULL, 0); //creo la variable y la asocio al segmento
+
+	if (pcb->ruta == (char*)(-1))		//capturo error del shmat
+		perror("shmat");
+
 	printf("id_ruta: %d \n", id_ruta); //imprimo la direccion de memoria de la ruta
 
 
@@ -157,6 +166,7 @@ void preparoHeader(t_headcpu *header)
 	header->clave_pcb=key_pcb;
 	header->clave_ruta=key_ruta;
 	//printf("clave: %d \n",header->clave);
-	//key++;
+	key_pcb++;
+	key_ruta++;
 	
 }

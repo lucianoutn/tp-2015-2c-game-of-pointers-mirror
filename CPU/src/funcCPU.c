@@ -293,17 +293,21 @@ void iniciarCPU(t_sockets *sockets){
 
 			case 1: 	//INSTRUCCION PARA RECIBIR MSJS
 			{
-				printf("clave: %d \n", header->clave_pcb);
-				int id_pcb = shmget(header->clave_pcb, sizeof(t_pcb), 0666); //reservo espacio dentro de la seccion de memoria compartida
+				printf("clave: %d \n", header->clave_ruta);
+				long id_pcb = shmget(header->clave_pcb, sizeof(t_pcb), 0644); //reservo espacio dentro de la seccion de memoria compartida
 				t_pcb *PCB;
-				PCB =(t_pcb*) shmat(id_pcb,0, 0); //creo la variable y la asocio al segmento
+				PCB = shmat(id_pcb,0, 0); //creo la variable y la asocio al segmento
 				printf("id_pcb: %d \n", id_pcb); //imprimo el identificador de la seccion(igual que el del plani)
 
-				int id_ruta = shmget(header->clave_ruta, sizeof(char)*20, 0666); //reservo espacio dentro de la seccion de memoria compartida
-				PCB->ruta= (char*) shmat(id_ruta, 0, 0); //creo la variable y la asocio al segmento
+				if (PCB == (t_pcb *)(-1))		//capturo error del shmat
+					perror("shmat");
+
+				long id_ruta = shmget(header->clave_ruta, 4, 0644); //reservo espacio dentro de la seccion de memoria compartida
+				printf("idruta: %d \n",id_ruta);
+				PCB->ruta= shmat(id_ruta, 0, 0); //creo la variable y la asocio al segmento
 				printf("id_ruta: %d \n", id_ruta); //imprimo el identificador de la seccion
 
-				if (PCB == (t_pcb *)(-1))		//capturo error del shmat
+				if (PCB->ruta == (char *)(-1))		//capturo error del shmat
 				    perror("shmat");
 
 				printf("%p\n", PCB); //imprimo la direccion de variable local (notese que es difente a la del plani)
