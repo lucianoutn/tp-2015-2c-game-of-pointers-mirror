@@ -564,13 +564,19 @@ int verificarTlb (t_list * TLB, int tamanio_msg, char * message, t_header * pagi
 int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mensaje, char * serverSocket, t_header * header)
 {
 	// TRAIGO LA PRIMER PAGINA QUE SE HAYA CARGADO EN MEMORIA, LA ELIMINO Y SE LA ENVIO AL SWAP
-	// primerPaginaCargada();
+	process_pag * pagina_a_remover = primerPaginaCargada(tablaProceso);
+	int num_pag_to_remove = pagina_a_remover->pag;
 
-	process_pag * paginaASwapear = list_remove(tablaProceso, 0);
+	bool _numeroDePagina (void * p)
+	{
+		return(*(int*)p == num_pag_to_remove);
+	}
+
+	process_pag * paginaASwapear = list_remove_by_condition(tablaProceso, (void*)_numeroDePagina);
 	printf("HIZO EL REMOVE DE pagina->%d \n", paginaASwapear->pag);
 
 	t_header * header_escritura = crearHeaderEscritura( header->PID, paginaASwapear->pag, sizeof(paginaASwapear->direccion_fisica));
-	printf("CREO EL HEADER ESCRITURA: pid->%d, ejecucion->%d pagina-> \n", header_escritura->PID, header_escritura->type_ejecution, paginaASwapear->pag);
+	printf("CREO EL HEADER ESCRITURA: pid->%d, ejecucion->%d pagina-> %d \n", header_escritura->PID, header_escritura->type_ejecution, paginaASwapear->pag);
 
 	int status_escritura = envioAlSwap(header_escritura, serverSocket, "KOLO");
 
@@ -614,6 +620,23 @@ void actualizarTablaProceso(t_list * tabla_proceso, int num_pagina, char * direc
 	printf("DESPUES - CANTIDAD DE ELEMENTOS DE LA TABLA DEL PROCESO ---> %d \n", tabla_proceso->elements_count);
 	list_add(tabla_proceso,pagina);
 	printf("MAS DESPUES - CANTIDAD DE ELEMENTOS DE LA TABLA DEL PROCESO ---> %d \n", tabla_proceso->elements_count);
+}
+
+process_pag * primerPaginaCargada(t_list * tablaProceso)
+{
+	int cantidad_paginas = list_size(tablaProceso);
+	printf("LA CANTIDAD DE PAGINAS ES ---> %d \n", cantidad_paginas);
+	int x = 0;
+	while (x < cantidad_paginas)
+	{
+		process_pag * pagina = list_get(tablaProceso, x);
+		if (pagina->direccion_fisica != NULL)
+		{
+			return pagina;
+		}
+		x++;
+	}
+	return NULL;
 }
 
 int marcosProcesoLlenos(t_list * lista_proceso)
@@ -661,14 +684,14 @@ void actualizarTlb (int pid, int marco, char * direccion_memoria, t_list * TLB)
 	{
 		list_remove_and_destroy_element(TLB, 0, free); // ESTA BIEN USADO EL FREE AHI?
 		list_add(TLB, reg_tlb_create(pid, marco, direccion_memoria));
-		printf("DESPUES ADD REMOVE - CANTIDAD DE ELEMENTOS TLB -----> %d \n", TLB->elements_count);
+		printf("DESPUES ADD & REMOVE - CANTIDAD DE ELEMENTOS TLB -----> %d \n", TLB->elements_count);
 	}
 
 }
 
 t_header* crearHeaderLectura(t_header * package)
 {
-	t_header * package_lectura = package_create(0, package->PID, package->pagina_proceso, package->tamanio_msj);
+	t_header * package_lectura = package_create(0, package->PID, package->pagina_proceso, 0);
 	return package_lectura;
 }
 
