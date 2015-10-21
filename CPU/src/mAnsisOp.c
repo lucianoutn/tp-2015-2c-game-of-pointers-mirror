@@ -31,6 +31,9 @@ char** leermCod(const char* ruta, int * num)
 {
 	//El archivo tiene q estar en la ruta blahblah/CPU/archivo.algo
 	printf("la ruta es: %s",ruta);
+	char *cwd;
+	cwd = getcwd;
+	printf("imprimo workdirectory donde estoy parado ahora: %s", cwd);
 	FILE *fd = fopen(ruta,"r"); //abro el archivo mCod
 
 	if(fd == NULL) printf("Error al abrir el mCod. Path: %s.\n",ruta);

@@ -273,7 +273,7 @@ void iniciarCPU(t_sockets *sockets){
 		//CPU a la espera de nuevas instrucciones
 		sem_wait(semProduccionMsjs); //semaforo productor-consumidor
 		status = recv(sockets->socketPlanificador, header, sizeof(t_headcpu),0);
-		printf("clave: %d", header->clave);
+		printf("clave: %d", header->clave_pcb);
 
 		//headcpu->tipo_ejecucion=1; //PARA PROBAR NADA MAS
 
@@ -293,12 +293,21 @@ void iniciarCPU(t_sockets *sockets){
 
 			case 1: 	//INSTRUCCION PARA RECIBIR MSJS
 			{
-				printf("clave: %d \n", header->clave);
-				int id_pcb = shmget(header->clave, sizeof(t_pcb), 0644); //reservo espacio dentro de la seccion de memoria compartida
-				printf("id: %d \n", id_pcb); //imprimo el identificador de la seccion(igual que el del plani)
+				printf("clave: %d \n", header->clave_ruta);
+				long id_pcb = shmget(header->clave_pcb, sizeof(t_pcb), 0644); //reservo espacio dentro de la seccion de memoria compartida
 				t_pcb *PCB;
 				PCB = shmat(id_pcb,0, 0); //creo la variable y la asocio al segmento
+				printf("id_pcb: %d \n", id_pcb); //imprimo el identificador de la seccion(igual que el del plani)
+
 				if (PCB == (t_pcb *)(-1))		//capturo error del shmat
+					perror("shmat");
+
+				long id_ruta = shmget(header->clave_ruta, 4, 0644); //reservo espacio dentro de la seccion de memoria compartida
+				printf("idruta: %d \n",id_ruta);
+				PCB->ruta= shmat(id_ruta, 0, 0); //creo la variable y la asocio al segmento
+				printf("id_ruta: %d \n", id_ruta); //imprimo el identificador de la seccion
+
+				if (PCB->ruta == (char *)(-1))		//capturo error del shmat
 				    perror("shmat");
 
 				printf("%p\n", PCB); //imprimo la direccion de variable local (notese que es difente a la del plani)
@@ -306,10 +315,7 @@ void iniciarCPU(t_sockets *sockets){
 				printf("%d\n", PCB->instructionPointer);
 				printf("%d\n", PCB->numInstrucciones);
 
-				printf("ruta %s\n",PCB->ruta);
-
-				//PCB->PID=4; //modifico el valor (se ve reflejado en el plani
-
+				printf("Ruta: %s\n", PCB->ruta); //imprimo la ruta
 
 				printf("PCB Recibido. PID:%d\n",PCB->PID);
 
