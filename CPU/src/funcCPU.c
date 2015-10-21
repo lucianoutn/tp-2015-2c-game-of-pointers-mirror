@@ -155,7 +155,6 @@ void ejecutoPCB(int socketMemoria, t_pcb *PCB){
 	flag recibi=false;
 
 	//reservo espacio en la memoria para guardar todas las instrucciones del archivo mCod
-	printf("la ruta era: %s", PCB->ruta);
 	leermCod(PCB->ruta,PCB->numInstrucciones);	//primero leo para saber el numero de instrucciones
 	puts("llega");
 	char **instrucciones= (char**)malloc(sizeof(char**) * (PCB->numInstrucciones));
@@ -261,7 +260,7 @@ void ejecutoPCB(int socketMemoria, t_pcb *PCB){
 void iniciarCPU(t_sockets *sockets){
 
 	pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
-	printf("CPU hilo ID: %d conectado", (pthread_t)id);
+	printf("CPU hilo ID: %d conectado", (int)id);
 	int status=1;		// Estructura que manjea el status de los recieve.
 
 	//Estructuras que manejan los datos recibidos
@@ -274,8 +273,6 @@ void iniciarCPU(t_sockets *sockets){
 		sem_wait(semProduccionMsjs); //semaforo productor-consumidor
 		status = recv(sockets->socketPlanificador, header, sizeof(t_headcpu),0);
 		printf("clave: %d", header->clave_pcb);
-
-		//headcpu->tipo_ejecucion=1; //PARA PROBAR NADA MAS
 
 		if(status!=0)	//CONTROLA QUE NO SE PIERDA LA CONEXION
 
@@ -297,16 +294,11 @@ void iniciarCPU(t_sockets *sockets){
 				long id_pcb = shmget(header->clave_pcb, sizeof(t_pcb), 0644); //reservo espacio dentro de la seccion de memoria compartida
 				t_pcb *PCB;
 				PCB = shmat(id_pcb,0, 0); //creo la variable y la asocio al segmento
-				printf("id_pcb: %d \n", id_pcb); //imprimo el identificador de la seccion(igual que el del plani)
-
 				if (PCB == (t_pcb *)(-1))		//capturo error del shmat
 					perror("shmat");
 
-				long id_ruta = shmget(header->clave_ruta, 4, 0644); //reservo espacio dentro de la seccion de memoria compartida
-				printf("idruta: %d \n",id_ruta);
+				long id_ruta = shmget(header->clave_ruta, sizeof(char*), 0644); //reservo espacio dentro de la seccion de memoria compartida
 				PCB->ruta= shmat(id_ruta, 0, 0); //creo la variable y la asocio al segmento
-				printf("id_ruta: %d \n", id_ruta); //imprimo el identificador de la seccion
-
 				if (PCB->ruta == (char *)(-1))		//capturo error del shmat
 				    perror("shmat");
 
@@ -314,7 +306,6 @@ void iniciarCPU(t_sockets *sockets){
 				printf("%d\n", PCB->PID);
 				printf("%d\n", PCB->instructionPointer);
 				printf("%d\n", PCB->numInstrucciones);
-
 				printf("Ruta: %s\n", PCB->ruta); //imprimo la ruta
 
 				printf("PCB Recibido. PID:%d\n",PCB->PID);
