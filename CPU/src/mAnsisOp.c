@@ -32,6 +32,7 @@ char** leermCod(const char* ruta, int * num)
 	//El archivo tiene q estar en la ruta blahblah/CPU/archivo.algo
 	printf("la ruta es: %s",ruta);
 
+
 	printf("imprimo workdirectory donde estoy parado ahora: %s", cwd());
 	printf("la length es: %d", strlen(ruta));
 
@@ -42,8 +43,11 @@ char** leermCod(const char* ruta, int * num)
 	printf("Error %d \n", errno);
 	//printf("fd: %d",fd);
 
+
+
 	if(fd == NULL) printf("Error al abrir el mCod. Path: %s.\n",ruta);
 	/*char **instruccion= (char**)malloc(sizeof(char*)); //solicito espacio en la memoria para el buffer
+
 	int nu=0;
 	while(!feof(fd))
 	{
