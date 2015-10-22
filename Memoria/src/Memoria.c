@@ -61,12 +61,6 @@ int main()
 		int tamanio_memoria_cache = miContexto.tamanioMarco * 4;
 		//t_list * TLB = crearListaTlb();
 	}
-
-	list_add(TLB, reg_tlb_create(0, 1, 0x28823));
-	list_add(TLB, reg_tlb_create(1,2,0x383883));
-	list_add(TLB, reg_tlb_create(2,0,0x923823));
-	int a= list_size(TLB);
-	printf("La TLB tiene %d elementos",a);
  	//Me quedo atenta a las señales, y si las recibe ejecuta esa funcion
 	signal(SIGUSR1,tlbFlush);
 	signal(SIGUSR2,limpiarMemoria);
@@ -103,7 +97,6 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
 	printf("Conexion aceptada Socket= %d \n",socketCPU);
 
-
 	sem_wait(semConexion);
 	// ME CONECTO AL SWAP PARA ENVIARLE LO QUE VOY A RECIBIR DE LA CPU
 	int serverSocket = crearCliente(IP,miContexto.puertoCliente);
@@ -116,38 +109,11 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 
 		printf ("El tipo de ejecucion recibido es %d \n", package->type_ejecution);
 
-		/*
-	  	  if(package->tamanio_msj!=0)
-	  	  {
-		  mensaje = malloc(package->tamanio_msj);
-		  status = recv(socketCPU, mensaje, package->tamanio_msj,0);
-	  	  }
-		 */
-
 		// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
 		ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 	}
-/*
-	t_header * package1 = malloc(sizeof(t_header));
-	package1->type_ejecution=2;
-	package1->PID=1;
-	package1->pagina_proceso=3;
 
-	ejecutoInstruccion(package1, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
-
-	package1->type_ejecution=0;
-	package1->PID=1;
-	package1->pagina_proceso=0;
-
-	ejecutoInstruccion(package1, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
-
-	package1->type_ejecution=0;
-	package1->PID=1;
-	package1->pagina_proceso=1;
-
-	ejecutoInstruccion(package1, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
-*/
-  /* SELECT primera version no borrar
+	/* SELECT primera version no borrar
   do {
      FD_ZERO(&readset); 	//esto abre y limpia la estructura cada vez q se reinicia el select luego de un error
      FD_SET(socketCliente, &readset);
@@ -202,10 +168,4 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
   fin tercera version */
   //FIN SELECT
 
-
-/*
-	close(listenningSocket);
-	close(socketCPU);
-	close(serverSocket); //SWAP
-*/
 }

@@ -124,7 +124,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 						 */
 						char * contenido_a_escribir = malloc(miContexto.tamanioMarco);
 
-						int * status_lectura2 = envioAlSwap(lectura_swap, serverSocket, contenido_a_escribir);
+						int status_lectura2 = envioAlSwap(lectura_swap, serverSocket, contenido_a_escribir);
 						if(status_lectura2 == 1)
 							printf("SE TRAJO CORRECTAMENTE EL CONTENIDO DEL SWAP Y ES ---> %s \n", contenido_a_escribir);
 						else
@@ -132,6 +132,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 
 						// TENGO QUE ASIGNARLE UNA DIRECCION PARA ESCRIBIR AHI, TRAIGO UN MARCO HUECO Y ESCRIBO
 						 t_marco_hueco * marco_a_llenar = list_remove(listaFramesHuecosMemR, 0);
+						marco_a_llenar->direccion_inicio=malloc(miContexto.tamanioMarco);
 						memcpy ( marco_a_llenar->direccion_inicio, contenido_a_escribir, sizeof(contenido_a_escribir));
 						printf("ESCRIBI EN EL MARCO ---> %s \n", contenido_a_escribir);
 						//AGREGO EL MARCO AHORA ESCRITO, A LA LISTA DE MARCOS ESCRITOS
@@ -147,6 +148,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				else
 				{
 					printf("NO ESTA EN SWAP \n");
+					paginaProceso->direccion_fisica=malloc(miContexto.tamanioMarco);
 					memcpy ( paginaProceso->direccion_fisica, mensaje, tamanio_mensaje);
 					printf ("ESCRIBI EN LA PAGINA: %s \n", paginaProceso->direccion_fisica);
 				}
@@ -231,7 +233,7 @@ int leerEnCache(int socketCliente, t_list * TLB)
 		// SI LA ENCONTRO LA LEO Y SE LA ENVIO AL CPU
 		if (registro_tlb != NULL)
 		{
-			send(socketCliente,*(registro_tlb->direccion_fisica) ,sizeof(miContexto.tamanioMarco),0);
+			send(socketCliente,*(registro_tlb->direccion_fisica) ,miContexto.tamanioMarco,0);
 			return 1;
 		}else
 		{
@@ -265,7 +267,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		// SI LA DIRECCION = NULL ES PORQUE ESTA EN SWAP, SINO YA LA ENCONTRE EN MEMORIA
 		if (pagina_proc->direccion_fisica == NULL)
 		{
-			char * contenido = malloc(sizeof(miContexto.tamanioMarco));
+			char * contenido = malloc(miContexto.tamanioMarco);
 			flag = envioAlSwap(package, serverSocket, contenido );
 			//SI TODO SALIO BIEN, EL SWAP CARGO LA PAGINA A LEER EN "CONTENIDO"
 			if(flag)
@@ -273,7 +275,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 				log_info(logger, "Se hizo conexion con swap, se envio paquete a leer y este fue recibido correctamente");
 				lectura(package, tabla_adm, memoria_real, contenido, TLB);
 				// Como la transferencia con el swap fue exitosa, le envio la pagina al CPU
-				send(socketCliente,contenido,sizeof(miContexto.tamanioMarco),0);
+				send(socketCliente,contenido,miContexto.tamanioMarco,0);
 				return 1;
 			}
 			else
@@ -287,7 +289,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 			 * HABRIA QUE PROBAR QUE ONDA
 			 */
 
-			send(socketCliente,*(pagina_proc->direccion_fisica),sizeof(miContexto.tamanioMarco),0);
+			send(socketCliente,*(pagina_proc->direccion_fisica),miContexto.tamanioMarco,0);
 
 			return 1;
 		}
@@ -443,7 +445,7 @@ int envioAlSwap ( t_header * header, int serverSocket, char * contenido)
 		{
 			if(header->type_ejecution==0) //si hice una lectura, devuelve la pag
 			{
-				recv(serverSocket, (void *)contenido, sizeof(miContexto.tamanioMarco),0);
+				recv(serverSocket, (void *)contenido, miContexto.tamanioMarco,0);
 			}
 		}
 
@@ -560,7 +562,9 @@ int verificarTlb (t_list * TLB, int tamanio_msg, char * message, t_header * pagi
 
 	if (registro_tlb != NULL)
 	{
-		memcpy (registro_tlb->direccion_fisica, message, tamanio_msg + 1);
+		//PINCHA ACAAAA NO SE PORQUE!!!
+		registro_tlb->direccion_fisica=malloc(miContexto.tamanioMarco);
+		strcpy (registro_tlb->direccion_fisica, message);
 		printf( "ESCRIBI : %s EN LA PAGINA %d PID %d Y DIRECCION %p \n", registro_tlb->direccion_fisica, registro_tlb->pagina, registro_tlb->pid, registro_tlb->direccion_fisica);
 		return 1;
 		// SI NO LA ENCONTRO RETORNO 0
