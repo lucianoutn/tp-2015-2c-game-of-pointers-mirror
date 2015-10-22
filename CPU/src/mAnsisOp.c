@@ -34,6 +34,7 @@ char** leermCod(const char* ruta, int * num)
 
 
 	printf("imprimo workdirectory donde estoy parado ahora: %s", cwd());
+	puts("prueba");
 	printf("la length es: %d", strlen(ruta));
 
 	errno = 0;
