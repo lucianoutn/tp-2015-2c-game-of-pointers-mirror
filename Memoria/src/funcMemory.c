@@ -50,7 +50,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	switch (registro_prueba->type_ejecution)
 	{
 	 	case 0:
-			printf ("Se recibio orden de lectura\n");
+			printf ("*********************Se recibio orden de lectura*********************\n");
 			/* CUANDO SE RECIBE UNA INSTRUCCION DE LECTURA, PRIMERO SE VERIFICA LA TLB A VER SI YA FUE CARGADA
 			 * RECIENTEMENTE, EN CASO CONTRARIO SE ENVIA AL SWAP, ESTE ME VA A DEVOLVER LA PAGINA A LEER,
 			 * LA MEMORIA LA ALMACENA EN UN MARCO DISPONIBLE PARA EL PROCESO DE LA PAGINA Y ACTUALIZA SUS TABLAS
@@ -74,7 +74,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 		break;
 
 	 	case 1:
-			printf ("Se recibio orden de escritura\n");
+			printf ("*********************Se recibio orden de escritura*********************\n");
 
 			// TRAIGO LA TABLA DEL PROCESO
 			t_list * tablaProceso = obtenerTablaProceso(tabla_adm, registro_prueba->PID);
@@ -156,7 +156,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 
 	 		break;
 	 	case 2:
-	 		printf("Se recibio orden de inicializacion \n");
+	 		printf("*********************Se recibio orden de inicializacion********************* \n");
 	 		iniciarProceso(tabla_adm, registro_prueba);
 
 	 		/* LA INICIALIZACION SE MANDA DIRECO AL SWAP PARA QUE RESERVE ESPACIO,
@@ -176,7 +176,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 
 	 		break;
 	 	case 3:
-			printf ("Se recibio orden de finalizacion de proceso :) \n");
+			printf ("*********************Se recibio orden de finalizacion de proceso :)********************* \n");
 			matarProceso(registro_prueba, tabla_adm, TLB);
 			int flag = envioAlSwap(registro_prueba, serverSocket, NULL );
 
@@ -431,6 +431,11 @@ int envioAlSwap ( t_header * header, int serverSocket, char * contenido)
 		int flag;
 		send(serverSocket, header, sizeof(t_header), 0);
 
+		//SI EL TIPO DE EJECUCION ES ESCRITURA, MANDO EL CONTENIDO
+		if (header->type_ejecution == 1)
+		{
+			send(serverSocket, contenido, header->tamanio_msj, 0);
+		}
 		/*
 		 * Una vez enviado el registro, recibo la notificación por parte del swap.
 	  	 * 0 = Hubo un error.
@@ -604,17 +609,21 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	printf("CREO EL HEADER LECTURA, pid->%d, ejecucion->%d \n", header_lectura->PID, header_lectura->type_ejecution);
 
 	char * contenido = malloc(miContexto.tamanioMarco);
-	int * status_lectura = envioAlSwap(header_lectura, serverSocket, contenido);
+	int status_lectura = envioAlSwap(header_lectura, serverSocket, contenido);
 
-	if (*status_lectura == 1)
+	printf("EL CONTENIDO DE LA PAGINA TRAIDA DEL SWAP PARA SWAPEAR ES --> %s \n", contenido);
+
+	if (status_lectura == 1)
 		printf ("LECTURA - RECIBI FLAG TODO OK \n");
 	else
 		printf ("LECTURA - RECIBI FLAG TODO MAL \n;");
-	/*
+
 	// CONTATENO LO QUE YA TENIA + LO QUE TENGO QUE ESCRIBIR
-	strcpy(paginaASwapear->direccion_fisica, contenido);
-	strcat(paginaASwapear->direccion_fisica, mensaje );
-	*/
+	//strcpy(paginaASwapear->direccion_fisica, contenido);
+
+	strcpy(paginaASwapear->direccion_fisica, mensaje );
+
+	printf("Y ESCRIBI EN MI PAGINA ---> %s \n", mensaje);
 	//process_pag * paginaASwapear
 	//ENVIO AL SWAP LA PAGINA A ESCRIBIR
 	//int status = send(serverSocket, registro_prueba, sizeof(t_header), 0);
