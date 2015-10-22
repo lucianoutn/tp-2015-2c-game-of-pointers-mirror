@@ -107,6 +107,7 @@ void *consola (void* arg)
 				// No se que tan necesario es esto porque nosotros devolvemos el comando ingresado, pero bueno...
 				printf("No se pudo encontrar el comando especificado\n");
 				printf("Ingrese el comando deseado o ayuda para conocer los comandos posibles\n");
+				sem_post(&semConsola);
 				break;
 			}
 			// esto es porque al final de la ejecución de un comando, puede quedar en el flujo estandar el ingreso
