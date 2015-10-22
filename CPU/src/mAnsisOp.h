@@ -12,6 +12,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include "SharedLibs/comun.h"
+#include <errno.h>
 
 /*Funcion que lee el archivo indicado en el parametro ruta y retorna un vector de punteros, en donde
  * cada puntero es una instruccion del archivo. El parametro num indica la cantidad de instrucciones
