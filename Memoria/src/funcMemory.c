@@ -772,9 +772,31 @@ void tlbFlush(t_list * TLB)
  * Cuando se recibe esta señal, se debe limpiar completamente la memoria principal,
  * actualizando los bits que sean necesarios en las tablas de páginas de los diferentes procesos
  */
-void limpiarMemoria()
+void limpiarMemoria(char * memoria_real, t_list * tablaAdm)
 {
-	puts("Recibi SIGUSR2");
+	puts("Recibi SIGUSR2 \n");
+	puts("Voy a limpiar la memoria real\n");
+
+	//Vacio la memoria
+	strcpy(memoria_real,NULL);
+
+	//Actualizo las listas
+	int i = 0, j = 0;
+
+	for(;i<tablaAdm->elements_count;i++) //Recorro la tabla de tablas
+	{
+		//Traigo una tabla
+		t_list * tablaProceso = list_get(tablaAdm,i);
+
+		for(;j<tablaProceso->elements_count;j++) //Recorro la tabla de procesos
+		{
+			process_pag * pagina_proc = list_get(tablaProceso, j); //Traigo una pagina
+
+			//Actualizo la pagina
+			pagina_proc->direccion_fisica = NULL;
+		}
+
+	}
 
 }
 

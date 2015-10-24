@@ -62,9 +62,22 @@ int main()
 		//t_list * TLB = crearListaTlb();
 	}
  	//Me quedo atenta a las señales, y si las recibe ejecuta esa funcion
-	signal(SIGUSR1,tlbFlush);
-	signal(SIGUSR2,limpiarMemoria);
-	signal(SIGPOLL,dumpEnLog);
+	void flush ()
+	{
+		tlbFlush(TLB);
+	}
+	void limpiar()
+	{
+		limpiarMemoria(memoria_real,tablaAdm);
+	}
+	void dump()
+	{
+		dumpEnLog(memoria_real);
+	}
+
+	signal(SIGINT,flush);
+	signal(SIGUSR2,limpiar);
+	signal(SIGPOLL,dump);
 
 	reciboDelCpu(memoria_real, TLB, tablaAdm);
 

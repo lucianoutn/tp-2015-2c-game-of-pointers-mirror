@@ -147,7 +147,7 @@ int removerEntradasTlb(t_list *, t_header*);
 //------SEÑALES QUE TIENE QUE RECIBIR LA MEMORIA-------------//
 void tlbFlush(t_list *);
 
-void limpiarMemoria();
+void limpiarMemoria(char *, t_list*);
 
 void dumpEnLog();
 //-----------------------------------------------------------//
