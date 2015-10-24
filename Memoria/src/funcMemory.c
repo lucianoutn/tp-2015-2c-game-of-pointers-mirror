@@ -61,7 +61,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			// PRIMERO VERIFICO QUE LA TLB ESTE HABILITADA*/
 			if (!strcmp(miContexto.tlbHabilitada, "SI"))
 			{
-				flag=leerEnCache(socketCliente,TLB, registro_prueba->PID, registro_prueba->pagina_proceso);
+				flag=leerDesdeTlb(socketCliente,TLB, registro_prueba->PID, registro_prueba->pagina_proceso);
 				if(!flag)
 				{
 					leerEnMemReal(tabla_adm,TLB, registro_prueba, serverSocket,socketCliente, memoria_real);
@@ -116,10 +116,10 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 						int verific = swapeando(tablaProceso,tabla_adm ,TLB, mensaje, serverSocket, registro_prueba);
 
 					}
-					//SI TENGO ESPACIO PARA TRAERLA, LA TRAIGO Y LA ESCRIBO
+					//SI TENGO ESPACIO PARA TRAERLA (CANT MAX DE MARCOS PARA ESE PROCESO
+					// NO FUE ALCANZADA TODAVÍA), SI ME QUEDA MEMORIA (MARCOS) LA TRAIGO Y LA ESCRIBO
 					else
 					{
-						//printf("TENGO ESPACIO PARA TRAERLA \n");
 						// Creo el header de lectura de una pagina y se lo mando al swap
 						t_header * lectura_swap = crearHeaderLectura(registro_prueba);
 						/* char para guardar el contenido de la pagina que tengo que traer del swap para escribir
@@ -158,22 +158,24 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 		break;
 	 	case 2:
 	 		//printf("*********************Se recibio orden de inicializacion********************* \n");
-	 		iniciarProceso(tabla_adm, registro_prueba);
 
 	 		/* LA INICIALIZACION SE MANDA DIRECO AL SWAP PARA QUE RESERVE ESPACIO,
 	 		   EL FLAG = 1 ME AVISA QUE RECIBIO OK */
-
 	 		flag = envioAlSwap(registro_prueba, serverSocket, NULL);
+	 		bool recibi;
 	 		if(flag)
 	 		{
-	 			bool recibi = true;
-	 			send(socketCliente,&recibi,sizeof(bool),0);
-	 			//log_info(logger, "Se hizo conexion con swap, se envio proceso a iniciar y este fue recibido correctamente");
+	 			//creo todas las estructuras porque el swap ya inicializo
+	 			iniciarProceso(tabla_adm, registro_prueba);
 	 			log_info(logger, "Proceso mProc creado, numero de PID: %d y cantidad de paginas: %d"
 	 											,registro_prueba->PID, registro_prueba->pagina_proceso);
+	 			recibi = true;
+	 			send(socketCliente,&recibi,sizeof(bool),0);
 	 		}
 	 		else
 	 		{
+	 			recibi = false;
+	 			send(socketCliente,&recibi,sizeof(bool),0);
 				log_error(logger, "Hubo un problema con la conexion/envio al swap");
 	 		}
 
@@ -223,7 +225,7 @@ void iniciarProceso(t_list* tabla_adm, t_header * proceso)
 		//printf("FINAL - La tabla de admimistracion de tablas tiene %d nodos \n", tabla_adm->elements_count);
 }
 
-int leerEnCache(int socketCliente, t_list * TLB, int pid, int pagina)
+int leerDesdeTlb(int socketCliente, t_list * TLB, int pid, int pagina)
 {
 	bool _numeroDePid (void * p)
 	{
@@ -608,7 +610,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 {
 	// TRAIGO LA PRIMER PAGINA QUE SE HAYA CARGADO EN MEMORIA, LA ELIMINO Y SE LA ENVIO AL SWAP
 	process_pag * pagina_a_remover = primerPaginaCargada(tablaProceso);
-	log_info(logger, "Voy a buscar una pagina a memoria para swapear porque no tengo lugar en este proceso");
+	log_info(logger, "Acceso a swap: Voy a swapear para traer la pagina %d porque no tengo lugar para este proceso", header->pagina_proceso);
 	sleep(miContexto.retardoMemoria);
 
 	int num_pag_to_remove = pagina_a_remover->pag;
@@ -634,7 +636,6 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	log_info(logger, "Escribo el marco de mi pagina swapeada");
 	sleep(miContexto.retardoMemoria);
 	strcpy(paginaASwapear->direccion_fisica, mensaje );
-
 }
 
 void actualizarTablaProceso(t_list * tabla_proceso, int num_pagina, char * direccion_marco)
