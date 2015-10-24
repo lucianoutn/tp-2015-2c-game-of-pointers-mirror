@@ -145,7 +145,7 @@ process_pag * primerPaginaCargada(t_list*);
 int removerEntradasTlb(t_list *, t_header*);
 
 //------SEÑALES QUE TIENE QUE RECIBIR LA MEMORIA-------------//
-void tlbFlush();
+void tlbFlush(t_list *);
 
 void limpiarMemoria();
 

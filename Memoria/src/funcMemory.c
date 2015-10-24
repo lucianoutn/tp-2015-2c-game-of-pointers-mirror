@@ -747,22 +747,13 @@ t_header * crearHeaderEscritura(int pid, int pagina, int tamanio)
 void tlbFlush(t_list * TLB)
 {
 	puts("Recibi SIGUSR1\n");
-	if(TLB!= NULL)
-	{
-		puts("Recibi la TLB\n");
-	}
-	else
-	{
-		puts("No recibi nada men \n");
-	}
+
 	if (!strcmp(miContexto.tlbHabilitada,"SI"))
 	{
 		puts("Uy, voy a vaciar la TLB\n");
-		int a=list_size(TLB);
-		printf("La TLB tiene %d elementos", a);
-		int tamanioTLB = list_size(TLB);
+		printf("La TLB tiene %d elementos \n", TLB->elements_count);
 		int i=0;
-		for(;i<tamanioTLB;i++)
+		for(;i<TLB->elements_count;i++)
 		{
 			list_remove_and_destroy_element(TLB, i, (void *)reg_tlb_destroy);
 		}
@@ -772,7 +763,8 @@ void tlbFlush(t_list * TLB)
 		puts("La TLB NO esta habilitada campeon.\n");
 	}
 
-	printf("La TLB tiene %d elementos", list_size(TLB));
+	printf("La TLB tiene %d elementos \n", TLB->elements_count);
+	puts("Mostrame esto gato \n");
 }
 
 /*
