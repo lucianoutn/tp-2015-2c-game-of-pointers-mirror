@@ -98,7 +98,7 @@ t_list * obtenerTablaProceso(t_list*, int);
 /* DEVUELVE LA PAGINA DE LA TABLA DEL PROCESO */
 process_pag * obtenerPaginaProceso(t_list *, int);
 
-int leerEnCache(int , t_list * , int, int);
+int leerDesdeTlb(int , t_list * , int, int);
 
 /*
  * Unicamente crea las tablas para manejarlo
