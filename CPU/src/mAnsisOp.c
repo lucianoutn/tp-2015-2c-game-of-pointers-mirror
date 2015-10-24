@@ -27,42 +27,29 @@ char* leerInstruccion(FILE *fd)
 	return buffer;
 }
 
-char** leermCod(const char* ruta, int * num)
+char** leermCod(const char* ruta,unsigned int *num)
 {
-	//El archivo tiene q estar en la ruta blahblah/CPU/archivo.algo
-	printf("la ruta es: %s",ruta);
 
-
-	printf("imprimo workdirectory donde estoy parado ahora: %s", cwd());
-	puts("prueba");
-	printf("la length es: %d", strlen(ruta));
-
-	errno = 0;
-	printf("%s",ruta);
 	FILE *fd;
 	fd = fopen(ruta,"r"); //abro el archivo mCod
-	printf("Error %d \n", errno);
-	//printf("fd: %d",fd);
+	if(fd == NULL)
+		printf("Error al abrir el mCod. Path: %s.\n",ruta);
+	char **instruccion= (char**)malloc(sizeof(char*)); //solicito espacio en la memoria para el buffer
 
-
-
-	if(fd == NULL) printf("Error al abrir el mCod. Path: %s.\n",ruta);
-	/*char **instruccion= (char**)malloc(sizeof(char*)); //solicito espacio en la memoria para el buffer
-
-	int nu=0;
+	int I=0;
 	while(!feof(fd))
 	{
-		instruccion[nu]= (char*)malloc(sizeof(leerInstruccion(fd))); //solicito espacio en la memoria para la instruccion
-		instruccion[nu]= leerInstruccion(fd); //leo la instruccion
-		if(strcmp(instruccion[nu],"fin")==0) //para que no solicite mas espacio en la memoria
+		instruccion[I]= (char*)malloc(sizeof(leerInstruccion(fd))); //solicito espacio en la memoria para la instruccion
+		instruccion[I]= leerInstruccion(fd); //leo la instruccion
+		if(strcmp(instruccion[I],"fin")==0) //para que no solicite mas espacio en la memoria
 		{
 			break;
 		}
-		nu+=1;
-		instruccion= (char**)realloc(instruccion, (nu+1)*sizeof(char*)); //solicito mas espacio en la memoria para buffer
+		I+=1;
+		instruccion= (char**)realloc(instruccion, (I+1)*sizeof(char*)); //solicito mas espacio en la memoria para buffer
 	}
-	*num = nu;
+	*num = I;
 	return instruccion;
-	*/
+
 }
 

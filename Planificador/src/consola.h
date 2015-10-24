@@ -16,7 +16,7 @@
  * LIBRERIA DEDICADA UNICAMENTE A LA CONSOLA
  ********************************************************/
 
-
+#include <ctype.h>
 
 enum Commands
 {

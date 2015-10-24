@@ -48,30 +48,6 @@ void creoHeader(t_pcb * pcb, t_header* header, int ejecucion, int pagina)
 }
 
 
-//se hace directo ahora, no hace falta
-
-/* Recibe un MSJ y arma el PCB correspondiente
- * y lo devuelve (RESERVA MEMORIA)
- */
-/*t_pcb* traduceMsj(t_msjRecibido * msj){
-	t_pcb* pcb = malloc(sizeof(t_pcb));
-	pcb->PID = msj->PID;
-	pcb->instructionPointer = msj->instructionPointer;
-	pcb->numInstrucciones = msj->numInstrucciones;
-	pcb->permisos = msj->permisos;
-	pcb->prioridad = msj->prioridad;
-	pcb->ruta = malloc(20);
-	//copia la ruta y saca el \n, para poder abrir el archivo con fopen sin error
-	int x;
-		for (x = 0; x < 20; x++) {
-			if(msj->ruta[x]!='\n')
-				pcb->ruta[x] = msj->ruta[x];
-			else
-				pcb->ruta[x] = '\0';
-		}
-	return pcb;
-}*/
-
 /* Recibe una palabra y devuelve el valor
  * del tipo de instruccion correspondiente
  * 0=iniciar	1=escribir	2=iniciar
@@ -107,31 +83,32 @@ int palabraAValor(char *palabra)
 int procesaInstruccion(char* instruccion, int *pagina){
 
 	//Inicializo variables y reservo memoria
-	int i=0, j=0, valor;
-	char * palabra=malloc(sizeof(char*) * 20);
-	char * aux =malloc(sizeof(char*) * 4);
-
-	//Borro las variables
-	memset(palabra,'\0',20);
-	memset(aux,'\0',4);
+	int I=0, J=0, valor;
+	char *palabra=(char*) malloc(sizeof(char));
+	char *aux=(char*) malloc(sizeof(char));
 
 	//CONTROLO QUE NO SE TERMINE LA PALABRA
-	while(instruccion[i]!= ' '){
-		if (instruccion[i] == '\0')
+	while(instruccion[I]!= ' ')
+	{
+		if(instruccion[I]== '\0')
 			break;
-		palabra[i]=instruccion[i];
-		i++;
+		palabra[I]=instruccion[I];
+		I++;
+		palabra= (char*)realloc(palabra, (I+1)*sizeof(char));
 	}
-	i++;	//incremento para ver el numero de pagina
+	palabra[I]='\0';
+	valor = palabraAValor(palabra);
 
+	I++;	//incremento para ver el valor de instruccion
 	//CONTROLO QUE NO SE TERMINE LA INSTRUCCION
-	while(instruccion[i] != '\0'){
-		aux[j]=instruccion[i];
-		i++; j++;
+	while(instruccion[I] != '\0')
+	{
+		aux[J]=instruccion[I];
+		aux= (char*)realloc(aux, (J+1)*sizeof(char));
+		I++; J++;
 	}
-	//Convierto a int la cadena
+	//Convierto a int la cadena y guardo el valor para liberar memoria
 	*pagina = atoi(aux);
-	valor = palabraAValor(palabra);	//Guardo el valor para liberar la memoria
 
 	//Libero memoria
 	free(palabra);
@@ -155,17 +132,12 @@ void ejecutoPCB(int socketMemoria, t_pcb *PCB){
 	flag recibi=false;
 
 	//reservo espacio en la memoria para guardar todas las instrucciones del archivo mCod
-	leermCod(PCB->ruta,PCB->numInstrucciones);	//primero leo para saber el numero de instrucciones
-	puts("llega");
-	char **instrucciones= (char**)malloc(sizeof(char**) * (PCB->numInstrucciones));
-
+	//primero leo para saber el numero de instrucciones
+	char **instrucciones= (char**)malloc(sizeof(char*));
 	//guardo las intrucciones
 	instrucciones = (leermCod(PCB->ruta, &PCB->numInstrucciones));
 
-	puts("Ejecutando..."); //Control (para pruebas)
-
 	//CONTROLO INSTRUCCION POR INSTRUCCION QUE NO QUIERA FINALIZAR
-	//while(strcmp(instrucciones[PCB->instructionPointer], "finalizar"))
 	while(PCB->numInstrucciones > PCB->instructionPointer)
 	{
 		//Switch que verifica el tipo de cada instruccion
@@ -260,7 +232,7 @@ void ejecutoPCB(int socketMemoria, t_pcb *PCB){
 void iniciarCPU(t_sockets *sockets){
 
 	pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
-	printf("CPU hilo ID: %d conectado", (int)id);
+	printf("CPU hilo ID: %d conectado\n", (int)id);
 	int status=1;		// Estructura que manjea el status de los recieve.
 
 	//Estructuras que manejan los datos recibidos
@@ -268,11 +240,10 @@ void iniciarCPU(t_sockets *sockets){
 
 	while(status!=0)	//MIENTRAS NO QUIERA SALIR RECIBO INSTRUCCIONES
 	{
-		puts("\n\nEsperando Instrucciones...\n\n");
+		puts("Esperando Instrucciones...\n");
 		//CPU a la espera de nuevas instrucciones
 		sem_wait(semProduccionMsjs); //semaforo productor-consumidor
 		status = recv(sockets->socketPlanificador, header, sizeof(t_headcpu),0);
-		printf("clave: %d", header->clave_pcb);
 
 		if(status!=0)	//CONTROLA QUE NO SE PIERDA LA CONEXION
 
@@ -282,7 +253,6 @@ void iniciarCPU(t_sockets *sockets){
 			case 0:		//INSTRUCCION PARA SALIR
 
 				//FINALIZO CONEXIONES
-				puts("Recibi salir, cierro conexiones\n");
 				puts("FINALIZANDO PROGRAMA\n");
 				status=0;	//Salgo del while
 				sem_post(&semSalir);	//Semaforo que controla la finalizacion de la CPU
@@ -290,27 +260,18 @@ void iniciarCPU(t_sockets *sockets){
 
 			case 1: 	//INSTRUCCION PARA RECIBIR MSJS
 			{
-				printf("clave: %d \n", header->clave_ruta);
-				long id_pcb = shmget(header->clave_pcb, sizeof(t_pcb), 0644); //reservo espacio dentro de la seccion de memoria compartida
+				long id_pcb = shmget(header->clave_pcb, sizeof(t_pcb), 0666); //reservo espacio dentro de la seccion de memoria compartida
 				t_pcb *PCB;
 				PCB = shmat(id_pcb,0, 0); //creo la variable y la asocio al segmento
 				if (PCB == (t_pcb *)(-1))		//capturo error del shmat
 					perror("shmat");
 
-				long id_ruta = shmget(header->clave_ruta, sizeof(char*), 0644); //reservo espacio dentro de la seccion de memoria compartida
+				long id_ruta = shmget(header->clave_ruta, sizeof(char*), 0666); //reservo espacio dentro de la seccion de memoria compartida
 				PCB->ruta= shmat(id_ruta, 0, 0); //creo la variable y la asocio al segmento
 				if (PCB->ruta == (char *)(-1))		//capturo error del shmat
 				    perror("shmat");
 
-				printf("%p\n", PCB); //imprimo la direccion de variable local (notese que es difente a la del plani)
-				printf("%d\n", PCB->PID);
-				printf("%d\n", PCB->instructionPointer);
-				printf("%d\n", PCB->numInstrucciones);
-				printf("Ruta: %s\n", PCB->ruta); //imprimo la ruta
-
 				printf("PCB Recibido. PID:%d\n",PCB->PID);
-
-				puts("hasta aca anda bien");
 
 				ejecutoPCB(sockets->socketMemoria,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
 

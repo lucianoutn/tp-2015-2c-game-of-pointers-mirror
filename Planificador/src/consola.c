@@ -25,12 +25,12 @@ const char* allCommands[] =
 void *consola (void* arg)
 {
 	//variables auxiliares para el uso de la consola
-	char *buffer;
+	//char *buffer;
 	int command;
 	int i,m;
 
 	CPUenUso=false;
-	pthread_t hCPU1;
+	//pthread_t hCPU1;
 
 	system("clear");
 	printf("_____________________________________________________________________________________________\n");
@@ -94,7 +94,7 @@ void *consola (void* arg)
 
 				sem_post(&semSalir);
 				sem_post(&ordenIngresada);
-				return -1;
+				return (int*)-1;
 				break;
 			}
 			case enter:
@@ -107,7 +107,6 @@ void *consola (void* arg)
 				// No se que tan necesario es esto porque nosotros devolvemos el comando ingresado, pero bueno...
 				printf("No se pudo encontrar el comando especificado\n");
 				printf("Ingrese el comando deseado o ayuda para conocer los comandos posibles\n");
-				sem_post(&semConsola);
 				break;
 			}
 			// esto es porque al final de la ejecución de un comando, puede quedar en el flujo estandar el ingreso
@@ -127,7 +126,7 @@ void *consola (void* arg)
 int leeComando(void)
 {
 	int c, i = 0;
-	char palabra[WORD_SIZE] = { NULL };
+	char *palabra=(char*)malloc(sizeof(char)*WORD_SIZE);
 	while ((c = getchar()) != '\n') //leo hasta identificar enter
 	{
 		if (i > WORD_SIZE)
@@ -141,7 +140,7 @@ int leeComando(void)
 		else
 		{
 			// si sigo dentro de rango guardo el caracter en la palabra a comparar con comandos
-			palabra[i] = tolower(c); //guardo el caracter ingresado para concatenar la palabra
+			palabra[i] = (char)tolower(c); //guardo el caracter ingresado para concatenar la palabra
 			// si es mayuscula lo paso a minuscula para no tener que comparar todos los casos
 		}
 		i++;

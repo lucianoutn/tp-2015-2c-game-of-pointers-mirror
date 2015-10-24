@@ -31,24 +31,20 @@ void traigoContexto()
 
 void iniciarPlanificador(t_queue* cola_ready)
 {
-	char ruta[20]; //la ruta es de 20?
-	puts("entre a correr");
+	char *ruta=(char*)malloc(sizeof(char));
 
 	//pido la ruta del archivo
 	puts("Ingrese el nombre del archivo que desea correr:");
 	fflush(stdin);
-	fgets(ruta, 20, stdin);
-
-	//imprimo tamaño de la ruta ingresada
-	printf("Tamaño ruta:%d\nPath:%s\n", sizeof(ruta),ruta);
-	//char *path = (char*)malloc(sizeof(string_substring_from(message, 7)));
+	fgets(ruta, 20, stdin); //20 es el tamaño maximo de la ruta a ingresar
+	int tamanio=strlen(ruta);
+	ruta[tamanio-1]='\0'; //agrego el caracter nulo al final de la ruta para que se indentifique como string.
 
 	//Se crea el PCB y se lo pone en la cola de ready
 	sem_post(&semConsola); // debe ir arriba del procesarPCB para que se aproveche el paralelismo
 	queue_push(cola_ready, procesarPCB(ruta));
 
-
-	puts("PCB procesado y encolado\n");
+	puts("PCB creado y encolado\n");
 
 	//sem_wait(&semSalir); //es para pruebas
 	//free(path);
@@ -82,22 +78,20 @@ void dispatcher(t_queue *cola_ready)
 		t_pcb *pcb = queue_pop(cola_ready);
 		t_headcpu *header = malloc(sizeof(t_headcpu));
 		preparoHeader(header);
-		printf("%p\n", pcb);
-		printf("ruta enviada: %s", pcb->ruta);
-		printf("Instruccion enviada:%d\nSocket:%d\n",header->tipo_ejecucion,conexiones.CPUS[I].socket);
+		//Envio el header
 		send(conexiones.CPUS[I].socket, header, sizeof(t_headcpu),0);
-		//free(msj);
+		puts("PCB enviado a la CPU para procesamiento\n");
 
 		sem_post(semProduccionMsjs);
 		//BLOQUEO HASTA QUE CAMBIE PARA COBRAR
-		while(pcb->PID==2)
+		/*while(pcb->PID==2)
 		{
 			printf("%d\n",pcb->PID);
 		}
 		printf("%d\n",pcb->PID); //CAMBIA!!
-		puts("Mensaje enviado\n");
-		log_info(logger,"Comienzo ejecucion PID: %d Nombre: %s", pcb->PID, pcb->ruta);
+		*/
 
+		log_info(logger,"Comienzo ejecucion PID: %d Nombre: %s", pcb->PID, pcb->ruta);
 
 		//RECIBE RESPUESTA
 		//esta bien que reciba la respuesta el despachador???
@@ -111,7 +105,7 @@ void dispatcher(t_queue *cola_ready)
 
 		//libero la cpu
 		conexiones.CPUS[I].enUso = false;
-	}else{
+		}else{
 		//sino hay cpu disponible no hago nada
 		puts("CPU ocupada");
 
@@ -124,16 +118,13 @@ void dispatcher(t_queue *cola_ready)
 //Funcion que permite procesar el PCB creado a partir del comando correr PATH
 t_pcb* procesarPCB(char *path)
 {
-	//key = ftok("key","a");
-	//printf("key: %d \n",key);
-	long id_pcb = shmget(key_pcb, sizeof(t_pcb),(0644 | IPC_CREAT));//reservo espacio dentro de la seccion de memoria compartida
+	long id_pcb = shmget(key_pcb, sizeof(t_pcb),(0666 | IPC_CREAT));//reservo espacio dentro de la seccion de memoria compartida
 	t_pcb *pcb;
 	pcb = (t_pcb*)shmat(id_pcb, NULL, 0); //creo la variable y la asocio al segmento
 	if (pcb == (t_pcb*)(-1))		//capturo error del shmat
 		perror("shmat");
 
-	printf("pido %d bytes de memoria para la ruta",  sizeof(char)*20);
-	long id_ruta = shmget(key_ruta, sizeof(char*),(0644 | IPC_CREAT)); //reservo espacio dentro de la seccion de memoria compartida
+	long id_ruta = shmget(key_ruta, sizeof(char*),(0666 | IPC_CREAT)); //reservo espacio dentro de la seccion de memoria compartida
 	pcb->ruta = (char*)shmat(id_ruta, NULL, 0); //creo la variable y la asocio al segmento
 	if (pcb->ruta == (char*)(-1))		//capturo error del shmat
 		perror("shmat");
@@ -145,10 +136,7 @@ t_pcb* procesarPCB(char *path)
 	pcb->prioridad=0;
 	pcb->permisos=0;
 	strcpy(pcb->ruta, path);
-	printf("Ruta: %s\n", pcb->ruta);
-	printf("Tamaño de la ruta: %d\n", strlen(pcb->ruta));
 
-	puts("hasta aca");
 	return pcb;
 }
 
@@ -158,7 +146,6 @@ void preparoHeader(t_headcpu *header)
 	header->tipo_ejecucion= 1;	//Orden de envio de pcb
 	header->clave_pcb=key_pcb;
 	header->clave_ruta=key_ruta;
-	//printf("clave: %d \n",header->clave);
 	key_pcb++;
 	key_ruta++;
 	

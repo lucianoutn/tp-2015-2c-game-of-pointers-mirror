@@ -68,7 +68,6 @@ int main() {
 		{
 			case 0: //orden correr
 			{
-				puts("case correr");
 				iniciarPlanificador(cola_ready);
 				dispatcher(cola_ready);
 				/*
@@ -77,7 +76,6 @@ int main() {
 				  cola_bloqueados, cuando termina vuelvo a encolar en la cola_ready
 				 *si termina de procesar el proceso no encolo y mato el pcb
 				*/
-				puts("prueba");
 				break;
 			}
 			case 1: //orden salir
