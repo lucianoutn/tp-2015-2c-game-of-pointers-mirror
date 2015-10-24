@@ -608,7 +608,7 @@ t_tlb * buscarEntradaProcesoEnTlb (t_list * TLB, t_header * pagina, int * posici
 
 int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mensaje, char * serverSocket, t_header * header)
 {
-	// TRAIGO LA PRIMER PAGINA QUE SE HAYA CARGADO EN MEMORIA, LA ELIMINO Y SE LA ENVIO AL SWAP
+	// TRAIGO LA PRIMER PAGINA QUE SE HAYA CARGADO EN MEMORIA, LA PONGO EN NULL Y SE LA ENVIO AL SWAP
 	process_pag * pagina_a_remover = primerPaginaCargada(tablaProceso);
 	log_info(logger, "Acceso a swap: Voy a swapear para traer la pagina %d porque no tengo lugar para este proceso", header->pagina_proceso);
 	sleep(miContexto.retardoMemoria);
@@ -620,22 +620,45 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		return(*(int*)p == num_pag_to_remove);
 	}
 
+	// ESTO ESTA PARA EL ORTO, BUSCAR UNA FORMA MAS EFICIENTE
 	process_pag * paginaASwapear = list_remove_by_condition(tablaProceso, (void*)_numeroDePagina);
+	list_add(tablaProceso, pag_proc_create(paginaASwapear->pag, NULL) );
 
-	t_header * header_escritura = crearHeaderEscritura( header->PID, paginaASwapear->pag, sizeof(paginaASwapear->direccion_fisica));
+	// SI SE TRATA DE UNA ESCRITURA
+	if (header->PID == 1)
+	{
+		t_header * header_escritura = crearHeaderEscritura( header->PID, paginaASwapear->pag, sizeof(paginaASwapear->direccion_fisica));
 
-	int status_escritura = envioAlSwap(header_escritura, serverSocket, "KOLO");
+		int status_escritura = envioAlSwap(header_escritura, serverSocket, mensaje);
 
-	// LE PIDO LA PAGINA QUE QUIERO ESCRIBIR, LA AGREGO AL FINAL DE LA LISTA Y LA ESCRIBO
-	t_header * header_lectura = crearHeaderLectura(header);
+		// LE PIDO LA PAGINA QUE QUIERO ESCRIBIR, LA AGREGO AL FINAL DE LA LISTA Y LA ESCRIBO
+		t_header * header_lectura = crearHeaderLectura(header);
 
-	char * contenido = malloc(miContexto.tamanioMarco);
-	int status_lectura = envioAlSwap(header_lectura, serverSocket, contenido);
+		char * contenido = malloc(miContexto.tamanioMarco);
+		int status_lectura = envioAlSwap(header_lectura, serverSocket, contenido);
 
-	// Escribo en mi pagina swpeada el contenido a escribir
-	log_info(logger, "Escribo el marco de mi pagina swapeada");
-	sleep(miContexto.retardoMemoria);
-	strcpy(paginaASwapear->direccion_fisica, mensaje );
+		int num_pag = header->pagina_proceso;
+
+		bool _numeroDePag (void * p)
+		{
+			return(*(int*)p == num_pag);
+		}
+
+		process_pag * paginaAEscribir = list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
+		list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica));
+
+		// Escribo en mi pagina swapeada el contenido a escribir
+		log_info(logger, "Escribo el marco de mi pagina swapeada para escribir");
+		sleep(miContexto.retardoMemoria);
+		strcpy(paginaASwapear->direccion_fisica, mensaje );
+		// SI SE TRATA DE UNA LECTURA
+	}else if(header->PID ==0)
+	{
+		int status_lectura = envioAlSwap(header, serverSocket, NULL);
+		log_info(logger, "Escribo el marco de mi pagina swapeada para leer");
+		sleep(miContexto.retardoMemoria);
+		strcpy(paginaASwapear->direccion_fisica, mensaje );
+	}
 }
 
 void actualizarTablaProceso(t_list * tabla_proceso, int num_pagina, char * direccion_marco)
