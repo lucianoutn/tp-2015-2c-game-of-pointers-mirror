@@ -98,7 +98,7 @@ t_list * obtenerTablaProceso(t_list*, int);
 /* DEVUELVE LA PAGINA DE LA TABLA DEL PROCESO */
 process_pag * obtenerPaginaProceso(t_list *, int);
 
-int leerEnCache(int , t_list * );
+int leerEnCache(int , t_list * , int, int);
 
 /*
  * Unicamente crea las tablas para manejarlo
@@ -128,7 +128,7 @@ void actualizarTlb(int, int, char*, t_list *);
 void actualizarTablaProceso(t_list *, int ,char*);
 
 // BUSCO Y RETORNO EL REGISTRO DE LA TLB BUSCADO EN EL CASO DE ENCONTRARLO, SINO RETORNO NULL
-t_tlb * buscarEntradaProcesoEnTlb (t_list*, t_header *);
+t_tlb * buscarEntradaProcesoEnTlb (t_list*, t_header *, int*);
 
 
 // CUANDO TENGO QUE ESCRIBIR, Y TENGO ESPACIO PARA GUARDAR LA PAGINA (NO TENGO QUE SWAPEAR), SOLO LE MANDO UN T_HEADER DE TIPO LECTURA AL SWAP
@@ -139,7 +139,7 @@ t_header * crearHeaderLectura(t_header*);
 t_header * crearHeaderEscritura(int, int, int);
 
 // OBTENGO LA PRIMER PAGINA QUE FUE CARGADA EN MEMORIA
-// SI POR ALGUN MOTIVO NO LA ENCONTRO, RETORNO NULL
+// SI POR ALGUN MOTIVO NO LA ENCONTRO, RETORNO NULL (SIRVE SI ESTOY USANDO FIFO)
 process_pag * primerPaginaCargada(t_list*);
 
 int removerEntradasTlb(t_list *, t_header*);
