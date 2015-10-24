@@ -113,6 +113,11 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 					if ( marcosProcesoLlenos(tablaProceso))
 					{
 						//printf("NO TENGO LUGAR PARA GUARDARLA, TENGO QUE SWAPEAR \n");
+						/*
+						 * KOLO!
+						 * Fijate que con este verific no estas haciendo nada
+						 * y tendrias que validar si estas swapeando bien para seguir.
+						 */
 						int verific = swapeando(tablaProceso,tabla_adm ,TLB, mensaje, serverSocket, registro_prueba);
 
 					}
@@ -134,7 +139,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 						marco_a_llenar->direccion_inicio=malloc(miContexto.tamanioMarco);
 						log_info(logger, "Traje la pagina del swap, voy a escribir el marco %d", marco_a_llenar->numero_marco);
 						sleep(miContexto.retardoMemoria);
-						memcpy ( marco_a_llenar->direccion_inicio, contenido_a_escribir, sizeof(contenido_a_escribir));
+						memcpy ( marco_a_llenar->direccion_inicio, contenido_a_escribir, strlen(contenido_a_escribir));
 
 						//AGREGO EL MARCO AHORA ESCRITO, A LA LISTA DE MARCOS ESCRITOS
 						list_add(listaFramesMemR, marco_a_llenar);
@@ -328,16 +333,16 @@ t_list * obtenerTablaProceso(t_list * tabla_adm, int pid)
 	{
 		return(*(int *)p == pid);
 	}
-
-	int flag;
 	t_tabla_adm * reg_tabla_tablas = list_find(tabla_adm, (void*)_numeroDePid);
 
 	// SI ENCONTRO UN REGISTRO CON ESE PID
 	if (reg_tabla_tablas != NULL)
 	{
-		//printf("Encontro la tabla, el pid es %d, la direccion %p \n", reg_tabla_tablas->pid, reg_tabla_tablas->direc_tabla_proc);
+		/*
+		printf("Encontro la tabla, el pid es %d, la direccion %p \n", reg_tabla_tablas->pid, reg_tabla_tablas->direc_tabla_proc);
 		int c =(reg_tabla_tablas->direc_tabla_proc)->elements_count;
-		//printf ("cantidad de elementos: %d \n", c);
+		printf ("cantidad de elementos: %d \n", c);
+		*/
 		// TRAIGO LA TABLA DEL PROCESO Y LA DEVUELVO
 		return reg_tabla_tablas->direc_tabla_proc;
 	}
@@ -353,7 +358,6 @@ t_list * obtenerTablaProceso(t_list * tabla_adm, int pid)
 
 			return NULL;
 
-			/*
 			char * contenido = malloc(sizeof(miContexto.tamanioMarco));
 			flag = envioAlSwap(package, serverSocket, contenido );
 			//SI TODO SALIO BIEN, EL SWAP CARGO LA PAGINA A LEER EN "CONTENIDO"
@@ -373,7 +377,6 @@ t_list * obtenerTablaProceso(t_list * tabla_adm, int pid)
 
 		}else // SI NO ESTA EN SWAP, YA CONOZCO LA DIRECCION DE SU MARCO //
 		{
-			/*
 			memcpy ( pagina_proc->direccion_fisica, "Hola Man", 8);
 			printf ("Escribi en el puntero: %s \n", pagina_proc->direccion_fisica);
 			return 1;
@@ -414,15 +417,7 @@ void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_rea
 	process_pag * pagina_proceso = list_find(lista_proceso,(void*)numeroDePaginaIgualA);
 	pagina_proceso->pag = proceso_entrante->pagina_proceso;
 	pagina_proceso->direccion_fisica = marco_vacio->direccion_inicio;
-	/*
-	 * KOLO!
-	 * Aca como ya la agregue a la lista, tendria que buscarlo y rellenar con los valores correspondientes
-	 *
-	 * 	process_pag * pagina_proceso = malloc(sizeof(process_pag));
-	  	pagina_proceso->pag = proceso_entrante->pagina_proceso;
-		pagina_proceso->direccion_fisica = marco_vacio->direccion_inicio;
-		list_add(lista_proceso,pagina_proceso);.
-	 */
+
 	// VERIFICO QUE HAYA AGREGADO LA PAGINA A LA TABLA
 	printf("LA CANTIDAD DE PAGINAS EN MI TABLA DE PAGINAS ES %d \n", lista_proceso->elements_count);
 
@@ -444,6 +439,10 @@ void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_rea
 	// SI LA TLB ESTA HABILITADA Y NO ESTA LLENA, ENTONCES LE CREO LA ENTRADA DE LA PAGINA LEIDA
 	if( !strcmp(miContexto.tlbHabilitada, "SI") && !tlbLlena(TLB))
 	{
+		/*
+		 * KOLO!!!
+		 * OKEY, LA CREAS, PERO NO LA AGREGAS A NINGUN LADO Y ESE PUNTERO LO PERDES
+		 */
 	 	t_tlb * entrada_tlb = reg_tlb_create(proceso_entrante->PID, proceso_entrante->pagina_proceso, pagina_proceso->direccion_fisica);
 	 	// VERIFICO LA CANTIDAD DE ELEMENTOS, A VER SI LO ESTOY HACIENDO BIEN
 	 	printf("LA TLB TIENE %d ELEMENTOS \n", TLB->elements_count);
@@ -512,7 +511,6 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB)
 		return(*(int *)p == numero_de_pid);
 	}
 
-	int flag;
 	t_tabla_adm * registro_tabla_proc = list_find(tabla_adm, (void*)_numeroDePid);
 
 	if (registro_tabla_proc != NULL)
@@ -555,10 +553,17 @@ int removerEntradasTlb(t_list * TLB, t_header * header)
 	while ( list_find(TLB,(void*)_numeroDePid) != NULL )
 	{
 		printf("ELEMENTOS DE LA TLB ANTES DE MATAR -> %d \n", TLB->elements_count);
-		t_tlb * entrada_tlb = list_remove_by_condition(TLB,(void*)_numeroDePid);
+		list_remove_by_condition(TLB,(void*)_numeroDePid);
 		printf("ELEMENTOS DE LA TLB DESPUES DE MATAR -> %d \n", TLB->elements_count);
 	}
 
+	/*
+	 * KOLO!!
+	 * Hay que agregar un return, le puse un 1 aca
+	 * pero no se en donde deberia retornar que hizo todo bien
+	 * y en donde si no funciono.
+	 */
+	return 1;
 }
 
 int verificarTlb (t_list * TLB, int tamanio_msg, char * message, t_header * pagina)
@@ -605,8 +610,13 @@ t_tlb * buscarEntradaProcesoEnTlb (t_list * TLB, t_header * pagina, int * posici
 	}
 	return NULL;
 }
-
-int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mensaje, char * serverSocket, t_header * header)
+/*
+ * KOLO!
+ * FALTAN VALIDACIONES PARA CHEQUEAR QUE SE HAGAN LAS COSAS
+ * SOLAMENTE SI EL ENVIO AL SWAP FUNCIONO.
+ * FIJATE LOS WARNINGS, QUE NO ESTAS USANDO PARA NADA LOS STATUS_LECTURA Y ESCRITURA
+ */
+int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mensaje, int serverSocket, t_header * header)
 {
 	// TRAIGO LA PRIMER PAGINA QUE SE HAYA CARGADO EN MEMORIA, LA PONGO EN NULL Y SE LA ENVIO AL SWAP
 	process_pag * pagina_a_remover = primerPaginaCargada(tablaProceso);
@@ -659,6 +669,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		sleep(miContexto.retardoMemoria);
 		strcpy(paginaASwapear->direccion_fisica, mensaje );
 	}
+	return 1;
 }
 
 void actualizarTablaProceso(t_list * tabla_proceso, int num_pagina, char * direccion_marco)
@@ -801,7 +812,7 @@ void limpiarMemoria(char * memoria_real, t_list * tablaAdm)
 	puts("Voy a limpiar la memoria real\n");
 
 	//Vacio la memoria
-	strcpy(memoria_real,NULL);
+	strcpy(memoria_real,"\0");
 
 	//Actualizo las listas
 	int i = 0, j = 0;
@@ -843,7 +854,7 @@ process_pag * pag_proc_create (int pagina, char * direccion_fisica)
  return reg_pagina;
 }
 
-static void pag_proc_destroy(process_pag * self)
+void pag_proc_destroy(process_pag * self)
 {
  free(self);
 }

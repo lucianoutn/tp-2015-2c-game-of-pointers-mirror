@@ -109,7 +109,7 @@ void iniciarProceso();
 /* BUSCA SI LA PAGINA A ESCRIBIR YA ESTA CARGADA EN TLB, SI LO ESTA LA ESCRIBE Y DEVUELVE 1, SINO DEVUELVE 0 */
 int verificarTlb (t_list *,int, char*, t_header *);
 
-int swapeando(t_list*, t_list* , t_list *, char *, char *, t_header *);
+int swapeando(t_list*, t_list* , t_list *, char *, int, t_header *);
 
 // LE MANDO LA TABLA DEL PROCESO Y ME DEVUELVE 1 SI YA TIENE TODOS SUS MARCOS DISPONIBLES OCUPADOS
 int marcosProcesoLlenos(t_list *);
@@ -156,7 +156,7 @@ void dumpEnLog();
 /* PASAR A MANEJOLISTAS */
 process_pag * pag_proc_create(int, char*);
 
-static void pag_proc_destroy(process_pag *);
+void pag_proc_destroy(process_pag *);
 /* ---------------------*/
 
 #endif /* SRC_FUNCMEMORY_H_ */
