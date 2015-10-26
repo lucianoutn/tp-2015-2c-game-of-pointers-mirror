@@ -138,7 +138,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							if (listaFramesHuecosMemR->elements_count != 0)
 							{
 								t_marco_hueco * marco_a_llenar = list_remove(listaFramesHuecosMemR, 0);
-								marco_a_llenar->direccion_inicio=malloc(miContexto.tamanioMarco);
+								//marco_a_llenar->direccion_inicio=malloc(miContexto.tamanioMarco);
 								log_info(logger, "Traje la pagina del swap, voy a escribir el marco %d", marco_a_llenar->numero_marco);
 								sleep(miContexto.retardoMemoria);
 								memcpy ( marco_a_llenar->direccion_inicio, contenido_a_escribir, strlen(contenido_a_escribir));
@@ -478,12 +478,17 @@ int envioAlSwap ( t_header * header, int serverSocket, char * contenido)
 		//recv(serverSocket,(void*)devuelvo,sizeof(t_devuelvo),0);
 		recv(serverSocket, &flag, sizeof(int),0);
 
-		if(flag) //si no hubo error
+		if(flag==1) //si no hubo error
 		{
+			puts("Recibi sin error");
 			if(header->type_ejecution==0) //si hice una lectura, devuelve la pag
 			{
 				recv(serverSocket, (void *)contenido, miContexto.tamanioMarco,0);
 			}
+		}
+		else
+		{
+			puts("Recibi con error");
 		}
 
 		//close(serverSocket);
@@ -646,7 +651,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	list_add(tablaProceso, pag_proc_create(paginaASwapear->pag, NULL) );
 
 	// SI SE TRATA DE UNA ESCRITURA
-	if (header->PID == 1)
+	if (header->type_ejecution == 1)
 	{
 		t_header * header_escritura = crearHeaderEscritura( header->PID, paginaASwapear->pag, miContexto.tamanioMarco);
 
@@ -684,7 +689,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		else
 			return 0;
 		// SI SE TRATA DE UNA LECTURA
-	}else if(header->PID ==0)
+	}else if(header->type_ejecution ==0)
 	{
 		int status_lectura = envioAlSwap(header, serverSocket, NULL);
 		log_info(logger, "Escribo el marco de mi pagina swapeada para leer");
