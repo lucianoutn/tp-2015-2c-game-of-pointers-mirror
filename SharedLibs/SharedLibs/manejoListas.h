@@ -104,11 +104,11 @@ static void package_destroy(t_header *);
 // -------- MEMORIA --------------------------//
 t_marco * marco_create (char *, int);
 
-static void marco_destroy(t_marco *);
+void marco_destroy(t_marco *);
 
 t_marco_hueco * marco_hueco_create (char * direc_mem, int);
 
-static void marco_hueco_destroy(t_marco_hueco * self);
+void marco_hueco_destroy(t_marco_hueco * self);
 
 t_tlb * reg_tlb_create (int pid, int marco, char * direc_mem);
 

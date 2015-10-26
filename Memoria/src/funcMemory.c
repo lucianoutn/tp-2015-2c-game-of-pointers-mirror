@@ -881,7 +881,9 @@ void limpiarMemoria(char * memoria_real, t_list * tablaAdm)
 	for(;i<tablaAdm->elements_count;i++) //Recorro la tabla de tablas
 	{
 		//Traigo una tabla
-		t_list * tablaProceso = list_get(tablaAdm,i);
+		t_tabla_adm * entrada_tabla_tablas = list_get(tablaAdm,i);
+
+		t_list * tablaProceso = entrada_tabla_tablas->direc_tabla_proc;
 
 		for(;j<tablaProceso->elements_count;j++) //Recorro la tabla de procesos
 		{
@@ -893,6 +895,14 @@ void limpiarMemoria(char * memoria_real, t_list * tablaAdm)
 
 	}
 
+	//Actualizo marcos
+
+	list_destroy_and_destroy_elements(listaFramesMemR,(void *)marco_destroy);
+	list_destroy_and_destroy_elements(listaFramesHuecosMemR,(void *)marco_hueco_destroy);
+	listaFramesMemR = crearListaFrames();
+	listaFramesHuecosMemR = crearListaHuecosFrames(miContexto.cantidadMarcos, miContexto.tamanioMarco, memoria_real);
+
+	puts("Mostrame esto");
 }
 
 /*
@@ -900,9 +910,10 @@ void limpiarMemoria(char * memoria_real, t_list * tablaAdm)
  * en el archivo log de Administrador de Memoria, creando para tal fin un proceso nuevo.
  * Se recomienda usar fork().
  */
-void dumpEnLog()
+void dumpEnLog(char * memoria_real, t_list * tablaAdm)
 {
 	puts("Recibi SIGPOLL");
+
 }
 //-----------------------------------------------------------//
 

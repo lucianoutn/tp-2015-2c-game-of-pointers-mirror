@@ -68,7 +68,7 @@ t_marco * marco_create (char * direccion_inicio, int num_marco)
  return frame;
 }
 
-static void marco_destroy(t_marco * self)
+void marco_destroy(t_marco * self)
 {
  free(self);
 }
@@ -81,7 +81,7 @@ t_marco_hueco * marco_hueco_create (char * direccion_inicio, int num_marco)
  return frame;
 }
 
-static void marco_hueco_destroy(t_marco_hueco * self)
+void marco_hueco_destroy(t_marco_hueco * self)
 {
  free(self);
 }
