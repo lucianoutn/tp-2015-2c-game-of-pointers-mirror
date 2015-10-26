@@ -94,7 +94,7 @@ void *consola (void* arg)
 
 				sem_post(&semSalir);
 				sem_post(&ordenIngresada);
-				return (int*)-1;
+				//return (int*)-1; no tiene q retornar nada
 				break;
 			}
 			case enter:
@@ -107,6 +107,7 @@ void *consola (void* arg)
 				// No se que tan necesario es esto porque nosotros devolvemos el comando ingresado, pero bueno...
 				printf("No se pudo encontrar el comando especificado\n");
 				printf("Ingrese el comando deseado o ayuda para conocer los comandos posibles\n");
+				sem_post(&semConsola); //para cuando no reconoce el comando
 				break;
 			}
 			// esto es porque al final de la ejecución de un comando, puede quedar en el flujo estandar el ingreso
