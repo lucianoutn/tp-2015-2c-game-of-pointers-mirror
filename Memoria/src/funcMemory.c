@@ -166,7 +166,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 						log_info(logger, "Encontre la pagina en memoria, la escribo y acualizo tlb");
 						sleep(miContexto.retardoMemoria);
 						memcpy ( paginaProceso->direccion_fisica, mensaje, tamanio_mensaje);
-						actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, registro_prueba->tamanio_msj);
+						actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
 					}
 			}
 	 		break;
@@ -262,7 +262,7 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, int pid, int pagina)
 		// SI LA ENCONTRO LA LEO Y SE LA ENVIO AL CPU
 		if (registro_tlb != NULL)
 		{
-			send(socketCliente,*(registro_tlb->direccion_fisica) ,miContexto.tamanioMarco,0);
+			send(socketCliente,registro_tlb->direccion_fisica,miContexto.tamanioMarco,0);
 			return 1;
 		}else
 		{
@@ -417,7 +417,7 @@ void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_rea
 
 	// TRAIGO EL PRIMER MARCO VACIO DE MI MEMORIA PARA ALMACENAR EL CONTENIDO A LEER
 	printf ("LA LISTA DE FRAMES HUECOS TIENE %d ELEMENTOS \n", listaFramesHuecosMemR->elements_count);
-	t_marco_hueco * marco_vacio = listaFramesHuecosMemR->head;
+	t_marco_hueco * marco_vacio = (t_marco_hueco*)listaFramesHuecosMemR->head;
 	printf("LA DIRECCION DE MI MARCO VACIO ES %p \n", marco_vacio->direccion_inicio);
 
 	// preguntar!! CREO LA ENTRADA DE LA PAGINA A LA TABLA DE PROCESO
@@ -452,8 +452,8 @@ void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_rea
 		 * KOLO!!!
 		 * OKEY, LA CREAS, PERO NO LA AGREGAS A NINGUN LADO Y ESE PUNTERO LO PERDES
 		 */
-	 	t_tlb * entrada_tlb = reg_tlb_create(proceso_entrante->PID, proceso_entrante->pagina_proceso, pagina_proceso->direccion_fisica);
-	 	// VERIFICO LA CANTIDAD DE ELEMENTOS, A VER SI LO ESTOY HACIENDO BIEN
+	 	actualizarTlb(proceso_entrante->PID, proceso_entrante->pagina_proceso, pagina_proceso->direccion_fisica, TLB);
+		// VERIFICO LA CANTIDAD DE ELEMENTOS, A VER SI LO ESTOY HACIENDO BIEN
 	 	printf("LA TLB TIENE %d ELEMENTOS \n", TLB->elements_count);
 	}
 
@@ -629,7 +629,7 @@ t_tlb * buscarEntradaProcesoEnTlb (t_list * TLB, t_header * pagina, int * posici
 int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mensaje, int serverSocket, t_header * header)
 {
 	// TRAIGO LA PRIMER PAGINA QUE SE HAYA CARGADO EN MEMORIA, LA PONGO EN NULL Y SE LA ENVIO AL SWAP
-	process_pag * pagina_a_remover = primerPaginaCargada(tablaProceso);
+	process_pag * pagina_a_remover = traerPaginaARemover(tablaProceso);
 	log_info(logger, "Acceso a swap: Voy a swapear para traer la pagina %d porque no tengo lugar para este proceso", header->pagina_proceso);
 	sleep(miContexto.retardoMemoria);
 
@@ -649,8 +649,8 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	if (header->PID == 1)
 	{
 		t_header * header_escritura = crearHeaderEscritura( header->PID, paginaASwapear->pag, miContexto.tamanioMarco);
-		// ESTA BIEN MANDADO LO QUE ESTA ESCRITO EN LA PAGINA ASI? paginaASwapear->direccion_fisica !!!!!!!!!
-		int status_escritura = envioAlSwap(header_escritura, serverSocket, NULL);
+
+		int status_escritura = envioAlSwap(header_escritura, serverSocket, paginaASwapear->direccion_fisica);
 
 		// LE PIDO LA PAGINA QUE QUIERO ESCRIBIR, LA AGREGO AL FINAL DE LA LISTA Y LA ESCRIBO
 		t_header * header_lectura = crearHeaderLectura(header);
@@ -665,9 +665,14 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 			return(*(int*)p == num_pag);
 		}
 
-		// La agrego al final con la direccion del marco de la pagina que swapee
-		process_pag * paginaAEscribir = list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
+
+		// La agrego al final con la direccion del marco de la pagina que swapee ( ALGORITMO FIFO )
+		if ( !strcmp(miContexto.algoritmoReemplazo, "FIFO"))
+		{
+		list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
 		list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica));
+		} // SINO VEO LOS OTRO ALGORITMOS  ( DESPUES VEO )
+
 
 		// Escribo en mi pagina swapeada el contenido a escribir
 		log_info(logger, "Escribo el marco de mi pagina swapeada para escribir");
@@ -718,6 +723,25 @@ void actualizarTablaProceso(t_list * tabla_proceso, int num_pagina, char * direc
 	process_pag * pagina = pag_proc_create(num_pagina, direccion_marco);
 	list_add(tabla_proceso,pagina);
 }
+
+process_pag * traerPaginaARemover(t_list * tablaProceso)
+{
+	// SI ALGORITMO == FIFO
+	if (!strcmp(miContexto.algoritmoReemplazo, "FIFO"))
+	{
+		return primerPaginaCargada(tablaProceso);
+	// SI ALGIRTMO == CLOCK
+	}else if (!strcmp(miContexto.algoritmoReemplazo, "CLOCK"))
+	{
+		// return
+	// SI ALGORITMO == LRU
+	}else
+	{
+
+	}
+	return NULL;
+}
+
 
 process_pag * primerPaginaCargada(t_list * tablaProceso)
 {
@@ -788,10 +812,7 @@ void actualizarTlb (int pid, int pagina, char * direccion_memoria, t_list * TLB)
 			// SI ESTA LLENA, REMUEVO EL PRIMER ELEMENTO Y AGREGO EL RECIEN USADO AL FINAL
 		}else
 		{
-			t_tlb * prueba_tlb1 = list_get(TLB, 0);
-			printf("----- pag = %d \n", prueba_tlb1->pagina);
-			list_remove_and_destroy_element(TLB, 0, free); // ESTA BIEN USADO EL FREE AHI?
-			t_tlb * prueba_tlb = list_get(TLB, 0);
+			list_remove_and_destroy_element(TLB, 0, (void*)reg_tlb_destroy);
 			list_add(TLB, reg_tlb_create(pid, pagina, direccion_memoria));
 		}
 	}

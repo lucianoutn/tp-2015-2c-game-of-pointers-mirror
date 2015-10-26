@@ -142,6 +142,9 @@ t_header * crearHeaderEscritura(int, int, int);
 // SI POR ALGUN MOTIVO NO LA ENCONTRO, RETORNO NULL (SIRVE SI ESTOY USANDO FIFO)
 process_pag * primerPaginaCargada(t_list*);
 
+// DEVUELVE LA PAGINA CORRESPONDIENTE PARA REMOVER DEPENDIENDO DEL ALGORITMO
+process_pag * traerPaginaARemover(t_list *);
+
 int removerEntradasTlb(t_list *, t_header*);
 
 //------SEÑALES QUE TIENE QUE RECIBIR LA MEMORIA-------------//
