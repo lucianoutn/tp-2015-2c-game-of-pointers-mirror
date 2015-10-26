@@ -90,11 +90,9 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	int socketCPU;
 	int resultadoSelect;
 	fd_set readset;
-	t_header * package = malloc(sizeof(t_header));
-	char * mensaje=malloc(11);
 	int status = 1;
 	sem_t *semConexion= sem_open("semConexion", 0);
-
+/*
 	//CONEXION AL CPU
 	int listenningSocket=crearServer(miContexto.puertoServidor);
 
@@ -109,12 +107,12 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	socketCPU = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen);
 	printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
 	printf("Conexion aceptada Socket= %d \n",socketCPU);
-
+*/
 	sem_wait(semConexion);
 	// ME CONECTO AL SWAP PARA ENVIARLE LO QUE VOY A RECIBIR DE LA CPU
 	int serverSocket = crearCliente(IP,miContexto.puertoCliente);
 	sem_post(semConexion);
-
+/*
 	while(status!=0)
 	{
 		// RECIBO EL PAQUETE(t_header) ENVIADO POR LA CPU
@@ -125,6 +123,48 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 		// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
 		ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 	}
+*/
+	t_header * package = package_create(2,15,5,0);
+	char * mensaje_inicializacion = malloc(1);
+	ejecutoInstruccion(package, mensaje_inicializacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	t_header * package_escritura = package_create(1,15,1,strlen("Hola"));
+	char * mensaje_escritura = malloc(5);
+	strcpy(mensaje_escritura,"Hola");
+	ejecutoInstruccion(package_escritura, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	t_header * package_finalizacion = package_create(3,15,0,0);
+	char * mensaje_finalizacion = malloc(1);
+	ejecutoInstruccion(package_finalizacion, mensaje_finalizacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+//***********************************************************
+	t_header * package1 = package_create(2,10,3,0);
+	char * mensaje_inicializacion1 = malloc(1);
+	ejecutoInstruccion(package1, mensaje_inicializacion1, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	t_header * package_escritura1 = package_create(1,10,0,strlen("Hola"));
+	char * mensaje_escritura1 = malloc(5);
+	strcpy(mensaje_escritura1,"Hola");
+	ejecutoInstruccion(package_escritura1, mensaje_escritura1, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	t_header * package_escritura2 = package_create(1,10,0,strlen("Hola"));
+	char * mensaje_escritura2 = malloc(5);
+	strcpy(mensaje_escritura2,"CHAU");
+	ejecutoInstruccion(package_escritura2, mensaje_escritura2, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	t_header * package_escritura3 = package_create(1,10,1,strlen("Hola"));
+	char * mensaje_escritura3 = malloc(5);
+	strcpy(mensaje_escritura3,"LKJH");
+	ejecutoInstruccion(package_escritura3, mensaje_escritura3, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	t_header * package_escritura9 = package_create(1,10,2,strlen("Hola"));
+	char * mensaje_escritura9 = malloc(5);
+	strcpy(mensaje_escritura9,"ASDD");
+	ejecutoInstruccion(package_escritura9, mensaje_escritura9, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	t_header * package_finalizacion1 = package_create(3,10,0,0);
+	char * mensaje_finalizacion1 = malloc(1);
+	ejecutoInstruccion(package_finalizacion1, mensaje_finalizacion1, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
 
 	/* SELECT primera version no borrar
   do {
