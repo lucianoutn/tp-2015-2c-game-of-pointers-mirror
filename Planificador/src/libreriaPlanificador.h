@@ -62,6 +62,7 @@ typedef struct{
 typedef struct{
 	char * puertoEscucha;
 	char * algoritmoPlanificacion;
+	int quantum;
 } contexto;
 
 //Flag

@@ -26,6 +26,7 @@ void traigoContexto()
  // OBTENGO CONFIGURACION DEL CONFIG /
  miContexto.puertoEscucha = config_get_string_value(config_planificador, "PUERTO_ESCUCHA" );
  miContexto.algoritmoPlanificacion = config_get_string_value(config_planificador, "ALGORITMO_PLANIFICACION" );
+ miContexto.quantum= config_get_int_value(config_planificador, "QUANTUM" );
 }
 
 
@@ -58,7 +59,7 @@ void dispatcher(t_queue *cola_ready)
 	 * Para poder entender los distintos tipos de mensajes que se envia, mandamos primero
 	 * un header t_headcpu.
 	 * tipo_ejecucion: 0 - salir
-	 *  1 - correr programa
+	 * 				   1 - correr programa
 	 * 				   envia PCB
 	 * tamanio_mensaje: tamanio del char * o del PCB
 	 */
@@ -107,7 +108,7 @@ void dispatcher(t_queue *cola_ready)
 		conexiones.CPUS[I].enUso = false;
 		}else{
 		//sino hay cpu disponible no hago nada
-		puts("CPU ocupada");
+		puts("CPUs ocupadas");
 
 		//deberia volver a ejecutar el despachador o mandar algun aviso que esta ocupado???
 
