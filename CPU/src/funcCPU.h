@@ -24,6 +24,8 @@
 #include <pthread.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <fcntl.h>           /* para las constantes O_* de los semaforos ipc  */
+#include <sys/stat.h>        /* para las constantes de modo de los semaforos ipc */
 
 typedef int pid;
 
@@ -67,6 +69,7 @@ typedef struct {
 
 sem_t semSalir;
 sem_t *semProduccionMsjs;
+sem_t *semRespuestaCpu;
 
 //preparo semaforos.lucho
 pthread_mutex_t mutex;

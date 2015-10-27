@@ -71,6 +71,7 @@ typedef bool flag;
 sem_t semSalir;
 sem_t semEsperaCPU;
 sem_t *semProduccionMsjs;
+sem_t *semRespuestaCpu;
 sem_t ordenIngresada;
 sem_t semConsola;
 

@@ -196,6 +196,11 @@ void ejecutoPCB(int socketMemoria, t_pcb *PCB){
 					else
 						puts("Error");
 					printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
+
+					//aca habria que hacer un send al plani indicando que termino
+					//preparo semaforo para envio de msj al plani si hace falta sincro
+					//sem_post(semRespuestaCpu);
+
 					//libero el PCB si ejecuto todas las instrucciones
 					free(PCB);
 					break;

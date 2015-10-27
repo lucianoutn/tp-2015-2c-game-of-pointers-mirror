@@ -97,7 +97,11 @@ void dispatcher(t_queue *cola_ready)
 		//RECIBE RESPUESTA
 		//esta bien que reciba la respuesta el despachador???
 		//porque sino se bloquea habria que poner semaforos creo
+
+		//sem_wait(semRespuestaCpu); preparo semaforos x si no bloquea al rcv. lucho
+
 		/*flag recibi = false;
+
 		recv(conexiones.CPUS[I].socket, &recibi, sizeof(flag),0);
 		if(recibi)
 			puts("RECIBI OK");

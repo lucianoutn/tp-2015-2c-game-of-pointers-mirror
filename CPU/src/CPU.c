@@ -21,6 +21,7 @@ int main()
 	//int socketPlanificador, socketMemoria;
 	semSalir.__align =0;
 	semProduccionMsjs = sem_open("semPlani", 0);
+	semRespuestaCpu = sem_open("semCPU", O_CREAT, 0644, 0);//inicializo sem prod-consum, el 0_creat es para evitar q se inicialize en el otro proceso
 	if (configuroSocketsYLogs(sockets) == 1) //Preparo las configuraciones bascias para ejecutar la CPU
 		puts("¡¡¡CPU!!!");
 	else
