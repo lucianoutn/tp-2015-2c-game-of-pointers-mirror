@@ -17,6 +17,7 @@
 #include <commons/config.h>
 #include <SharedLibs/manejoListas.h>
 #include <SharedLibs/comun.h>
+#include <pthread.h>
 
 typedef struct{
  char * puertoServidor;
@@ -42,6 +43,9 @@ typedef struct{
 	int status;
 	char* contenido;
 }t_devuelvo;
+
+pthread_mutex_t mutexTLB;
+
 
 // DECLARACIONES GLOBALES PARA USAR FUNCIONES DE CONDICION EN LISTFIND
 int numero_de_pid;

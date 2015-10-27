@@ -40,8 +40,6 @@ int main()
 	creoLogger(1);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
 	log_info(logger, "Inicio Log MEMORIA", NULL);
 
-	//sem_t * semPrueba= sem_open("semPrueba", 0);
-
 	//RESERVO ESPACIO PARA LA MEMORIA REAL /
 	int tamanio_memoria_real = miContexto.tamanioMarco * miContexto.cantidadMarcos;
 	char * memoria_real = reservarMemoria(tamanio_memoria_real);
@@ -62,9 +60,15 @@ int main()
 		//t_list * TLB = crearListaTlb();
 	}
  	//Me quedo atenta a las señales, y si las recibe ejecuta esa funcion
+	// Se inicializa el mutex
+	pthread_t senial[3];
+	pthread_mutex_init (&mutexTLB, NULL);
 	void flush ()
 	{
-		tlbFlush(TLB);
+		int err= pthread_create(&(senial[0]), NULL, (void*)tlbFlush,TLB);
+		if (err != 0)
+			printf("no se pudo crear el hilo de TLBFlush :[%s]", strerror(err));
+		pthread_join(senial[0], NULL);
 	}
 	void limpiar()
 	{
@@ -125,7 +129,20 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 		// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
 		ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 	}
+/*
+	t_header * package = package_create(2,15,5,0);
+	char * mensaje_inicializacion = malloc(1);
+	ejecutoInstruccion(package, mensaje_inicializacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 
+	t_header * package_escritura = package_create(1,15,1,strlen("Hola"));
+	char * mensaje_escritura = malloc(5);
+	strcpy(mensaje_escritura,"Hola");
+	ejecutoInstruccion(package_escritura, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	t_header * package_finalizacion = package_create(3,15,0,0);
+	char * mensaje_finalizacion = malloc(1);
+	ejecutoInstruccion(package_finalizacion, mensaje_finalizacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+*/
 	/* SELECT primera version no borrar
   do {
      FD_ZERO(&readset); 	//esto abre y limpia la estructura cada vez q se reinicia el select luego de un error
