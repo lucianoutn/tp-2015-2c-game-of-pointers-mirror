@@ -24,8 +24,10 @@
 #include <pthread.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
-#include <fcntl.h>           /* para las constantes O_* de los semaforos ipc  */
-#include <sys/stat.h>        /* para las constantes de modo de los semaforos ipc */
+#include <fcntl.h>           // para las constantes O_* de los semaforos ipc
+#include <sys/stat.h>      //  para las constantes de modo de los semaforos ipc
+#include <linux/unistd.h>   //para alguna syscall
+
 
 typedef int pid;
 

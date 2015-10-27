@@ -95,6 +95,7 @@ void *consola (void* arg)
 				sem_post(&semSalir);
 				sem_post(&ordenIngresada);
 				//return (int*)-1; no tiene q retornar nada
+				//void pthread_exit(void *retval); //mata el hilo
 				break;
 			}
 			case enter:

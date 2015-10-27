@@ -236,8 +236,9 @@ void ejecutoPCB(int socketMemoria, t_pcb *PCB){
 
 void iniciarCPU(t_sockets *sockets){
 
-	pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
-	printf("CPU hilo ID: %d conectado\n", (int)id);
+	//pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
+	printf("CPU hilo ID: %d conectado\n", syscall( __NR_gettid )); //se puede usar "htop" en la consola para verlos
+	//printf("CPU hilo ID: %lu conectado\n", pthread_self());
 	int status=1;		// Estructura que manjea el status de los recieve.
 
 	//Estructuras que manejan los datos recibidos
