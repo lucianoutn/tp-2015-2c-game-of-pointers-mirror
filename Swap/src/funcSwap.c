@@ -13,30 +13,15 @@
 #include <sys/mman.h>
 
 FILE* crearParticion() {
-	FILE *archivo;
 	char * comando = malloc(200);
-/*
-	strcpy(comando,"dd if=/home/utnso/git/tp-2015-2c-game-of-pointers/Swap/");
-	strcat(comando, contexto->nombre);
-	strcat(comando," of=/home/utnso/git/tp-2015-2c-game-of-pointers/Swap/aux.txt");
-	strcat(comando, " bs=");
-	strcat(comando,  string_itoa(contexto->tam_pagina));
-	strcat(comando, " count=");
-	strcat(comando,  string_itoa(contexto->cant_paginas));
-	system(comando);
-
-	strcpy(comando,"dd if=/home/utnso/git/tp-2015-2c-game-of-pointers/Swap/aux.txt");
-	*/
 	strcpy(comando,"dd if=/dev/zero");
 	strcat(comando," of=/home/utnso/git/tp-2015-2c-game-of-pointers/Swap/");
 	strcat(comando, contexto->nombre);
 	strcat(comando, " count=");
 	strcat(comando,  string_itoa(contexto->cant_paginas));
 	strcat(comando, " bs=");
-	strcat(comando,  string_itoa(contexto->tam_pagina));
+	strcat(comando, string_itoa(contexto->tam_pagina));
 	system(comando);
-
-	//system("rm /home/utnso/git/tp-2015-2c-game-of-pointers/Swap/aux.txt");
 
 	archivo = fopen(contexto->nombre, "rb+");
 	if (archivo)
@@ -66,6 +51,9 @@ void traigoContexto() {
 
 	if (config_swap == NULL) {
 		puts("Final feliz");
+		free(config_swap->path);
+		free(config_swap->properties);
+		free(config_swap);
 		abort();
 	}
 	contexto->puerto = config_get_string_value(config_swap, "PUERTO_ESCUCHA");
@@ -76,6 +64,9 @@ void traigoContexto() {
 	contexto->retardo_swap = config_get_int_value(config_swap, "RETARDO_SWAP");
 	contexto->retardo_compac = config_get_int_value(config_swap,
 			"RETARDO_COMPACTACION");
+
+	free(config_swap->path);
+	free(config_swap->properties);
 	free(config_swap);
 }
 
@@ -86,7 +77,7 @@ void analizoPaquete(t_header * package, int socketCliente) {
 	{
 	case 0:
 		printf("Se recibio orden de lectura\n");
-		char * contenido = malloc(contexto->tam_pagina)+1;
+		char * contenido = malloc(contexto->tam_pagina+1);
 		leerSwap(package,contenido);
 		if(contenido!=NULL){
 			status = 1;
@@ -97,6 +88,7 @@ void analizoPaquete(t_header * package, int socketCliente) {
 			puts("Todo mal");
 			send(socketCliente,&status,sizeof(int),0);
 		}
+		free(contenido);
 		break;
 	case 1:
 		printf("Se recibio orden de escritura\n");
@@ -149,7 +141,7 @@ int escribirSwap(t_header * package, int socketCliente)
 		return (*(int *)p == package->PID);
 	}
 
-	char * mensaje = malloc(package->tamanio_msj);
+	char * mensaje = malloc(package->tamanio_msj+1);
 
 	recv(socketCliente, mensaje, package->tamanio_msj, 0);
 	t_pag * pag = list_find(lista_paginas, (void *)_numeroDePid);
@@ -269,6 +261,8 @@ void compactarSwap()
 
 		//actualizo el inicio en el nodo.
 		pagina->inicio=inicio;
+		free(contenido);
+		free(pagina);
 	}
 
 	//actualizo lista huecos
@@ -283,6 +277,7 @@ void compactarSwap()
 		list_remove_and_destroy_element(lista_huecos, j, (void *)hueco_destroy);
 	}
 
+	free(hueco);
 	sleep(contexto->retardo_compac);
 	log_info(logger, "Se finalizo la compactacion");
 }

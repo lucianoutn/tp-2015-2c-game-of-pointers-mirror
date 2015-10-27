@@ -121,6 +121,9 @@ int main()
 	//Cierro particion
 	cerrarParticion();
 	log_destroy(logger);
+
+	free(contexto->nombre);
+	free(contexto->puerto);
 	free(contexto);
 	return 1;
 }
@@ -158,7 +161,6 @@ void reciboDelAdminMem()
 			sleep(contexto->retardo_swap);
 		}
 	}
-
 
 	//Cierro conexiones
 	close(socketCliente);
