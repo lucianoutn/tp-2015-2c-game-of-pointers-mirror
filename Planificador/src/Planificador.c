@@ -87,9 +87,8 @@ int main() {
 	}
 
 
-	pthread_join(hilo_consola, NULL);
+	//pthread_join(hilo_consola, NULL); no habiliten este join, usamos semaforos.lucho
 
-	//si entra el comando correr PATH desde el hilo consola:
 
 	//cierra los sockets
 
