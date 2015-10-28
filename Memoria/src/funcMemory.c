@@ -77,10 +77,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			//printf ("*********************Se recibio orden de escritura*********************\n");
 			log_info(logger, "Solicitud de escritura recibida del PID: %d y pagina: %d", registro_prueba->PID, registro_prueba->pagina_proceso);
 
-			int tamanio_mensaje = registro_prueba->tamanio_msj;
-
 			// DECLARO UN FLAG PARA SABER SI ESTABA EN LA TLB Y SE ESCRIBIO, O SI NO ESTABA
-			int okTlb = verificarTlb(TLB,tamanio_mensaje, mensaje, registro_prueba);
+			int okTlb = verificarTlb(TLB,registro_prueba->tamanio_msj, mensaje, registro_prueba);
 
 			// SI ESTABA EN LA TLB, YA LA FUNCION ESCRIBIO Y LISTO
 			if(okTlb == 1)
@@ -147,17 +145,17 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 								//marco_a_llenar->direccion_inicio=malloc(miContexto.tamanioMarco);
 								log_info(logger, "Traje la pagina del swap, voy a escribir el marco %d", marco_a_llenar->numero_marco);
 								sleep(miContexto.retardoMemoria);
-								memcpy ( marco_a_llenar->direccion_inicio, contenido_a_escribir, strlen(contenido_a_escribir));
+								memcpy ( marco_a_llenar->direccion_inicio, mensaje, strlen(mensaje));
 
 								//AGREGO EL MARCO AHORA ESCRITO, A LA LISTA DE MARCOS ESCRITOS
 								list_add(listaFramesMemR, marco_a_llenar);
 
 								//AGREGO LA PAGINA A LA TLB (VERIFICO SI ESTA LLENA Y REEMPLAZO)
 								pthread_mutex_lock (&mutexTLB); //Espero y bloqueo
-								actualizarTlb(lectura_swap->PID, lectura_swap->pagina_proceso, marco_a_llenar->direccion_inicio, TLB);
+								actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, TLB);
 								pthread_mutex_unlock (&mutexTLB); //Desbloqueo
 								// ACTUALIZO LA TABLA DEL PROCESO CON LA DRIECCION FISICA
-								actualizarTablaProceso(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio);
+								actualizarTablaProceso(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
 							}else
 							{
 								/*  KOLO PREGUNTAR SI HAY QUE HACER ESTO O AUNQUE EL PROCESO TENGA ESPACIO
@@ -173,7 +171,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 					{
 						log_info(logger, "Encontre la pagina en memoria, la escribo y acualizo tlb");
 						sleep(miContexto.retardoMemoria);
-						memcpy ( paginaProceso->direccion_fisica, mensaje, tamanio_mensaje);
+						memcpy ( paginaProceso->direccion_fisica, mensaje, registro_prueba->tamanio_msj);
 						pthread_mutex_lock (&mutexTLB); //Espero y bloqueo
 						actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
 						pthread_mutex_unlock (&mutexTLB); //Desbloqueo
@@ -232,7 +230,7 @@ void iniciarProceso(t_list* tabla_adm, t_header * proceso)
 		// MIENTRAS FALTEN PAGINAS PARA INICIAR //
 		while (x<proceso->pagina_proceso)
 		{
-			list_add(lista_proceso,pag_proc_create(x, NULL));
+			//list_add(lista_proceso,pag_proc_create(x, NULL, NULL));
 			x++;
 		}
 
@@ -510,20 +508,45 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB)
 	if (registro_tabla_proc != NULL)
 	{
 		printf("ENCONTRE UN PROCESO PARA MATAR\n");
-
 		printf ("LA TABLA DE TABLAS DE PROCESOS TIENE %d ELEMENTOS ANTES DE MATAR \n", tabla_adm->elements_count);
 		t_list * tabla_proceso = registro_tabla_proc->direc_tabla_proc;
 
 		if (tabla_proceso != NULL)
 		{
 			printf("ENCONTRE LA TABLA DEL PROCESO A MATAR \n");
+
+			int cantidad_paginas = sizeof(tabla_proceso);
+			int x = 0;
+			while (x < cantidad_paginas)
+			{
+				process_pag * pagina_removida = list_remove(tabla_proceso, x);
+
+				bool _numMarco (void * p)
+				{
+					return(*(char *)p == pagina_removida->marco);
+				}
+
+				if (pagina_removida->direccion_fisica != NULL)
+				{
+					printf("ENCONTRO PAGINA A REMOVER QUE TENIA UN AMRCO ASIGNADO \n");
+					t_marco * marco_a_remover = list_remove_by_condition(listaFramesMemR, (void*)_numMarco);
+					marco_a_remover->direccion_inicio=NULL;
+
+					//AGREGO EL MARCO AHORA HUECO, A LA LISTA DE MARCOS HUECOS
+					list_add(listaFramesHuecosMemR, marco_a_remover);
+				}
+			}
+
 			// ELIMINO TODOS LOS ELEMENTOS DE LA TABLA Y LA TABLA
 			list_destroy_and_destroy_elements(tabla_proceso, (void *)pag_destroy);
 			//ELIMINO LA REFERENCIA DE ESA TABLA DE PROCESO, DESDE LA TABLA DE PROCESOS
 			list_remove_by_condition(tabla_adm, (void*)_numeroDePid);
 			printf ("LA TABLA DE TABLAS DE PROCESOS TIENE %d ELEMENTOS DESPUES DE MATAR \n", tabla_adm->elements_count);
-			// ME FIJO SI EN LA TLB HABIA ALGUNA REFERENCIA A ALGUNA DE SUS PAGINAS Y LAS ELIMINO
-			removerEntradasTlb(TLB, proceso_entrante);
+			// ME FIJO SI EN LA TLB (SI ESTA HABILITADA) HABIA ALGUNA REFERENCIA A ALGUNA DE SUS PAGINAS Y LAS ELIMINO
+			if (!strcmp(miContexto.tlbHabilitada, "SI"))
+				removerEntradasTlb(TLB, proceso_entrante);
+
+
 		}else
 		{
 			printf("NO SE ENCONTRO LA TABLA DEL PROCESO \n");
@@ -616,7 +639,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	// ACTUALIZO LA PAGINA A SWAPEAR, DIRECCION_FISICA = NULL
 	//ESTO ESTA PARA EL ORTO, BUSCAR UNA FORMA MAS EFICIENTE
 	process_pag * paginaASwapear = list_remove_by_condition(tablaProceso, (void*)_numeroDePagina);
-	list_add(tablaProceso, pag_proc_create(paginaASwapear->pag, NULL) );
+	list_add(tablaProceso, pag_proc_create(paginaASwapear->pag, NULL, NULL) );
 
 	// SI SE TRATA DE UNA ESCRITURA
 	if (header->type_ejecution == 1)
@@ -625,7 +648,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 
 		int status_escritura = envioAlSwap(header_escritura, serverSocket, paginaASwapear->direccion_fisica);
 
-		// LE PIDO LA PAGINA QUE QUIERO ESCRIBIR, LA AGREGO AL FINAL DE LA LISTA Y LA ESCRIBO
+		// LE PIDO LA PAGINA QUE QUIERO ESCRIBIR Y LA AGREGO AL FINAL DE LA LISTA
 		t_header * header_lectura = crearHeaderLectura(header);
 
 		char * contenido = malloc(miContexto.tamanioMarco);
@@ -638,12 +661,11 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 			return(*(int*)p == num_pag);
 		}
 
-
 		// La agrego al final con la direccion del marco de la pagina que swapee ( ALGORITMO FIFO )
 		if ( !strcmp(miContexto.algoritmoReemplazo, "FIFO"))
 		{
 		list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
-		list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica));
+		list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco));
 		} // SINO VEO LOS OTRO ALGORITMOS  ( DESPUES VEO )
 
 
@@ -673,7 +695,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 
 		// La agrego al final con la direccion del marco de la pagina que swapee
 		process_pag * paginaALeer = list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
-		list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica));
+		list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco));
 
 
 		if ( status_lectura == 1)
@@ -685,15 +707,15 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	return 1;
 }
 
-void actualizarTablaProceso(t_list * tabla_proceso, int num_pagina, char * direccion_marco)
+void actualizarTablaProceso(t_list * tabla_proceso, int num_pagina, char * direccion_marco, int num_marco)
 {
 	bool _numeroDePagina (void * p)
 	{
 		return(*(int*)p == num_pagina);
 	}
 
-	list_remove_by_condition(tabla_proceso, _numeroDePagina); // ¿ ME DEVUELVE LO QUE REMUEVE ESTA FUNCION?
-	process_pag * pagina = pag_proc_create(num_pagina, direccion_marco);
+	list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina); // ¿ ME DEVUELVE LO QUE REMUEVE ESTA FUNCION?
+	process_pag * pagina = pag_proc_create(num_pagina, direccion_marco, num_marco);
 	list_add(tabla_proceso,pagina);
 }
 
@@ -881,11 +903,12 @@ void dumpEnLog(char * memoria_real, t_list * tablaAdm)
 //-----------------------------------------------------------//
 
 // --------------ENTRADAS A LA TABLA DE PROCESO ------------ //
-process_pag * pag_proc_create (int pagina, char * direccion_fisica)
+process_pag * pag_proc_create (int pagina, char * direccion_fisica, int marco)
 {
  process_pag * reg_pagina = malloc(sizeof(process_pag));
  reg_pagina->pag = pagina;
  reg_pagina->direccion_fisica = direccion_fisica;
+ reg_pagina->marco = marco;
  return reg_pagina;
 }
 

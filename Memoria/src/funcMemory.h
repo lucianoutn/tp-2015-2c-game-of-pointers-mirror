@@ -36,6 +36,7 @@ typedef struct
 {
    int pag; // Contiene el numero de pagina del proceso
    char * direccion_fisica; //Contiene la direccion de memoria de la pagina que se esta referenciando
+   int marco; // numero de marco ( si tiene ) en donde esta guardada la pagina
 }process_pag;
 // ------------------------------------//
 
@@ -129,7 +130,7 @@ void actualizarTlb(int, int, char*, t_list *);
  * DE QUE SE VAYAN ELIMINANDO LAS PRIMERAS QUE SE CARGARON CUANDO ESTE LLENA (CANTIDAD DE MARCOS
  * PARA EL PROCESO)
  */
-void actualizarTablaProceso(t_list *, int ,char*);
+void actualizarTablaProceso(t_list *, int ,char*,int);
 
 // BUSCO Y RETORNO EL REGISTRO DE LA TLB BUSCADO EN EL CASO DE ENCONTRARLO, SINO RETORNO NULL
 t_tlb * buscarEntradaProcesoEnTlb (t_list*, t_header *, int*);
@@ -161,7 +162,7 @@ void dumpEnLog();
 
 
 /* PASAR A MANEJOLISTAS */
-process_pag * pag_proc_create(int, char*);
+process_pag * pag_proc_create(int, char*, int);
 
 void pag_proc_destroy(process_pag *);
 /* ---------------------*/
