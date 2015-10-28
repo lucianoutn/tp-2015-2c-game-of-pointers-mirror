@@ -72,11 +72,16 @@ void *consola (void* arg)
 			{
 				printf("Este comando falta desarrollar\n");
 				system("ps");
+
+				//void list_iterate(t_list *, void(*closure)(void*));
+
+				sem_post(&semConsola);
 				break;
 			}
 			case cpu:
 			{
 				printf("Este comando todavia no ha sido implemenado\n");
+				sem_post(&semConsola);
 				break;
 			}
 			case salir:

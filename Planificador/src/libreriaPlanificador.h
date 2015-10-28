@@ -81,7 +81,7 @@ flag CPUenUso; //Flag que permite verificar si una CPU esta en uso o no
 
 int numero_de_pid;
 
-int max_PID;
+int PID_actual;
 
 void traigoContexto();
 

@@ -16,7 +16,7 @@ int main() {
 	semSalir.__align =0;
 	semProduccionMsjs = sem_open("semPlani", O_CREAT, 0644, 0);//inicializo sem prod-consum, el 0_creat es para evitar q se inicialize en el otro proceso
 	semRespuestaCpu = sem_open("semCPU", 0);
-	max_PID=0;      //inicializo numero de pid (yo le cambiaria el nombre a PID_actual)
+	PID_actual=0;      //inicializo numero de pid (yo le cambiaria el nombre a PID_actual)
 	puts("!!!!Planificador!!!!"); /* prints !!!Planificador!!! */
 
 	// El planificador debe recibir los resultados de la CPU.

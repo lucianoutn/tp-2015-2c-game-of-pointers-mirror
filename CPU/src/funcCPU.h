@@ -8,7 +8,7 @@
 #ifndef FUNCCPU_H_
 #define FUNCCPU_H_
 
-#include "../../SharedLibs/SharedLibs/libreriaCliente.h" //SharedLibs/Debug
+#include "SharedLibs/libreriaCliente.h" //SharedLibs/Debug
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -16,8 +16,9 @@
 #include <sys/socket.h>
 #include <netdb.h>
 #include <unistd.h>
-#include "../../SharedLibs/SharedLibs/manejoListas.h"
-#include "../../SharedLibs/SharedLibs/comun.h"
+#include "SharedLibs/manejoListas.h"
+#include "SharedLibs/comun.h"
+#include "commons/process.h"
 #include <commons/config.h>
 #include <semaphore.h>
 #include "mAnsisOp.h"

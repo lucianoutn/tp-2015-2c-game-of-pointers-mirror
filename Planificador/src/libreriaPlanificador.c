@@ -135,7 +135,7 @@ t_pcb* procesarPCB(char *path)
 		perror("shmat");
 
 	//armo PCB
-	pcb->PID= max_PID+1;
+	pcb->PID= PID_actual+1;
 	pcb->instructionPointer = 0;
 	pcb->numInstrucciones = 0;
 	pcb->prioridad=0;
