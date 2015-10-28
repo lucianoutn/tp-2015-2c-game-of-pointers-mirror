@@ -35,6 +35,8 @@
 #define PACKAGESIZE 1024 //comentar
 #define WORD_SIZE 35 //comentar
 
+t_list *lstPcbs;
+
 
 //tipo de dato t_pcb que es una estructura que almacena el PCB de cada proceso
 typedef struct PCB {
@@ -98,7 +100,7 @@ void encolar (t_pcb *, t_pcb *);
 t_pcb desencolar (t_pcb *);
 
 
-void iniciarPlanificador(t_queue *);
+void iniciarPlanificador(t_list *, t_queue *);
 
 void dispatcher(t_queue *);
 

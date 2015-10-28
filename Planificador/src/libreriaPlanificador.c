@@ -11,6 +11,7 @@ key_t key_pcb=1235; //clave de la seccion memoria pcb
 key_t key_ruta=3212; //cable de la seccion memoria ruta
 
 
+
 //Funcion que permite cargar el archivo de configuracion en el programa.
 void traigoContexto()
 {
@@ -30,7 +31,7 @@ void traigoContexto()
 }
 
 
-void iniciarPlanificador(t_queue* cola_ready)
+void iniciarPlanificador(t_list* lstPcbs, t_queue* cola_ready)
 {
 	char *ruta=(char*)malloc(sizeof(char));
 
@@ -43,7 +44,9 @@ void iniciarPlanificador(t_queue* cola_ready)
 
 	//Se crea el PCB y se lo pone en la cola de ready
 	sem_post(&semConsola); // debe ir arriba del procesarPCB para que se aproveche el paralelismo
-	queue_push(cola_ready, procesarPCB(ruta));
+	t_pcb* pcb= procesarPCB(ruta);
+	list_add(lstPcbs, pcb);
+	queue_push(cola_ready, pcb);
 
 	puts("PCB creado y encolado\n");
 

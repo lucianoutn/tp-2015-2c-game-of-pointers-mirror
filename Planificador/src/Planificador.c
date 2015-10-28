@@ -12,6 +12,9 @@
 #include "consola.h"
 
 
+
+
+
 int main() {
 	semSalir.__align =0;
 	semProduccionMsjs = sem_open("semPlani", O_CREAT, 0644, 0);//inicializo sem prod-consum, el 0_creat es para evitar q se inicialize en el otro proceso
@@ -53,6 +56,11 @@ int main() {
 
 	//Se crea la cola de readys
 	t_queue *cola_ready = queue_create();
+
+	//creo la lista de TODOS los pcb
+	lstPcbs= list_create();
+
+
 	//crear hilo de consola para que quede a la escucha de comandos por consola para el planificador
 
 	//consola(); //sin hilo
@@ -69,7 +77,7 @@ int main() {
 		{
 			case 0: //orden correr
 			{
-				iniciarPlanificador(cola_ready);
+				iniciarPlanificador(lstPcbs, cola_ready);
 
 				if	(!strcmp(miContexto.algoritmoPlanificacion, "FIFO")){ //por FIFO
 					puts("FIFO");

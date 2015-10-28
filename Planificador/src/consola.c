@@ -73,8 +73,8 @@ void *consola (void* arg)
 				printf("Este comando falta desarrollar\n");
 				system("ps");
 
-				//void list_iterate(t_list *, void(*closure)(void*));
-
+				//list_iterate(lstPcbs, void(*closure)(void*));
+				//list_add(lstPcbs, NULL);
 				sem_post(&semConsola);
 				break;
 			}
