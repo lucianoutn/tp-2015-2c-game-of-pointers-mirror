@@ -230,7 +230,7 @@ void iniciarProceso(t_list* tabla_adm, t_header * proceso)
 		// MIENTRAS FALTEN PAGINAS PARA INICIAR //
 		while (x<proceso->pagina_proceso)
 		{
-			//list_add(lista_proceso,pag_proc_create(x, NULL, NULL));
+			list_add(lista_proceso,pag_proc_create(x, "Swap" , NULL));
 			x++;
 		}
 
@@ -300,7 +300,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		process_pag * pagina_proc = list_find(tabla_proc, (void *)numeroDePaginaIgualA);
 
 		// SI LA DIRECCION = NULL ES PORQUE ESTA EN SWAP, SINO YA LA ENCONTRE EN MEMORIA
-		if (pagina_proc->direccion_fisica == NULL)
+		if (!strcmp(pagina_proc->direccion_fisica,"Swap"))
 		{
 			char * contenido = malloc(miContexto.tamanioMarco);
 			flag = envioAlSwap(package, serverSocket, contenido );
