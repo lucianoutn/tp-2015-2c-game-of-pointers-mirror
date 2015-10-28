@@ -639,7 +639,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	// ACTUALIZO LA PAGINA A SWAPEAR, DIRECCION_FISICA = NULL
 	//ESTO ESTA PARA EL ORTO, BUSCAR UNA FORMA MAS EFICIENTE
 	process_pag * paginaASwapear = list_remove_by_condition(tablaProceso, (void*)_numeroDePagina);
-	list_add(tablaProceso, pag_proc_create(paginaASwapear->pag, NULL, NULL) );
+	list_add(tablaProceso, pag_proc_create(paginaASwapear->pag, "Swap", NULL) );
 
 	// SI SE TRATA DE UNA ESCRITURA
 	if (header->type_ejecution == 1)
