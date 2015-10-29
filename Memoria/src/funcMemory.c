@@ -64,12 +64,16 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				flag=leerDesdeTlb(socketCliente,TLB, registro_prueba->PID, registro_prueba->pagina_proceso);
 				if(!flag)
 				{
+					pthread_mutex_lock (&mutexMem);
 					leerEnMemReal(tabla_adm,TLB, registro_prueba, serverSocket,socketCliente, memoria_real);
+					pthread_mutex_unlock (&mutexMem);
 				}
 			}
 			else
 			{
+				pthread_mutex_lock (&mutexMem);
 				leerEnMemReal(tabla_adm, TLB,registro_prueba, serverSocket,socketCliente, memoria_real);
+				pthread_mutex_unlock (&mutexMem);
 			}
 	 		break;
 
@@ -82,21 +86,24 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 
 			// SI ESTABA EN LA TLB, YA LA FUNCION ESCRIBIO Y LISTO
 			if(okTlb == 1)
-			{	// TRAIGO LA TABLA DEL PROCESO
+			{
+				pthread_mutex_lock (&mutexMem);
+				// TRAIGO LA TABLA DEL PROCESO
 				t_list * tablaProceso = obtenerTablaProceso(tabla_adm, registro_prueba->PID);
-
 				// TRAIGO LA PAGINA A ESCRIBIR ( SOLO EL NODO DE LA TABLA DEL PROCESO )
 				process_pag * paginaProceso = obtenerPaginaProceso(tablaProceso, registro_prueba->pagina_proceso);
+				pthread_mutex_unlock (&mutexMem);
 
 				// SE ESCRIBIO CORRECTAMENTE PORQUE YA ESTABA CARGADA EN TLB
-				pthread_mutex_lock (&mutexTLB); //Espero y bloqueo
+				pthread_mutex_lock (&mutexTLB);
 				actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
-				pthread_mutex_unlock (&mutexTLB); //Desbloqueo
+				pthread_mutex_unlock (&mutexTLB);
 				printf ("SE ESCRIBIO CORRECTAMENTE PORQUE ESTABA EN LA TLB \n");
 			}
 			// SI NO ESTABA EN LA TLB, AHORA ME FIJO SI ESTA EN LA TABLA DE TABLAS
 			else
 			{
+				pthread_mutex_lock (&mutexMem);
 				// TRAIGO LA TABLA DEL PROCESO
 				t_list * tablaProceso = obtenerTablaProceso(tabla_adm, registro_prueba->PID);
 
@@ -115,9 +122,9 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 						//printf("NO TENGO LUGAR PARA GUARDARLA, TENGO QUE SWAPEAR \n");
 						int verific = swapeando(tablaProceso,tabla_adm ,TLB, mensaje, serverSocket, registro_prueba);
 						if (verific == 1)
-						{	pthread_mutex_lock (&mutexTLB); //Espero y bloqueo
+						{	pthread_mutex_lock (&mutexTLB);
 							actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
-							pthread_mutex_unlock (&mutexTLB); //Desbloqueo
+							pthread_mutex_unlock (&mutexTLB);
 						}
 						else
 							log_info(logger, "Error al intentar swapear");
@@ -151,9 +158,9 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 								list_add(listaFramesMemR, marco_a_llenar);
 
 								//AGREGO LA PAGINA A LA TLB (VERIFICO SI ESTA LLENA Y REEMPLAZO)
-								pthread_mutex_lock (&mutexTLB); //Espero y bloqueo
+								pthread_mutex_lock (&mutexTLB);
 								actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, TLB);
-								pthread_mutex_unlock (&mutexTLB); //Desbloqueo
+								pthread_mutex_unlock (&mutexTLB);
 								// ACTUALIZO LA TABLA DEL PROCESO CON LA DRIECCION FISICA
 								actualizarTablaProceso(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
 							}else
@@ -172,11 +179,13 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 						log_info(logger, "Encontre la pagina en memoria, la escribo y acualizo tlb");
 						sleep(miContexto.retardoMemoria);
 						memcpy ( paginaProceso->direccion_fisica, mensaje, registro_prueba->tamanio_msj);
-						pthread_mutex_lock (&mutexTLB); //Espero y bloqueo
+						pthread_mutex_lock (&mutexTLB);
 						actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
-						pthread_mutex_unlock (&mutexTLB); //Desbloqueo
+						pthread_mutex_unlock (&mutexTLB);
 					}
+				pthread_mutex_unlock (&mutexMem);
 			}
+
 	 		break;
 	 	case 2:
 	 		//printf("*********************Se recibio orden de inicializacion********************* \n");
@@ -187,7 +196,9 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 		if(flag)
 	 		{
 	 			//creo todas las estructuras porque el swap ya inicializo
+	 			pthread_mutex_lock (&mutexMem);
 	 			iniciarProceso(tabla_adm, registro_prueba);
+	 			pthread_mutex_unlock (&mutexMem);
 	 			log_info(logger, "Proceso mProc creado, numero de PID: %d y cantidad de paginas: %d"
 	 											,registro_prueba->PID, registro_prueba->pagina_proceso);
 	 			recibi = true;
@@ -228,6 +239,7 @@ void iniciarProceso(t_list* tabla_adm, t_header * proceso)
 		//printf("La direccion del comienzo de la tabla del proceso es: %p \n", lista_proceso);
 		//printf("PRINCIPIO - La tabla del proceso tiene %d nodos \n", lista_proceso->elements_count);
 		// MIENTRAS FALTEN PAGINAS PARA INICIAR //
+		pthread_mutex_lock (&mutexMem);
 		while (x<proceso->pagina_proceso)
 		{
 			list_add(lista_proceso,pag_proc_create(x, "Swap" , NULL));
@@ -237,6 +249,7 @@ void iniciarProceso(t_list* tabla_adm, t_header * proceso)
 		//printf("FINAL - La tabla del proceso tiene %d nodos y su direccion sigue siendo %p \n", lista_proceso->elements_count, lista_proceso);
 
 		list_add(tabla_adm,tabla_adm_create(proceso->PID, lista_proceso) );
+		pthread_mutex_unlock (&mutexMem);
 		//printf("FINAL - La tabla de admimistracion de tablas tiene %d nodos \n", tabla_adm->elements_count);
 }
 
@@ -250,7 +263,7 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, int pid, int pagina)
 	{
 			return(*(int *)p == pid);
 	}
-	pthread_mutex_lock (&mutexTLB); //Espero y bloqueo
+	pthread_mutex_lock (&mutexTLB);
 
 	// VERIFICO TODAS LAS ENTRADAS DE LA TLB QUE TIENE EL PID DEL PROCESO
 	t_list * subListaProceso = list_filter(TLB, (void *)_numeroDePid);
@@ -265,7 +278,7 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, int pid, int pagina)
 		if (registro_tlb != NULL)
 		{
 			send(socketCliente,registro_tlb->direccion_fisica,miContexto.tamanioMarco,0);
-			pthread_mutex_unlock (&mutexTLB); //Desbloqueo
+			pthread_mutex_unlock (&mutexTLB);
 			return 1;
 		}
 	// SI LA TLB NO ESTA HABILITADA ENTONCES TENGO QUE VERIFICAR EN LA TABLA DE TABLAS
@@ -390,7 +403,7 @@ t_list * obtenerTablaProceso(t_list * tabla_adm, int pid)
 */
 }
 
- process_pag * obtenerPaginaProceso(t_list * tabla_proceso, int pagina)
+process_pag * obtenerPaginaProceso(t_list * tabla_proceso, int pagina)
  {
 	bool _numeroDePagina (void * p)
 	{
@@ -401,6 +414,10 @@ t_list * obtenerTablaProceso(t_list * tabla_adm, int pid)
 	return pagina_proc;
  }
 
+/*
+ * KOLO
+ * No pongo semaforos porque unicamente se la llama en leerEnMemReal que ya tiene el sem
+ */
 void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_real, char * contenido, t_list * TLB)
 {
 	// BUSCO LA TABLA DEL PROCESO EN LA LISTA DE TABLAS DE PROCESOS POR EL NUMERO DE PID
@@ -439,14 +456,14 @@ void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_rea
 	list_remove(listaFramesHuecosMemR, 0);
 
 	// SI LA TLB ESTA HABILITADA Y NO ESTA LLENA, ENTONCES LE CREO LA ENTRADA DE LA PAGINA LEIDA
-	pthread_mutex_lock (&mutexTLB); //Espero y bloqueo
+	pthread_mutex_lock (&mutexTLB);
 	if( !strcmp(miContexto.tlbHabilitada, "SI") && !tlbLlena(TLB))
 	{
 	 	actualizarTlb(proceso_entrante->PID, proceso_entrante->pagina_proceso, pagina_proceso->direccion_fisica, TLB);
 		// VERIFICO LA CANTIDAD DE ELEMENTOS, A VER SI LO ESTOY HACIENDO BIEN
 	 	printf("LA TLB TIENE %d ELEMENTOS \n", TLB->elements_count);
 	}
-	pthread_mutex_unlock (&mutexTLB); //Desbloqueo
+	pthread_mutex_unlock (&mutexTLB);
 }
 
 int envioAlSwap ( t_header * header, int serverSocket, char * contenido)
@@ -502,7 +519,7 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB)
 	{
 		return(*(int *)p == numero_de_pid);
 	}
-
+	pthread_mutex_lock (&mutexMem);
 	t_tabla_adm * registro_tabla_proc = list_find(tabla_adm, (void*)_numeroDePid);
 
 	if (registro_tabla_proc != NULL)
@@ -555,6 +572,7 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB)
 	{
 		printf("ESTAS QUERIENDO MATAR UN PROCESO QUE NO ESTA NI INICIADO \n");
 	}
+	pthread_mutex_unlock (&mutexMem);
 }
 
 int removerEntradasTlb(t_list * TLB, t_header * header)
@@ -565,21 +583,21 @@ int removerEntradasTlb(t_list * TLB, t_header * header)
 	{
 		return(*(int *)p == pid_a_eliminar);
 	}
-	pthread_mutex_lock (&mutexTLB); //Espero y bloqueo
+	pthread_mutex_lock (&mutexTLB);
 	while ( list_find(TLB,(void*)_numeroDePid) != NULL )
 	{
 		printf("ELEMENTOS DE LA TLB ANTES DE MATAR -> %d \n", TLB->elements_count);
 		list_remove_by_condition(TLB,(void*)_numeroDePid);
 		printf("ELEMENTOS DE LA TLB DESPUES DE MATAR -> %d \n", TLB->elements_count);
 	}
-	pthread_mutex_unlock (&mutexTLB); //Desbloqueo
+	pthread_mutex_unlock (&mutexTLB);
 	return 1;
 }
 
 int verificarTlb (t_list * TLB, int tamanio_msg, char * message, t_header * pagina)
 {
 	int * parametro = malloc(sizeof(int));
-	pthread_mutex_lock (&mutexTLB); //Espero y bloqueo
+	pthread_mutex_lock (&mutexTLB);
 	t_tlb * registro_tlb = buscarEntradaProcesoEnTlb(TLB, pagina, parametro);
 
 	if (registro_tlb != NULL)
@@ -587,14 +605,14 @@ int verificarTlb (t_list * TLB, int tamanio_msg, char * message, t_header * pagi
 		log_info(logger, "TLB HIT pagina: %d", registro_tlb->pagina);
 		strcpy (registro_tlb->direccion_fisica, message);
 		//printf( "ESCRIBI : %s EN LA PAGINA %d PID %d Y DIRECCION %p \n", registro_tlb->direccion_fisica, registro_tlb->pagina, registro_tlb->pid, registro_tlb->direccion_fisica);
-		pthread_mutex_unlock (&mutexTLB); //Desbloqueo
+		pthread_mutex_unlock (&mutexTLB);
 		return 1;
 	}else
 	{
 		// SI NO LA ENCONTRO RETORNO 0
 		log_info(logger, "TLB MISS");
 		//printf ("NO ENCONTRE ESA PAGINA EN LA TLB\n");
-		pthread_mutex_unlock (&mutexTLB); //Desbloqueo
+		pthread_mutex_unlock (&mutexTLB);
 		return 0;
 	}
 }
@@ -622,6 +640,10 @@ t_tlb * buscarEntradaProcesoEnTlb (t_list * TLB, t_header * pagina, int * posici
 }
 
 // ARREGLAR ESTA FUNCION, ESTA TODO EL CODIGO DUPLICADO ESCRITURA/LECTURA
+/*
+ * KOLO
+ * No pongo semaforo porque la llama una sola vez, y ya tiene el sem ahi
+ */
 int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mensaje, int serverSocket, t_header * header)
 {
 	// TRAIGO LA PRIMER PAGINA QUE SE HAYA CARGADO EN MEMORIA, LA PONGO EN NULL Y SE LA ENVIO AL SWAP
@@ -638,8 +660,10 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 
 	// ACTUALIZO LA PAGINA A SWAPEAR, DIRECCION_FISICA = NULL
 	//ESTO ESTA PARA EL ORTO, BUSCAR UNA FORMA MAS EFICIENTE
+
 	process_pag * paginaASwapear = list_remove_by_condition(tablaProceso, (void*)_numeroDePagina);
 	list_add(tablaProceso, pag_proc_create(paginaASwapear->pag, "Swap", NULL) );
+
 
 	// SI SE TRATA DE UNA ESCRITURA
 	if (header->type_ejecution == 1)
@@ -838,12 +862,12 @@ void tlbFlush(t_list * TLB)
 		puts("Uy, voy a vaciar la TLB\n");
 		printf("La TLB tiene %d elementos \n", TLB->elements_count);
 		int i=0;
-		pthread_mutex_lock (&mutexTLB); //Espero y bloqueo
+		pthread_mutex_lock (&mutexTLB);
 		for(;i<TLB->elements_count;i++)
 		{
 			list_remove_and_destroy_element(TLB, i, (void *)reg_tlb_destroy);
 		}
-		pthread_mutex_unlock (&mutexTLB); //Desbloqueo
+		pthread_mutex_unlock (&mutexTLB);
 	}
 	else
 	{
@@ -858,18 +882,22 @@ void tlbFlush(t_list * TLB)
  * Cuando se recibe esta señal, se debe limpiar completamente la memoria principal,
  * actualizando los bits que sean necesarios en las tablas de páginas de los diferentes procesos
  */
-void limpiarMemoria(char * memoria_real, t_list * tablaAdm)
+void limpiarMemoria(void * args)
 {
+	parametros * param;
+	param = (parametros * ) args;
+
 	puts("Recibi SIGUSR2 \n");
 	//Vacio la memoria
-	strcpy(memoria_real,"\0");
+	pthread_mutex_lock (&mutexMem);
+	strcpy(param->memoria,"\0");
 
 	//Actualizo las listas
 	int i = 0, j = 0;
-	for(;i<tablaAdm->elements_count;i++) //Recorro la tabla de tablas
+	for(;i<param->tabla_adm->elements_count;i++) //Recorro la tabla de tablas
 	{
 		//Traigo una tabla
-		t_tabla_adm * entrada_tabla_tablas = list_get(tablaAdm,i);
+		t_tabla_adm * entrada_tabla_tablas = list_get(param->tabla_adm,i);
 		t_list * tablaProceso = entrada_tabla_tablas->direc_tabla_proc;
 
 		for(;j<tablaProceso->elements_count;j++) //Recorro la tabla de procesos
@@ -877,16 +905,20 @@ void limpiarMemoria(char * memoria_real, t_list * tablaAdm)
 			process_pag * pagina_proc = list_get(tablaProceso, j); //Traigo una pagina
 			//Actualizo la pagina
 			pagina_proc->direccion_fisica = NULL;
+			pagina_proc->marco=0;
+			/*
+			 * KOLO
+			 * esta bien que aca le ponga 0 en el marco????
+			 * Si limpio la memoria, también tengo que limpiar la TLB?
+			 */
 		}
 	}
-
 	//Actualizo marcos
-
 	list_destroy_and_destroy_elements(listaFramesMemR,(void *)marco_destroy);
 	list_destroy_and_destroy_elements(listaFramesHuecosMemR,(void *)marco_hueco_destroy);
 	listaFramesMemR = crearListaFrames();
-	listaFramesHuecosMemR = crearListaHuecosFrames(miContexto.cantidadMarcos, miContexto.tamanioMarco, memoria_real);
-
+	listaFramesHuecosMemR = crearListaHuecosFrames(miContexto.cantidadMarcos, miContexto.tamanioMarco, param->memoria);
+	pthread_mutex_unlock (&mutexMem);
 	puts("Mostrame esto");
 }
 

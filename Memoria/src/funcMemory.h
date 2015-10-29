@@ -41,11 +41,13 @@ typedef struct
 // ------------------------------------//
 
 typedef struct{
-	int status;
-	char* contenido;
-}t_devuelvo;
+			char * memoria;
+			t_list *tabla_adm;
+		}parametros;
 
 pthread_mutex_t mutexTLB;
+pthread_mutex_t mutexMem;
+pthread_mutex_t mutexDump;
 
 
 // DECLARACIONES GLOBALES PARA USAR FUNCIONES DE CONDICION EN LISTFIND
@@ -155,7 +157,7 @@ int removerEntradasTlb(t_list *, t_header*);
 //------SEÑALES QUE TIENE QUE RECIBIR LA MEMORIA-------------//
 void tlbFlush(t_list *);
 
-void limpiarMemoria(char *, t_list*);
+void limpiarMemoria(void *);
 
 void dumpEnLog();
 //-----------------------------------------------------------//

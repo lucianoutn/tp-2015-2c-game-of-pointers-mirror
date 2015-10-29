@@ -63,6 +63,7 @@ int main()
 	// Se inicializa el mutex
 	pthread_t senial[3];
 	pthread_mutex_init (&mutexTLB, NULL);
+	pthread_mutex_init (&mutexMem, NULL);
 	void flush ()
 	{
 		int err= pthread_create(&(senial[0]), NULL, (void*)tlbFlush,TLB);
@@ -72,7 +73,15 @@ int main()
 	}
 	void limpiar()
 	{
-		limpiarMemoria(memoria_real,tablaAdm);
+		parametros * param;
+
+		param->memoria= memoria_real;
+		param->tabla_adm = tablaAdm;
+
+		int err= pthread_create(&(senial[1]), NULL, (void*)limpiarMemoria,param);
+		if (err != 0)
+			printf("no se pudo crear el hilo de limpiarMemoria :[%s]", strerror(err));
+		pthread_join(senial[1], NULL);
 	}
 	void dump()
 	{
