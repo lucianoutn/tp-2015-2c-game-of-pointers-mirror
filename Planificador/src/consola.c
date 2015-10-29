@@ -37,6 +37,7 @@ void *consola (void* arg)
 	printf("                     Consola VERSION 2.0 | Grupo: Game of Pointers\n");
 	printf("_____________________________________UTN_|_Sistemas Operativos_______________________________\n");
 
+	fflush(stdin);
 	printf("\nIngrese el comando deseado o ayuda para conocer los comandos posibles\n");
 
 	command = leeComando(); // read lee la palabra y me devuelve un comando del enum
@@ -62,21 +63,31 @@ void *consola (void* arg)
 				sem_post(&ordenIngresada);
 				break;
 			}
-
 			case finalizar:
 			{
 				int pidAfinalizar;
-				printf("Finalizar tiene efecto solamente cuando el algoritmo de planificacion es RR\n");// por fifo tmb finaliza pero no se ve un "efecto"
+				t_pcb *pcb;
+				printf("\nFinalizar tiene efecto solamente cuando el algoritmo de planificacion es RR\n");// por fifo tmb finaliza pero no se ve un "efecto"
 				printf("Ingrese numero de PID para FINALIZAR\n");
-				//fflush(stdin);
-				scanf("%d", &pidAfinalizar);
-				printf("Se finalizara el PID: %d", pidAfinalizar);
-
-
+				fflush(stdin);	//limpia el buffer x el enter colgado
+				char buffer[1024];
+				fgets(buffer,sizeof(buffer),stdin);
+				sscanf(buffer, "%d", &pidAfinalizar);
+				//printf("Se finalizara el PID: %d\n", pidAfinalizar);
 				//marco el pcb para que finalize en la siguiente rafaga de ejecución
-				//list_find(lstPcbs, pcb->pid)(void*)); //busco el pcb
+
+
+				int buscoPid(t_pcb *pcb) {
+					return pcb->PID == pidAfinalizar;
+				}
+
+				pcb = list_find(lstPcbs, (void*) buscoPid); //busco el pcb
 				//lo marco para finalizar
 				//aca quiero lograr que en el pcb->campo finalizar ponga un 1
+				//printf("estoy leyendo el pcb: %d\n valor de finalizar: %d\n", pcb->PID, pcb->finalizar); //test
+				pcb->finalizar = true;
+				printf("PID: %d FINALIZADO\n", pidAfinalizar);
+				//printf("%d", pcb->finalizar);// test
 
 				sem_post(&semConsola);
 				break;
@@ -135,6 +146,7 @@ void *consola (void* arg)
 			// vaciamos el contenido en el flujo stdin
 		}
 			sem_wait(&semConsola);
+			sleep(1);
 			fflush(stdin);
 			printf("\nIngrese el comando deseado o ayuda para conocer los comandos posibles\n");
 			command = leeComando(); // read lee la palabra y me devuelve un comando del enum

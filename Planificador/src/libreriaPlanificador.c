@@ -43,7 +43,7 @@ void iniciarPlanificador(t_list* lstPcbs, t_queue* cola_ready)
 	ruta[tamanio-1]='\0'; //agrego el caracter nulo al final de la ruta para que se indentifique como string.
 
 	//Se crea el PCB y se lo pone en la cola de ready
-	sem_post(&semConsola); // debe ir arriba del procesarPCB para que se aproveche el paralelismo
+	sem_post(&semConsola); // debe ir arriba del procesarPCB para que se aproveche el paralelismo. vuelve a habilitar ingreso de nueva orden
 	t_pcb* pcb= procesarPCB(ruta);
 	list_add(lstPcbs, pcb);
 	queue_push(cola_ready, pcb);

@@ -89,6 +89,7 @@ int main() {
 				  	  cola_bloqueados, cuando termina vuelvo a encolar en la cola_ready
 					 *si termina de procesar el proceso no encolo y mato el pcb
 					 */
+
 				}else{
 				//por RoundRobin
 					puts("RoundRobin");
