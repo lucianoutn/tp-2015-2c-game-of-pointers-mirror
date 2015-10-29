@@ -22,7 +22,7 @@ const char* allCommands[] =
 };
 
 //Funcion que muestra la consola por pantalla con las opciones a enviar a la CPU
-void *consola (void* arg)
+void consola (void* arg)
 {
 	//variables auxiliares para el uso de la consola
 	//char *buffer;
@@ -52,7 +52,7 @@ void *consola (void* arg)
 				{
 					printf("%02d:\t%s\n", i + 1, allCommands[i]);
 				}
-				sem_post(&semConsola);
+				sem_post(&semConsola); //habilito de nuevo la consolita
 				break;
 			}
 			case correr:
@@ -60,7 +60,7 @@ void *consola (void* arg)
 				//el hilo debe enviar una señal al planificador para que solicite la ruta al usuario
 				//sem_post(semProduccionMsjs); //este sem hay q colocarlo adentro de inciarPlanificador();
 				orden=0;
-				sem_post(&ordenIngresada);
+				sem_post(&ordenIngresada); //habilita el swich case en planificador.c
 				break;
 			}
 			case finalizar:
@@ -77,7 +77,7 @@ void *consola (void* arg)
 				//marco el pcb para que finalize en la siguiente rafaga de ejecución
 
 
-				int buscoPid(t_pcb *pcb) {
+				int buscoPid(t_pcb *pcb) {		 //creo la funcion para usar ORDEN SUPERIOR
 					return pcb->PID == pidAfinalizar;
 				}
 
@@ -89,23 +89,28 @@ void *consola (void* arg)
 				printf("PID: %d FINALIZADO\n", pidAfinalizar);
 				//printf("%d", pcb->finalizar);// test
 
-				sem_post(&semConsola);
+				sem_post(&semConsola); //vuelvo a habilitar la consolita
 				break;
 			}
 			case ps:
 			{
-				printf("Este comando falta desarrollar\n");
-				system("ps");
+				//printf("Este comando falta desarrollar\n");
+				//system("ps");
+				puts("\nEstado de Porcesos\n");
 
-				//list_iterate(lstPcbs, void(*closure)(void*));
-				//list_add(lstPcbs, NULL);
-				sem_post(&semConsola);
+				void imprimePS(t_pcb *pcb) {		 //creo la funcion para usar ORDEN SUPERIOR
+					printf("mProc %d: %s -> (aca iria el estado)\n", pcb->PID, pcb->ruta);
+				}
+				//mapeo la funsion imprimePS en cada nodo de la lista
+				list_iterate(lstPcbs,(void*)imprimePS);
+
+				sem_post(&semConsola); 	//vuelvo a habilitar la consolita
 				break;
 			}
 			case cpu:
 			{
 				printf("Este comando todavia no ha sido implemenado\n");
-				sem_post(&semConsola);
+				sem_post(&semConsola);  //vuelvo a habilitar la consolita
 				break;
 			}
 			case salir:
@@ -117,12 +122,12 @@ void *consola (void* arg)
 					t_headcpu header;
 					header.tipo_ejecucion=0;
 					send(conexiones.CPUS[m].socket, &header,sizeof(t_headcpu),0);
-					sem_post(semProduccionMsjs);
+					sem_post(semProduccionMsjs);	//habilita el proceso CPU
 
 				}
 
 				sem_post(&semSalir);
-				sem_post(&ordenIngresada);
+				sem_post(&ordenIngresada);	//habilita el swich case en planificador.c
 				//return (int*)-1; no tiene q retornar nada
 				//void pthread_exit(void *retval); //mata el hilo
 				break;
@@ -145,9 +150,9 @@ void *consola (void* arg)
 			// que se terminó de ingresar un comando y trataría de entenderlo. Para evitar eso al final de cada lectura
 			// vaciamos el contenido en el flujo stdin
 		}
-			sem_wait(&semConsola);
-			sleep(1);
-			fflush(stdin);
+			sem_wait(&semConsola);	//espera la correcta ejecucion de un comando anterior para ejecutar uno nuevo
+			sleep(1);		//esta puesto a modo estetico, xq a veces se imprime otro mensaje de otro hilo antes.
+			fflush(stdin);		//limpia el buffer del teclado
 			printf("\nIngrese el comando deseado o ayuda para conocer los comandos posibles\n");
 			command = leeComando(); // read lee la palabra y me devuelve un comando del enum
 	}

@@ -34,7 +34,7 @@ enum Commands
 	enter
 };
 
-void *consola (void*);
+void consola (void*);
 
 int leeComando(void);
 
