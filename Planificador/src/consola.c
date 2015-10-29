@@ -15,7 +15,7 @@ const char* allCommands[] =
 	// TODOS LOS COMANDOS deben estar en minúscula para que lo reconozca bien sin importar como lo ingrese el usuario
 	"ayuda",
 	"correr", // tendria q ser correr PATH directamente acá
-	"finalizar PID",
+	"finalizar",
 	"ps",
 	"cpu",
 	"salir"
@@ -65,7 +65,20 @@ void *consola (void* arg)
 
 			case finalizar:
 			{
-				printf("Este comando todavia no ha sido implemenado\n");
+				int pidAfinalizar;
+				printf("Finalizar tiene efecto solamente cuando el algoritmo de planificacion es RR\n");// por fifo tmb finaliza pero no se ve un "efecto"
+				printf("Ingrese numero de PID para FINALIZAR\n");
+				//fflush(stdin);
+				scanf("%d", &pidAfinalizar);
+				printf("Se finalizara el PID: %d", pidAfinalizar);
+
+
+				//marco el pcb para que finalize en la siguiente rafaga de ejecución
+				//list_find(lstPcbs, pcb->pid)(void*)); //busco el pcb
+				//lo marco para finalizar
+				//aca quiero lograr que en el pcb->campo finalizar ponga un 1
+
+				sem_post(&semConsola);
 				break;
 			}
 			case ps:

@@ -80,6 +80,9 @@ void dispatcher(t_queue *cola_ready)
 		conexiones.CPUS[I].enUso = true;
 		//CPU DISPONIBLE  saco de la cola y envio msj
 		t_pcb *pcb = queue_pop(cola_ready);
+		//chequeo el flag FINALIZAR. si esta prendido le pogno el IP al final, para cuando vuelva a ejecutar finalice. lucho
+		if (pcb->finalizar) pcb->instructionPointer = pcb->numInstrucciones;
+
 		t_headcpu *header = malloc(sizeof(t_headcpu));
 		preparoHeader(header);
 		//Envio el header
@@ -144,6 +147,7 @@ t_pcb* procesarPCB(char *path)
 	pcb->prioridad=0;
 	pcb->permisos=0;
 	strcpy(pcb->ruta, path);
+	pcb->finalizar=false;
 
 	return pcb;
 }
