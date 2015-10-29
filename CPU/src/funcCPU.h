@@ -54,6 +54,7 @@ typedef struct PCB {
 	int prioridad; // prioridad (usar mas adelante)
 	int permisos; // sin uso por ahora
 	char *ruta; //ruta del archivo mCod que tiene las instrucciones a procesar
+	bool finalizar;
 }t_pcb;
 
 //Protocolo de envio Planificador->CPU
