@@ -171,8 +171,6 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							 */
 							log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedido");
 						}
-
-						}
 					}
 				// SI NO ESTA EN SWAP, ENTONCES okMem TIENE LA DIRECCION DEL MARCO PARA ESCRIBIR EL MENSAJE
 				}else
@@ -749,6 +747,7 @@ void actualizarTablaProcesoFifo(t_list * tabla_proceso, int num_pagina, char * d
 	}
 }
 
+void actualizarTablaProcesoClock();
 
 process_pag * traerPaginaARemover(t_list * tablaProceso)
 {

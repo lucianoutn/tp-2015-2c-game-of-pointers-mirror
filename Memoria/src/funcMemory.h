@@ -139,6 +139,9 @@ void actualizarTablaProcesoLru(t_list *, int ,char*,int);
  */
 void actualizarTablaProcesoFifo(t_list *, int, char*, int);
 
+// ATUALIZA LA TABLA PARA ALGORITMO CLOCK
+void actualizarTablaProcesoClock(t_list *, int, char *, int);
+
 
 // BUSCO Y RETORNO EL REGISTRO DE LA TLB BUSCADO EN EL CASO DE ENCONTRARLO, SINO RETORNO NULL
 t_tlb * buscarEntradaProcesoEnTlb (t_list*, t_header *, int*);
