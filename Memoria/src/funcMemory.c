@@ -534,12 +534,12 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB)
 
 				if (pagina_removida->direccion_fisica != NULL)
 				{
-					printf("ENCONTRO PAGINA A REMOVER QUE TENIA UN AMRCO ASIGNADO \n");
+					printf("ENCONTRO PAGINA A REMOVER QUE TENIA UN MARCO ASIGNADO \n");
 					t_marco * marco_a_remover = list_remove_by_condition(listaFramesMemR, (void*)_numMarco);
-					marco_a_remover->direccion_inicio=NULL;
 
 					//AGREGO EL MARCO AHORA HUECO, A LA LISTA DE MARCOS HUECOS
-					list_add(listaFramesHuecosMemR, marco_a_remover);
+					// SIGUE TENIENDO SU DIRECCION Y SU NUMERO DE MARCO, NO IMPORTA EN QUE LISTA ESTE
+					list_add(listaFramesHuecosMemR, marco_create(marco_a_remover->direccion_inicio, marco_a_remover->numero_marco));
 				}
 			}
 
