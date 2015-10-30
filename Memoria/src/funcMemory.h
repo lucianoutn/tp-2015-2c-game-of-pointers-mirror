@@ -84,7 +84,7 @@ bool numeroDePaginaIgualA(int *);
 
 /* AGREGO UN FRAME A LA LISTA DE FRAMES, SACO UNO DE LA LISTA DE FRAMES HUECOS. ESCRIBO EL FRAME CON LA
  	PAGINA RECIBIDA DEL SWAP */
-void lectura(t_header *, t_list*, char*, char*, t_list *);
+void lectura(t_header *, t_list*, char*, char*, t_list *, process_pag *);
 
 // SOLO CONEXION //
 int meConectoAlSwap();

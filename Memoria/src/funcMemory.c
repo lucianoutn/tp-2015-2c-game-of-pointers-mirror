@@ -55,8 +55,6 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			 * RECIENTEMENTE, EN CASO CONTRARIO SE ENVIA AL SWAP, ESTE ME VA A DEVOLVER LA PAGINA A LEER,
 			 * LA MEMORIA LA ALMACENA EN UN MARCO DISPONIBLE PARA EL PROCESO DE LA PAGINA Y ACTUALIZA SUS TABLAS
 			 */
-			//numero_pagina = registro_prueba->pagina_proceso;
-			//numero_de_pid = registro_prueba->PID;
 
 			// PRIMERO VERIFICO QUE LA TLB ESTE HABILITADA*/
 			if (!strcmp(miContexto.tlbHabilitada, "SI"))
@@ -273,7 +271,7 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, int pid, int pagina)
 	t_list * subListaProceso = list_filter(TLB, (void *)_numeroDePid);
 
 	// SI ENCONTRE ALGUNA ENTRADA CON ESE PID
-	if (subListaProceso != NULL)
+	if (subListaProceso->elements_count != 0)
 	{
 		// VERIFICO QUE ALGUNA DE LAS ENTRADAS TENGA LA PAGINA QUE BUSCO
 		t_tlb * registro_tlb = list_find(subListaProceso, (void *)_numeroDePagina);
@@ -306,7 +304,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 	}
 
 	// SI ENCONTRO UN REGISTRO CON ESE PID
-	if (reg_tabla_tablas != NULL)
+	if (strcmp(reg_tabla_tablas->direc_tabla_proc,""))
 	{
 		// TRAIGO LA TABLA DEL PROCESO
 		t_list * tabla_proc = reg_tabla_tablas->direc_tabla_proc;
@@ -314,7 +312,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		// TRAIGO LA PAGINA BUSCADA
 		process_pag * pagina_proc = list_find(tabla_proc, (void *)numeroDePaginaIgualA);
 
-		// SI LA DIRECCION = NULL ES PORQUE ESTA EN SWAP, SINO YA LA ENCONTRE EN MEMORIA
+		// SI LA DIRECCION CONTIENE = "Swap" ES PORQUE ESTA EN SWAP, SINO YA LA ENCONTRE EN MEMORIA
 		if (!strcmp(pagina_proc->direccion_fisica,"Swap"))
 		{
 			char * contenido = malloc(miContexto.tamanioMarco);
@@ -323,7 +321,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 			if(flag)
 			{
 				log_info(logger, "Se hizo conexion con swap, se envio paquete a leer y este fue recibido correctamente");
-				lectura(package, tabla_adm, memoria_real, contenido, TLB);
+				lectura(package, tabla_adm, memoria_real, contenido, TLB, pagina_proc);
 				// Como la transferencia con el swap fue exitosa, le envio la pagina al CPU
 				send(socketCliente,contenido,miContexto.tamanioMarco,0);
 				return 1;
@@ -420,39 +418,31 @@ process_pag * obtenerPaginaProceso(t_list * tabla_proceso, int pagina)
  * KOLO
  * No pongo semaforos porque unicamente se la llama en leerEnMemReal que ya tiene el sem
  */
-void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_real, char * contenido, t_list * TLB)
+void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_real, char * contenido, t_list * TLB, process_pag * pagina_proceso)
 {
-	// BUSCO LA TABLA DEL PROCESO EN LA LISTA DE TABLAS DE PROCESOS POR EL NUMERO DE PID
+	/* BUSCO LA TABLA DEL PROCESO EN LA LISTA DE TABLAS DE PROCESOS POR EL NUMERO DE PID
 	numero_de_pid = proceso_entrante->PID;
 	t_tabla_adm * registro_tabla_proc = list_find(tabla_adm,(void*) elNodoTienePidIgualA);
 	t_list * lista_proceso = registro_tabla_proc->direc_tabla_proc;
 
-	// TRAIGO EL PRIMER MARCO VACIO DE MI MEMORIA PARA ALMACENAR EL CONTENIDO A LEER
-	printf ("LA LISTA DE FRAMES HUECOS TIENE %d ELEMENTOS \n", listaFramesHuecosMemR->elements_count);
-	t_marco_hueco * marco_vacio = (t_marco_hueco*)listaFramesHuecosMemR->head;
-	printf("LA DIRECCION DE MI MARCO VACIO ES %p \n", marco_vacio->direccion_inicio);
-
+	//BUSCO LA ENTRADA DE ESA PAGINA EN LISTA_PROCESO Y LA CARGO
+	process_pag * pagina_proceso = list_find(lista_proceso,(void*)_numeroDePagina);
+	*/
 	// preguntar!! CREO LA ENTRADA DE LA PAGINA A LA TABLA DE PROCESO
 
-	//BUSCO LA ENTRADA DE ESA PAGINA EN LISTA_PROCESO Y LA CARGO
-	process_pag * pagina_proceso = list_find(lista_proceso,(void*)numeroDePaginaIgualA);
+	// TRAIGO EL PRIMER MARCO VACIO DE MI MEMORIA PARA ALMACENAR EL CONTENIDO A LEER
+	t_marco_hueco * marco_vacio = (t_marco_hueco*)listaFramesHuecosMemR->head;
+
+	// VER QUE ONDA ESTO, NO TIENE LA PAGINA YA?
 	pagina_proceso->pag = proceso_entrante->pagina_proceso;
 	pagina_proceso->direccion_fisica = marco_vacio->direccion_inicio;
-
-	// VERIFICO QUE HAYA AGREGADO LA PAGINA A LA TABLA
-	printf("LA CANTIDAD DE PAGINAS EN MI TABLA DE PAGINAS ES %d \n", lista_proceso->elements_count);
 
 	// PASO EL MARCO LIBRE A LA LISTA DE OCUPADOS
 	t_marco * marco_ocupado = marco_create(marco_vacio->direccion_inicio, marco_vacio->numero_marco);
 	list_add(listaFramesMemR, marco_ocupado);
 
-	// VERIFICO QUE SE HAYA PASADO MI MARCO A LA LISTA DE MARCOS "OCUPADOS" PARA LLENARLO
-	printf ("LA CANTIDAD DE NODOS EN MI LISTA DE FRAMES OCUPADOS ES %d \n", listaFramesMemR->elements_count);
-
-	// ESCRIBO EN EL MARCO LA PAGINA QUE RECIBI DEL SWAP
+	// ESCRIBO EN EL MARCO LA PAGINA QUE RECIBI DEL SWAP (ES PARA LECTURA)
 	strcpy(pagina_proceso->direccion_fisica, contenido);
-
-	printf("ESCRIBI EN LA PAGINA: %s", pagina_proceso->direccion_fisica);
 
 	// LIBERO EL NODO/MARCO DE LA LISTA DE MARCOS HUECOS PORQUE AHORA ESTA EN LA DE OCUPADOS.
 	list_remove(listaFramesHuecosMemR, 0);
@@ -462,8 +452,6 @@ void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_rea
 	if( !strcmp(miContexto.tlbHabilitada, "SI") && !tlbLlena(TLB))
 	{
 	 	actualizarTlb(proceso_entrante->PID, proceso_entrante->pagina_proceso, pagina_proceso->direccion_fisica, TLB);
-		// VERIFICO LA CANTIDAD DE ELEMENTOS, A VER SI LO ESTOY HACIENDO BIEN
-	 	printf("LA TLB TIENE %d ELEMENTOS \n", TLB->elements_count);
 	}
 	pthread_mutex_unlock (&mutexTLB);
 }
@@ -810,10 +798,12 @@ void actualizarTlb (int pid, int pagina, char * direccion_memoria, t_list * TLB)
 	int posicion;
 	t_tlb * entrada_tlb = buscarEntradaProcesoEnTlb(TLB, package_create(0,pid,pagina,0), &posicion);
 
-	if( entrada_tlb != NULL )
+	if( strcmp(entrada_tlb->direccion_fisica,"") )
 	{
-		t_tlb * removido = list_remove(TLB, posicion);
-		list_add(TLB, removido);
+		// Verificando que ande la condicion
+		printf("Ya estaba cargada en TLB ");
+		//t_tlb * removido = list_remove(TLB, posicion);
+		//list_add(TLB, removido);
 
 	}
 	// SI NO ESTA CARGADA EN LA TLB
