@@ -132,50 +132,49 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							log_error(logger, "Error al intentar swapear");
 					}
 					/* SI TENGO ESPACIO PARA TRAERLA (CANT MAX DE MARCOS PARA ESE PROCESO
-					 *NO FUE ALCANZADA TODAVÍA), SI ME QUEDA MEMORIA (MARCOS) LA TRAIGO Y LA ESCRIBO
+					 *NO FUE ALCANZADA TODAVÍA), SI ME QUEDA MEMORIA (MARCOS) LA TRAIGO(MENTIRA) Y LA ESCRIBO
 					 */
 					else
 					{
-						// Creo el header de lectura de una pagina y se lo mando al swap
-						t_header * lectura_swap = crearHeaderLectura(registro_prueba);
-						/* char para guardar el contenido de la pagina que tengo que traer del swap para escribir
-						 * (Entendiendo que tengo que traer el contenido y escribir a continuacion)
-						 */
-						char * contenido_a_escribir = malloc(miContexto.tamanioMarco);
-
-						int status_lectura2 = envioAlSwap(lectura_swap, serverSocket, contenido_a_escribir);
-
-						if (status_lectura2 == 1)
+						if ( listaFramesHuecosMemR->elements_count != 0)
 						{
-							// TENGO QUE ASIGNARLE UNA DIRECCION PARA ESCRIBIR AHI, TRAIGO UN MARCO HUECO Y ESCRIBO
-							if (listaFramesHuecosMemR->elements_count != 0)
+							t_marco_hueco * marco_a_llenar = list_remove(listaFramesHuecosMemR, 0);
+							log_info(logger, "Traje la pagina del swap, voy a escribir el marco %d", marco_a_llenar->numero_marco);
+							sleep(miContexto.retardoMemoria);
+							// LO ESCRIBO CON EL MENSAJE QUE ME DICEN QUE LO ESCRIBA PORQUE NO TENGO QUE TRAER LO QUE YA ESTE ESCRITO DEL SWAP
+							memcpy ( marco_a_llenar->direccion_inicio, mensaje, strlen(mensaje));
+
+							//AGREGO EL MARCO AHORA ESCRITO, A LA LISTA DE MARCOS ESCRITOS
+							list_add(listaFramesMemR, marco_a_llenar);
+
+							//AGREGO LA PAGINA A LA TLB (VERIFICO SI ESTA LLENA Y REEMPLAZO)
+							pthread_mutex_lock (&mutexTLB);
+							actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, TLB);
+							pthread_mutex_unlock (&mutexTLB);
+							// ACTUALIZO LA TABLA DEL PROCESO CON LA DRIECCION FISICA, DEPENDIENDO EL ALGORITMO DEL CONTEXTO
+							if(!strcmp(miContexto.algoritmoReemplazo, "FIFO"))
 							{
-								t_marco_hueco * marco_a_llenar = list_remove(listaFramesHuecosMemR, 0);
-								//marco_a_llenar->direccion_inicio=malloc(miContexto.tamanioMarco);
-								log_info(logger, "Traje la pagina del swap, voy a escribir el marco %d", marco_a_llenar->numero_marco);
-								sleep(miContexto.retardoMemoria);
-								memcpy ( marco_a_llenar->direccion_inicio, mensaje, strlen(mensaje));
-
-								//AGREGO EL MARCO AHORA ESCRITO, A LA LISTA DE MARCOS ESCRITOS
-								list_add(listaFramesMemR, marco_a_llenar);
-
-								//AGREGO LA PAGINA A LA TLB (VERIFICO SI ESTA LLENA Y REEMPLAZO)
-								pthread_mutex_lock (&mutexTLB);
-								actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, TLB);
-								pthread_mutex_unlock (&mutexTLB);
-								// ACTUALIZO LA TABLA DEL PROCESO CON LA DRIECCION FISICA
-								actualizarTablaProceso(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
+								actualizarTablaProcesoFifo(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
+							}else if (!strcmp(miContexto.algoritmoReemplazo, "LRU"))
+							{
+								actualizarTablaProcesoLru(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
 							}else
 							{
-								/*  KOLO PREGUNTAR SI HAY QUE HACER ESTO O AUNQUE EL PROCESO TENGA ESPACIO
-								 * SWAPEAR PORQUE NO HAY MARCOS EXTRAS
-								 * Y QUE PASARIA SI NO HAY NINGUNA PAGINA DE ESE PROCESO CARGADA
-								 */
-								log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedido");
+								//actualizarTablaProcesoClock();
 							}
+						// SI NO ME QUEDAN MARCOS EN TODA LA MEMORIA PARA GUARDAR UNA PAGINA, CHAU
+						}else
+						{
+							/*  KOLO PREGUNTAR SI HAY QUE HACER ESTO O AUNQUE EL PROCESO TENGA ESPACIO
+							 * SWAPEAR PORQUE NO HAY MARCOS EXTRAS
+							 * Y QUE PASARIA SI NO HAY NINGUNA PAGINA DE ESE PROCESO CARGADA
+							 */
+							log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedido");
+						}
+
 						}
 					}
-					// SI NO ESTA EN SWAP, ENTONCES okMem TIENE LA DIRECCION DEL MARCO PARA ESCRIBIR EL MENSAJE
+				// SI NO ESTA EN SWAP, ENTONCES okMem TIENE LA DIRECCION DEL MARCO PARA ESCRIBIR EL MENSAJE
 				}else
 				{
 					log_info(logger, "Encontre la pagina en memoria, la escribo y acualizo tlb");
@@ -534,7 +533,7 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB)
 
 				if (pagina_removida->direccion_fisica != NULL)
 				{
-					printf("ENCONTRO PAGINA A REMOVER QUE TENIA UN MARCO ASIGNADO \n");
+					//ENCONTRO PAGINA A REMOVER QUE TENIA UN MARCO ASIGNADO
 					t_marco * marco_a_remover = list_remove_by_condition(listaFramesMemR, (void*)_numMarco);
 
 					//AGREGO EL MARCO AHORA HUECO, A LA LISTA DE MARCOS HUECOS
@@ -553,8 +552,6 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB)
 			if (!strcmp(miContexto.tlbHabilitada, "SI"))
 				removerEntradasTlb(TLB, proceso_entrante);
 			pthread_mutex_unlock (&mutexTLB);
-
-
 		}else
 		{
 			printf("NO SE ENCONTRO LA TABLA DEL PROCESO \n");
@@ -715,7 +712,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	return 1;
 }
 
-void actualizarTablaProceso(t_list * tabla_proceso, int num_pagina, char * direccion_marco, int num_marco)
+void actualizarTablaProcesoLru(t_list * tabla_proceso, int num_pagina, char * direccion_marco, int num_marco)
 {
 	bool _numeroDePagina (void * p)
 	{
@@ -726,6 +723,32 @@ void actualizarTablaProceso(t_list * tabla_proceso, int num_pagina, char * direc
 	process_pag * pagina = pag_proc_create(num_pagina, direccion_marco, num_marco);
 	list_add(tabla_proceso,pagina);
 }
+
+void actualizarTablaProcesoFifo(t_list * tabla_proceso, int num_pagina, char * direccion_marco, int num_marco)
+{
+	int tamanio = tabla_proceso->elements_count;
+	int x = 0;
+
+	bool _numeroDePagina (void * p)
+	{
+		return(*(int*)p == num_pagina);
+	}
+
+	while ( x < tamanio)
+	{
+		process_pag * pagina = list_get(tabla_proceso, x);
+		if( !strcmp(pagina->direccion_fisica, "Swap"))
+		{
+			list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
+			pagina->direccion_fisica = direccion_marco;
+			list_add(tabla_proceso, pagina);
+		}else
+		{
+			// TECNICAMENTE SI YA ESTABA CARGADA, LA DEJO EN LA POSICION EN LA QUE ESTABA
+		}
+	}
+}
+
 
 process_pag * traerPaginaARemover(t_list * tablaProceso)
 {
@@ -752,12 +775,13 @@ process_pag * primerPaginaCargada(t_list * tablaProceso)
 	while (x < cantidad_paginas)
 	{
 		process_pag * pagina = list_get(tablaProceso, x);
-		if (pagina->direccion_fisica != NULL)
+		if (strcmp(pagina->direccion_fisica, "Swap"))
 		{
 			return pagina;
 		}
 		x++;
 	}
+	// SI NO HAY NINGUNA CARGADA, O SEA, SI NO TIENE NADA PARA SWAPEAR
 	return NULL;
 }
 
