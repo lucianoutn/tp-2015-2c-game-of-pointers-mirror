@@ -304,7 +304,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 	}
 
 	// SI ENCONTRO UN REGISTRO CON ESE PID
-	if (strcmp(reg_tabla_tablas->direc_tabla_proc,""))
+	if (reg_tabla_tablas!=NULL)
 	{
 		// TRAIGO LA TABLA DEL PROCESO
 		t_list * tabla_proc = reg_tabla_tablas->direc_tabla_proc;
@@ -521,26 +521,27 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB)
 		{
 			printf("ENCONTRE LA TABLA DEL PROCESO A MATAR \n");
 
-			int cantidad_paginas = sizeof(tabla_proceso);
+			int cantidad_paginas = tabla_proceso->elements_count;
 			int x = 0;
 			while (x < cantidad_paginas)
 			{
-				process_pag * pagina_removida = list_remove(tabla_proceso, x);
+				process_pag * pagina_removida = list_remove(tabla_proceso, 0);
 
 				bool _numMarco (void * p)
 				{
 					return(*(char *)p == pagina_removida->marco);
 				}
 
-				if (pagina_removida->direccion_fisica != NULL)
+				if (strcmp(pagina_removida->direccion_fisica,"Swap"))
 				{
 					printf("ENCONTRO PAGINA A REMOVER QUE TENIA UN MARCO ASIGNADO \n");
 					t_marco * marco_a_remover = list_remove_by_condition(listaFramesMemR, (void*)_numMarco);
 
 					//AGREGO EL MARCO AHORA HUECO, A LA LISTA DE MARCOS HUECOS
 					// SIGUE TENIENDO SU DIRECCION Y SU NUMERO DE MARCO, NO IMPORTA EN QUE LISTA ESTE
-					list_add(listaFramesHuecosMemR, marco_create(marco_a_remover->direccion_inicio, marco_a_remover->numero_marco));
+					list_add(listaFramesHuecosMemR, marco_a_remover);
 				}
+				x++;
 			}
 
 			// ELIMINO TODOS LOS ELEMENTOS DE LA TABLA Y LA TABLA
@@ -798,7 +799,7 @@ void actualizarTlb (int pid, int pagina, char * direccion_memoria, t_list * TLB)
 	int posicion;
 	t_tlb * entrada_tlb = buscarEntradaProcesoEnTlb(TLB, package_create(0,pid,pagina,0), &posicion);
 
-	if( strcmp(entrada_tlb->direccion_fisica,"") )
+	if(entrada_tlb!=NULL)
 	{
 		// Verificando que ande la condicion
 		printf("Ya estaba cargada en TLB ");
