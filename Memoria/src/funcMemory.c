@@ -80,10 +80,18 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 	case 1:
 			//printf ("*********************Se recibio orden de escritura*********************\n");
 			log_info(logger, "Solicitud de escritura recibida del PID: %d y pagina: %d", registro_prueba->PID, registro_prueba->pagina_proceso);
-
+			int okTlb;
 			// DECLARO UN FLAG PARA SABER SI ESTABA EN LA TLB Y SE ESCRIBIO, O SI NO ESTABA
 			pthread_mutex_lock (&mutexMem);
-			int okTlb = verificarTlb(TLB,registro_prueba->tamanio_msj, mensaje, registro_prueba);
+			if (!strcmp(miContexto.tlbHabilitada, "SI"))
+			{
+				okTlb = verificarTlb(TLB,registro_prueba->tamanio_msj, mensaje, registro_prueba);
+			}
+			else
+			{
+				okTlb = 0;
+			}
+
 			pthread_mutex_unlock (&mutexMem);
 
 			// SI ESTABA EN LA TLB, YA LA FUNCION ESCRIBIO Y LISTO
@@ -98,7 +106,10 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 
 				// SE ESCRIBIO CORRECTAMENTE PORQUE YA ESTABA CARGADA EN TLB
 				pthread_mutex_lock (&mutexTLB);
-				actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
+				if(!strcmp(miContexto.tlbHabilitada, "SI"))
+				{
+					actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
+				}
 				pthread_mutex_unlock (&mutexTLB);
 				printf ("SE ESCRIBIO CORRECTAMENTE PORQUE ESTABA EN LA TLB \n");
 			}
@@ -125,7 +136,10 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 						int verific = swapeando(tablaProceso,tabla_adm ,TLB, mensaje, serverSocket, registro_prueba);
 						if (verific == 1)
 						{	pthread_mutex_lock (&mutexTLB);
-							actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
+							if(!strcmp(miContexto.tlbHabilitada, "SI"))
+							{
+								actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
+							}
 							pthread_mutex_unlock (&mutexTLB);
 						}
 						else
@@ -161,7 +175,10 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 
 								//AGREGO LA PAGINA A LA TLB (VERIFICO SI ESTA LLENA Y REEMPLAZO)
 								pthread_mutex_lock (&mutexTLB);
-								actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, TLB);
+								if(!strcmp(miContexto.tlbHabilitada, "SI"))
+								{
+									actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, TLB);
+								}
 								pthread_mutex_unlock (&mutexTLB);
 								// ACTUALIZO LA TABLA DEL PROCESO CON LA DRIECCION FISICA
 								actualizarTablaProceso(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
@@ -182,7 +199,10 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 					sleep(miContexto.retardoMemoria);
 					memcpy ( paginaProceso->direccion_fisica, mensaje, registro_prueba->tamanio_msj);
 					pthread_mutex_lock (&mutexTLB);
-					actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
+					if(!strcmp(miContexto.tlbHabilitada, "SI"))
+					{
+						actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
+					}
 					pthread_mutex_unlock (&mutexTLB);
 				}
 				pthread_mutex_unlock (&mutexMem);
