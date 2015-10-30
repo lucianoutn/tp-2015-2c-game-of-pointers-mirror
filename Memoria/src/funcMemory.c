@@ -113,7 +113,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				process_pag * paginaProceso = obtenerPaginaProceso(tablaProceso, registro_prueba->pagina_proceso);
 
 				// SI ESTA EN SWAP
-				if (paginaProceso->direccion_fisica == NULL)
+				if (!strcmp(paginaProceso->direccion_fisica,"Swap"))
 				{
 					/* SI NO TENGO ESPACIO PARA TRAERLA (TODOS LOS MARCOS DISPONIBLES PARA ESE
 					 * PROCESO YA ESTAN LLENOS), SWAPEO LA PRIMER PAGINA CARGADA (FIFO)
@@ -176,15 +176,15 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 						}
 					}
 					// SI NO ESTA EN SWAP, ENTONCES okMem TIENE LA DIRECCION DEL MARCO PARA ESCRIBIR EL MENSAJE
-					}else
-					{
-						log_info(logger, "Encontre la pagina en memoria, la escribo y acualizo tlb");
-						sleep(miContexto.retardoMemoria);
-						memcpy ( paginaProceso->direccion_fisica, mensaje, registro_prueba->tamanio_msj);
-						pthread_mutex_lock (&mutexTLB);
-						actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
-						pthread_mutex_unlock (&mutexTLB);
-					}
+				}else
+				{
+					log_info(logger, "Encontre la pagina en memoria, la escribo y acualizo tlb");
+					sleep(miContexto.retardoMemoria);
+					memcpy ( paginaProceso->direccion_fisica, mensaje, registro_prueba->tamanio_msj);
+					pthread_mutex_lock (&mutexTLB);
+					actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
+					pthread_mutex_unlock (&mutexTLB);
+				}
 				pthread_mutex_unlock (&mutexMem);
 			}
 
@@ -911,6 +911,23 @@ void limpiarMemoria(void * args)
 void dumpEnLog(char * memoria_real, t_list * tablaAdm)
 {
 	puts("Recibi SIGPOLL");
+	int i = 0, j = 0;
+	for(;i<tablaAdm->elements_count;i++) //Recorro la tabla de tablas
+	{
+		//Traigo una tabla
+		t_tabla_adm * entrada_tabla_tablas = list_get(tablaAdm,i);
+		t_list * tablaProceso = entrada_tabla_tablas->direc_tabla_proc;
+
+		for(;j<tablaProceso->elements_count;j++) //Recorro la tabla de procesos
+		{
+			process_pag * pagina_proc = list_get(tablaProceso, j); //Traigo una pagina
+			if(pagina_proc->marco!=-1) //si el marco no es -1 es porque esta cargado en un marco
+			{
+				log_info(logger,"Marco: %d ; Contenido: %s",pagina_proc->marco, pagina_proc->direccion_fisica);
+			}
+		}
+	}
+	puts("Termine dump");
 
 }
 //-----------------------------------------------------------//

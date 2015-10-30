@@ -24,6 +24,8 @@
 #include <sys/stat.h>        // para las constantes de modo de los semaforos ipc
 #include <sys/types.h> 		//Para señales
 #include <signal.h>			//Para señales
+#include <wait.h>
+
 
 #define IP "127.0.0.1"
 #define BACKLOG 10
@@ -85,12 +87,28 @@ int main()
 	}
 	void dump()
 	{
-		dumpEnLog(memoria_real);
+		pid_t idProceso;
+		idProceso =fork();
+		switch(idProceso)
+		{
+		case -1:
+			log_error(logger,"Error en la creacion del hijo");
+			break;
+		case 0:
+			dumpEnLog(memoria_real,tablaAdm);
+			break;
+		/*
+		default:
+			sleep(3);
+			puts("Entro al default");
+		*/
+		}
+
 	}
 
-	signal(SIGINT,flush);
+	signal(SIGUSR1,flush);
 	signal(SIGUSR2,limpiar);
-	signal(SIGPOLL,dump);
+	signal(SIGINT,dump);
 
 	reciboDelCpu(memoria_real, TLB, tablaAdm);
 
@@ -143,10 +161,18 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	char * mensaje_inicializacion = malloc(1);
 	ejecutoInstruccion(package, mensaje_inicializacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 
-	t_header * package_escritura = package_create(1,15,1,strlen("Hola"));
+	t_header * package_escritura = package_create(1,15,0,strlen("Hola"));
 	char * mensaje_escritura = malloc(5);
 	strcpy(mensaje_escritura,"Hola");
 	ejecutoInstruccion(package_escritura, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	t_header * package_escritura1 = package_create(1,15,1,strlen("Aldu"));
+	strcpy(mensaje_escritura,"Aldu");
+	ejecutoInstruccion(package_escritura1, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	t_header * package_escritura2 = package_create(1,15,2,strlen("Aldu"));
+	strcpy(mensaje_escritura,"Chau");
+	ejecutoInstruccion(package_escritura2, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 
 	t_header * package_finalizacion = package_create(3,15,0,0);
 	char * mensaje_finalizacion = malloc(1);
