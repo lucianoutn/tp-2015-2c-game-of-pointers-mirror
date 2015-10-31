@@ -145,7 +145,8 @@ void actualizarTablaProcesoFifo(t_list *, int, char*, int);
 void actualizarTablaProcesoClock(t_list *, int, char *, int);
 
 
-// BUSCO Y RETORNO EL REGISTRO DE LA TLB BUSCADO EN EL CASO DE ENCONTRARLO, SINO RETORNO NULL
+// BUSCO Y RETORNO EL REGISTRO DE LA TLB BUSCADO EN EL CASO DE ENCONTRARLO, SINO RETORNO NULL.
+// TAMBIEN CARGO EN EL TERCER PARAMETRO (INT*) LA POSICION DE ESA ENTRADA
 t_tlb * buscarEntradaProcesoEnTlb (t_list*, t_header *, int*);
 
 
