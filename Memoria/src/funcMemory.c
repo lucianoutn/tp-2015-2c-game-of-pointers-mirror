@@ -63,6 +63,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				pthread_mutex_lock (&mutexTLB);
 				int flagg=leerDesdeTlb(socketCliente,TLB, registro_prueba->PID, registro_prueba->pagina_proceso);
 				pthread_mutex_unlock (&mutexTLB);
+				// SI NO ESTABA EN TLB, ME FIJO EN MEMORIA
 				if(!flagg)
 				{
 					pthread_mutex_lock (&mutexMem);
@@ -76,6 +77,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				leerEnMemReal(tabla_adm, TLB,registro_prueba, serverSocket,socketCliente, memoria_real);
 				pthread_mutex_unlock (&mutexMem);
 			}
+			cantPagAccessed++;
 	 		break;
 
 	 	case 1:
@@ -115,6 +117,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				// SI ESTA EN SWAP
 				if (!strcmp(paginaProceso->direccion_fisica,"Swap"))
 				{
+					cantFallosPag++;
 					/* SI NO TENGO ESPACIO PARA TRAERLA (TODOS LOS MARCOS DISPONIBLES PARA ESE
 					 * PROCESO YA ESTAN LLENOS), SWAPEO LA PRIMER PAGINA CARGADA (FIFO)
 					 * Y ESCRIBO LA QUE RECIBO DEL SWAP AL FINAL DE LA LISTA
@@ -174,7 +177,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				}
 				pthread_mutex_unlock (&mutexMem);
 			}
-
+			cantPagAccessed++;
 	 		break;
 	 	case 2:
 	 		/* LA INICIALIZACION SE MANDA DIRECO AL SWAP PARA QUE RESERVE ESPACIO,
@@ -207,8 +210,10 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			envioAlSwap(registro_prueba, serverSocket, NULL, flag );
 
 			if(flag)
+			{
 				log_info(logger, "Se hizo conexion con swap, se envio proceso a matar y este fue recibido correctamente");
-			else
+				log_info(logger, "Cantidad total de paginas accedidas: %d\n vs Cantidad de fallos de pagina %d", cantPagAccessed, cantFallosPag);
+			}else
 				log_error(logger, "Hubo un problema con la conexion/envio al swap");
 	 		break;
 	 	default:
@@ -286,6 +291,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		// SI LA DIRECCION CONTIENE = "Swap" ES PORQUE ESTA EN SWAP, SINO YA LA ENCONTRE EN MEMORIA
 		if (!strcmp(pagina_proc->direccion_fisica,"Swap"))
 		{
+			cantFallosPag++;
 			char * contenido = malloc(miContexto.tamanioMarco);
 			envioAlSwap(package, serverSocket, contenido, flag);
 			//SI TODO SALIO BIEN, EL SWAP CARGO LA PAGINA A LEER EN "CONTENIDO"
@@ -408,7 +414,7 @@ bool tlbLlena(t_list * TLB)
 
 void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB)
 {
-	numero_de_pid = proceso_entrante->PID;
+	int numero_de_pid = proceso_entrante->PID;
 
 	bool _numeroDePid (void * p)
 	{

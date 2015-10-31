@@ -54,9 +54,9 @@ pthread_mutex_t mutexMem;
 pthread_mutex_t mutexDump;
 
 
-// DECLARACIONES GLOBALES PARA USAR FUNCIONES DE CONDICION EN LISTFIND
-int numero_de_pid;
-int numero_de_pagina;
+// DECLARACIONES GLOBALES PARA MOSTRAR FALLOS DE PAGINA VS TOTAL DE PAGINAS ACCEDIDAS
+int cantPagAccessed;
+int cantFallosPag;
 
 // ESTRUCTURA QUE CONTIENE EL CONTEXTO DE LA MEMORIA
 contexto miContexto;
@@ -94,6 +94,7 @@ void envioAlSwap(t_header *, int, char *, int *);
 bool tlbLlena(t_list *);
 // FUNCION PARA FINALIZAR PROCESOS
 void matarProceso(t_header *, t_list*, t_list *);
+
 /* ME DEVUELVE NULL SI LA PAGINA ESTA EN SWAP Y SINO ME DEVUELVE LA DIRECCION DEL MARCO */
 //direccionDePag();
 
