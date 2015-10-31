@@ -110,7 +110,11 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				pthread_mutex_lock (&mutexMem);
 				// TRAIGO LA TABLA DEL PROCESO
 				t_list * tablaProceso = obtenerTablaProceso(tabla_adm, registro_prueba->PID);
-
+				if(tablaProceso == NULL)
+				{
+					log_error(logger, "Este proceso fue finalizado recientemente o nunca se inicio");
+					break;
+				}
 				// TRAIGO LA PAGINA A ESCRIBIR ( SOLO EL NODO DE LA TABLA DEL PROCESO )
 				process_pag * paginaProceso = obtenerPaginaProceso(tablaProceso, registro_prueba->pagina_proceso);
 
@@ -158,11 +162,10 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 						// SI NO ME QUEDAN MARCOS EN TODA LA MEMORIA PARA GUARDAR UNA PAGINA, CHAU
 						}else
 						{
-							/*  KOLO PREGUNTAR SI HAY QUE HACER ESTO O AUNQUE EL PROCESO TENGA ESPACIO
-							 * SWAPEAR PORQUE NO HAY MARCOS EXTRAS
-							 * Y QUE PASARIA SI NO HAY NINGUNA PAGINA DE ESE PROCESO CARGADA
-							 */
+							// POR ISSUE #25, SE FINALIZA EL PROCESO AUNQUE TENGA LUGAR RESPECTO A SU CANTIDAD
+							// MAXIMA DE MARCOS, SI NO HAY MÁS MARCOS PARA ASIGNAR
 							log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedido");
+							matarProceso(registro_prueba, tabla_adm, TLB);
 						}
 					}
 				// SI NO ESTA EN SWAP, ENTONCES okMem TIENE LA DIRECCION DEL MARCO PARA ESCRIBIR EL MENSAJE
