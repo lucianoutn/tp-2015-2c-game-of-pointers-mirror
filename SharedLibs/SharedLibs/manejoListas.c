@@ -118,6 +118,7 @@ void reg_tlb_destroy(t_tlb * self)
 }
 /* ---------------------------------------------------------*/
 
+
 /* --------------ENTRADAS A LA TABLA DE PROCESO ------------
 pag_proceso * pag_proc_create (int pagina, char * direccion_fisica)
 {
@@ -130,6 +131,8 @@ static void pag_proc_destroy(pag_proceso * self)
 {
  free(self);
 }
+*/
+
 
 /* ----------------------MEMORIA -----------------*/
 t_list * crearListaFrames()

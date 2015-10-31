@@ -77,13 +77,7 @@ typedef struct
 } pag_proceso;
 // ------------------------------------//
 
-/* STRUCT TABLA PARA CADA PROCESO QUE LLEGA
-typedef struct
-{
-	int pag; // Contiene el numero de pagina del proceso
-	char * direc_mem; //Contiene la direccion de memoria de la pagina que se esta referenciando
-} pag_proceso;
- ------------------------------------*/
+
 
 // ---------- SWAP ----------------//
 t_pag * pag_create(int,int, int);
@@ -136,5 +130,6 @@ t_list * crearListaProceso();
 t_list * crearListaAdm();
 
 // -------------------------------------- //
+
 
 #endif /* SHAREDLIBS_MANEJOLISTAS_H_ */

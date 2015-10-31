@@ -31,14 +31,18 @@ typedef struct{
  char * algoritmoReemplazo;
 } contexto;
 
+
 // STRUCT TABLA PARA CADA PROCESO QUE LLEGA //
 typedef struct
 {
    int pag; // Contiene el numero de pagina del proceso
    char * direccion_fisica; //Contiene la direccion de memoria de la pagina que se esta referenciando
    int marco; // numero de marco ( si tiene ) en donde esta guardada la pagina
+   int accessed;
+   int dirty;
 }process_pag;
 // ------------------------------------//
+
 
 typedef struct{
 			char * memoria;
@@ -77,10 +81,6 @@ void liberarMemoria(char *);
 /* RECIBE LA INSTRUCCION RECIBIDA DEL CPU Y SE HACE UN CASE DEL TIPO DE EJECUCION PARA SABER
    LAS ESTRUCTURAS A CREAR, QUE MANDAR AL SWAP, QUE RECIBIR, ETC... */
 void ejecutoInstruccion(t_header *, char*,char*, t_list*, t_list*, int, int);
-
-// FUNCIONES PARA USAR COMO FUNCION CONDICION EN LISTFIND O LISTFILTER POR EJEMPLO (ARREGLAR ESTO)!!!!!
-bool elNodoTienePidIgualA(int *);
-bool numeroDePaginaIgualA(int *);
 
 /* AGREGO UN FRAME A LA LISTA DE FRAMES, SACO UNO DE LA LISTA DE FRAMES HUECOS. ESCRIBO EL FRAME CON LA
  	PAGINA RECIBIDA DEL SWAP */
@@ -157,12 +157,21 @@ t_header * crearHeaderLectura(t_header*);
 // LE MANDO LA PAGINA A SWAPEAR PARA QUE LA ESCRIBA Y PODER ALMACENAR EN MEMORIA LA NUEVA A ESCRIBIR
 t_header * crearHeaderEscritura(int, int, int);
 
-// OBTENGO LA PRIMER PAGINA QUE FUE CARGADA EN MEMORIA
-// SI POR ALGUN MOTIVO NO LA ENCONTRO, RETORNO NULL (SIRVE SI ESTOY USANDO FIFO)
-process_pag * primerPaginaCargada(t_list*);
-
 // DEVUELVE LA PAGINA CORRESPONDIENTE PARA REMOVER DEPENDIENDO DEL ALGORITMO
 process_pag * traerPaginaARemover(t_list *);
+
+// OBTENGO LA PRIMER PAGINA QUE FUE CARGADA EN MEMORIA
+// SI POR ALGUN MOTIVO NO LA ENCONTRO, RETORNO NULL (SIRVE SI ESTOY USANDO FIFO O LRU)
+process_pag * paginaARemoverFifoLru(t_list*);
+
+process_pag * paginaARemoverClock(t_list*);
+
+// VERIFICA SI HAY ALGUNA PAGINA CON EL BIT ACCEDIDO Y EL DIRTY EN 0
+process_pag * ambosBitsEnCero(t_list *);
+
+// VERIFICA SI HAY ALGUNA PAGINA CON A = 0, D = 1, MIENTRAS NO LA ENCUENTRE,
+// VA ACTUALIZANDO A = 0, SI RECORRIO TODO Y NO LA ENCONTRO, VUELVE A HACER AMBOSBITSENCERO
+process_pag * bitDirtyEnUno(t_list*);
 
 int removerEntradasTlb(t_list *, t_header*);
 
@@ -176,7 +185,7 @@ void dumpEnLog();
 
 
 /* PASAR A MANEJOLISTAS */
-process_pag * pag_proc_create(int, char*, int);
+process_pag * pag_proc_create(int, char*, int, int, int);
 
 void pag_proc_destroy(process_pag *);
 /* ---------------------*/
