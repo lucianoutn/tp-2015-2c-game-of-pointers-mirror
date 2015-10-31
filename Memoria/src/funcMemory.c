@@ -253,27 +253,18 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, int pid, int pagina)
 	}
 	bool _numeroDePagina (void * p)
 	{
-			return(*(int *)p == pid);
+			return(*(int *)p == pagina);
 	}
-
-	// VERIFICO TODAS LAS ENTRADAS DE LA TLB QUE TIENE EL PID DEL PROCESO
-	t_list * subListaProceso = list_filter(TLB, (void *)_numeroDePid);
-
-	// SI ENCONTRE ALGUNA ENTRADA CON ESE PID
-	if (subListaProceso->elements_count != 0)
+	int * posicion = malloc(sizeof(int));
+	t_tlb * registro_tlb = buscarEntradaProcesoEnTlb(TLB, package_create(0, pid, pagina, 0), posicion );
+	// SI LA ENCONTRO LA LEO Y SE LA ENVIO AL CPU
+	if (registro_tlb != NULL)
 	{
-		// VERIFICO QUE ALGUNA DE LAS ENTRADAS TENGA LA PAGINA QUE BUSCO
-		t_tlb * registro_tlb = list_find(subListaProceso, (void *)_numeroDePagina);
-
-		// SI LA ENCONTRO LA LEO Y SE LA ENVIO AL CPU
-		if (registro_tlb != NULL)
-		{
-			send(socketCliente,registro_tlb->direccion_fisica,miContexto.tamanioMarco,0);
-			return 1;
-		}
+		send(socketCliente,registro_tlb->direccion_fisica,miContexto.tamanioMarco,0);
+		return 1;
+	}
 	// SI LA TLB NO ESTA HABILITADA ENTONCES TENGO QUE VERIFICAR EN LA TABLA DE TABLAS
 	//  SI YA ESTA CARGADA EN MEMORIA O SI ESTA EN SWAP
-	}
 	return 0;
 }
 
@@ -719,7 +710,6 @@ void actualizoTablaProceso(t_list * tablaProceso, t_marco_hueco * marco_a_llenar
 		//actualizarTablaProcesoClock();
 	}
 }
-
 
 void actualizarTablaProcesoLru(t_list * tabla_proceso, int num_pagina, char * direccion_marco, int num_marco)
 {
