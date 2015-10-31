@@ -435,26 +435,27 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB)
 		{
 			printf("ENCONTRE LA TABLA DEL PROCESO A MATAR \n");
 
-			int cantidad_paginas = sizeof(tabla_proceso);
+			int cantidad_paginas = tabla_proceso->elements_count;
 			int x = 0;
 			while (x < cantidad_paginas)
 			{
-				process_pag * pagina_removida = list_remove(tabla_proceso, x);
+				process_pag * pagina_removida = list_remove(tabla_proceso, 0);
 
 				bool _numMarco (void * p)
 				{
 					return(*(char *)p == pagina_removida->marco);
 				}
 
-				if (pagina_removida->direccion_fisica != NULL)
+				if (strcmp(pagina_removida->direccion_fisica,"Swap"))
 				{
 					//ENCONTRO PAGINA A REMOVER QUE TENIA UN MARCO ASIGNADO
 					t_marco * marco_a_remover = list_remove_by_condition(listaFramesMemR, (void*)_numMarco);
 
 					//AGREGO EL MARCO AHORA HUECO, A LA LISTA DE MARCOS HUECOS
 					// SIGUE TENIENDO SU DIRECCION Y SU NUMERO DE MARCO, NO IMPORTA EN QUE LISTA ESTE
-					list_add(listaFramesHuecosMemR, marco_create(marco_a_remover->direccion_inicio, marco_a_remover->numero_marco));
+					list_add(listaFramesHuecosMemR, marco_a_remover);
 				}
+				x++;
 			}
 
 			// ELIMINO TODOS LOS ELEMENTOS DE LA TABLA Y LA TABLA
@@ -808,18 +809,16 @@ t_header * crearHeaderEscritura(int pid, int pagina, int tamanio)
 void tlbFlush(t_list * TLB)
 {
 	puts("Recibi SIGUSR1\n");
-
+	pthread_mutex_lock (&mutexTLB);
 	if (!strcmp(miContexto.tlbHabilitada,"SI"))
 	{
-		puts("Uy, voy a vaciar la TLB\n");
 		printf("La TLB tiene %d elementos \n", TLB->elements_count);
 		int i=0;
-		pthread_mutex_lock (&mutexTLB);
-		for(;i<TLB->elements_count;i++)
+		int cant_elementos = TLB->elements_count;
+		for(;i<cant_elementos;i++)
 		{
-			list_remove_and_destroy_element(TLB, i, (void *)reg_tlb_destroy);
+			list_remove(TLB, 0);
 		}
-		pthread_mutex_unlock (&mutexTLB);
 	}
 	else
 	{
@@ -828,6 +827,7 @@ void tlbFlush(t_list * TLB)
 
 	printf("La TLB tiene %d elementos \n", TLB->elements_count);
 	puts("Mostrame esto gato \n");
+	pthread_mutex_unlock (&mutexTLB);
 }
 
 /*
@@ -842,6 +842,7 @@ void limpiarMemoria(void * args)
 	puts("Recibi SIGUSR2 \n");
 	//Vacio la memoria
 	pthread_mutex_lock (&mutexMem);
+	puts("Pase el lock");
 	strcpy(param->memoria,"\0");
 
 	//Actualizo las listas

@@ -44,7 +44,7 @@ int main()
 
 	//RESERVO ESPACIO PARA LA MEMORIA REAL /
 	int tamanio_memoria_real = miContexto.tamanioMarco * miContexto.cantidadMarcos;
-	char * memoria_real = reservarMemoria(tamanio_memoria_real);
+	char * memoria_real = reservarMemoria(miContexto.cantidadMarcos, miContexto.tamanioMarco);
 	t_list * TLB = NULL;
 	// CREO UNA LISTA PARA REFERENCIAR A LAS LISTAS DE PROCESOS //
 	t_list * tablaAdm = crearListaAdm();
@@ -107,8 +107,8 @@ int main()
 	}
 
 	signal(SIGUSR1,flush);
-	signal(SIGUSR2,limpiar);
-	signal(SIGINT,dump);
+	signal(SIGINT,limpiar);
+	signal(SIGPOLL,dump);
 
 	reciboDelCpu(memoria_real, TLB, tablaAdm);
 
