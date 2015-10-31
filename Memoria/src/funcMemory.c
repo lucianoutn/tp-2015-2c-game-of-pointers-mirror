@@ -154,10 +154,10 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							// ACTUALIZO LA TABLA DEL PROCESO CON LA DRIECCION FISICA, DEPENDIENDO EL ALGORITMO DEL CONTEXTO
 							if(!strcmp(miContexto.algoritmoReemplazo, "FIFO"))
 							{
-								actualizarTablaProcesoFifo(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
+								actualizarTablaProcesoFifo(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, TLB);
 							}else if (!strcmp(miContexto.algoritmoReemplazo, "LRU"))
 							{
-								actualizarTablaProcesoLru(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
+								actualizarTablaProcesoLru(registro_prueba->PID, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, TLB);
 							}else
 							{
 								//actualizarTablaProcesoClock();
@@ -724,7 +724,6 @@ void actualizarTablaProcesoLru(t_list * tabla_proceso, int num_pagina, char * di
 
 void actualizarTablaProcesoFifo(t_list * tabla_proceso, int num_pagina, char * direccion_marco, int num_marco)
 {
-	int tamanio = tabla_proceso->elements_count;
 	int x = 0;
 
 	bool _numeroDePagina (void * p)
@@ -732,22 +731,44 @@ void actualizarTablaProcesoFifo(t_list * tabla_proceso, int num_pagina, char * d
 		return(*(int*)p == num_pagina);
 	}
 
-	while ( x < tamanio)
+	process_pag * pagina = list_find(tabla_proceso, (void*)_numeroDePagina);
+	if( !strcmp(pagina->direccion_fisica, "Swap"))
 	{
-		process_pag * pagina = list_get(tabla_proceso, x);
-		if( !strcmp(pagina->direccion_fisica, "Swap"))
-		{
-			list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
-			pagina->direccion_fisica = direccion_marco;
-			list_add(tabla_proceso, pagina);
-		}else
-		{
-			// TECNICAMENTE SI YA ESTABA CARGADA, LA DEJO EN LA POSICION EN LA QUE ESTABA
-		}
+		list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
+		pagina->direccion_fisica = direccion_marco;
+		pagina->marco = num_marco;
+		list_add(tabla_proceso, pagina);
+	}else
+	{
+		// TECNICAMENTE SI YA ESTABA CARGADA, LA DEJO EN LA POSICION EN LA QUE ESTABA
 	}
+
 }
 
-void actualizarTablaProcesoClock();
+void actualizarTablaProcesoClock(t_list * tabla_proceso, int num_pagina, char * direccion_marco, int num_marco)
+{
+	int tamanio = tabla_proceso->elements_count;
+	int x = 0;
+	// HACER ABSTRACCIONES DESPUES
+	while ( x < tamanio)
+	{
+		/*
+		process_pag * pagina = list_get(tabla_proceso, x);
+		if ( pagina->dirtybit == 0 && pagina->accedidobit == 0)
+		{
+
+		}
+
+		if( pagina->dirtybit == 1 && pagina->accedidobit == 0)
+		{
+
+		}
+
+		*/
+
+	}
+
+}
 
 process_pag * traerPaginaARemover(t_list * tablaProceso)
 {
@@ -795,7 +816,7 @@ int marcosProcesoLlenos(t_list * lista_proceso)
 	while ( paginas_ocupadas+paginas_disponibles < cantidad_paginas )
 	{
 		process_pag * reg = list_get(lista_proceso, x);
-		if ( reg->direccion_fisica != NULL)
+		if ( strcmp(reg->direccion_fisica, "Swap"))
 			paginas_ocupadas++;
 		else
 			paginas_disponibles++;
@@ -821,7 +842,7 @@ void actualizarTlb (int pid, int pagina, char * direccion_memoria, t_list * TLB)
 	int posicion;
 	t_tlb * entrada_tlb = buscarEntradaProcesoEnTlb(TLB, package_create(0,pid,pagina,0), &posicion);
 
-	if( strcmp(entrada_tlb->direccion_fisica,"") )
+	if( entrada_tlb != NULL )
 	{
 		// Verificando que ande la condicion
 		printf("Ya estaba cargada en TLB ");
