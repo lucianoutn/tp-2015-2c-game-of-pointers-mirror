@@ -12,7 +12,7 @@ void traigoContexto()
  // LEVANTO EL ARCHIVO CONFIG Y VERIFICO QUE LO HAYA HECHO CORRECTAMENTE /
  t_config * config_memory = config_create("resources/config.cfg");
 
- if( config_memory == NULL )
+ if( config_memory  )
  {
   puts("Final feliz");
   abort();
@@ -30,9 +30,10 @@ void traigoContexto()
  miContexto.algoritmoReemplazo = config_get_string_value(config_memory, "ALGORITMO_REEMPLAZO");
 }
 
-char * reservarMemoria(int capacidad_en_bytes)
+char * reservarMemoria(int cantidadMarcos, int capacidadMarco)
 {
-	char * memoria = malloc(capacidad_en_bytes);
+	// La creo con calloc para que me la llene de \0
+	char * memoria = calloc(cantidadMarcos, capacidadMarco);
 	//printf ("Memoria reservada \n");
 	return memoria;
 }
@@ -45,7 +46,7 @@ void liberarMemoria(char * memoria_a_liberar)
 
 void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memoria_real, t_list * TLB, t_list * tabla_adm, int socketCliente, int serverSocket)
 {
-	int flag;
+	int * flag = malloc(sizeof(int));
 	// DEPENDIENDO EL TIPO DE EJECUCION
 	switch (registro_prueba->type_ejecution)
 	{
@@ -190,9 +191,9 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 		//printf("*********************Se recibio orden de inicializacion********************* \n");
 	 		/* LA INICIALIZACION SE MANDA DIRECO AL SWAP PARA QUE RESERVE ESPACIO,
 	 		   EL FLAG = 1 ME AVISA QUE RECIBIO OK */
-	 		flag = envioAlSwap(registro_prueba, serverSocket, NULL);
+	 		envioAlSwap(registro_prueba, serverSocket, NULL, flag);
 	 		bool recibi;
-	 		if(flag)
+	 		if(*flag == 1)
 	 		{
 	 			//creo todas las estructuras porque el swap ya inicializo
 	 			pthread_mutex_lock (&mutexMem);
@@ -215,7 +216,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			pthread_mutex_lock (&mutexMem);
 			matarProceso(registro_prueba, tabla_adm, TLB);
 			pthread_mutex_unlock (&mutexMem);
-			int flag = envioAlSwap(registro_prueba, serverSocket, NULL );
+			envioAlSwap(registro_prueba, serverSocket, NULL, flag );
 
 			if(flag)
 				log_info(logger, "Se hizo conexion con swap, se envio proceso a matar y este fue recibido correctamente");
@@ -292,7 +293,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		return(*(int *)p == package->PID);
 	}
 
-	int flag;
+	int  * flag;
 	t_tabla_adm * reg_tabla_tablas = list_find(tabla_adm, (void*)_numeroDePid);
 
 	bool _numeroDePagina (void * p)
@@ -301,7 +302,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 	}
 
 	// SI ENCONTRO UN REGISTRO CON ESE PID
-	if (strcmp(reg_tabla_tablas->direc_tabla_proc,""))
+	if (reg_tabla_tablas != NULL)
 	{
 		// TRAIGO LA TABLA DEL PROCESO
 		t_list * tabla_proc = reg_tabla_tablas->direc_tabla_proc;
@@ -313,7 +314,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		if (!strcmp(pagina_proc->direccion_fisica,"Swap"))
 		{
 			char * contenido = malloc(miContexto.tamanioMarco);
-			flag = envioAlSwap(package, serverSocket, contenido );
+			envioAlSwap(package, serverSocket, contenido, flag);
 			//SI TODO SALIO BIEN, EL SWAP CARGO LA PAGINA A LEER EN "CONTENIDO"
 			if(flag)
 			{
@@ -330,9 +331,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 			}
 		}else // SI NO ESTA EN SWAP, YA CONOZCO LA DIRECCION DE SU MARCO //
 		{
-			// ACA NO SE SI SE ENVIA CON UN POINTER SI QUIERO MANDAR EL CONTENIDO DESDE ESA DIRECCION,
-			// HABRIA QUE PROBAR QUE ONDA
-			send(socketCliente,pagina_proc->direccion_fisica,miContexto.tamanioMarco,0);
+			send(socketCliente,pagina_proc->direccion_fisica,sizeof(pagina_proc->direccion_fisica),0);
 			return 1;
 		}
 	}
@@ -453,9 +452,8 @@ void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_rea
 	pthread_mutex_unlock (&mutexTLB);
 }
 
-int envioAlSwap ( t_header * header, int serverSocket, char * contenido)
+void envioAlSwap ( t_header * header, int serverSocket, char * contenido, int * flag)
 {
-		int flag;
 		send(serverSocket, header, sizeof(t_header), 0);
 
 		//SI EL TIPO DE EJECUCION ES ESCRITURA, MANDO EL CONTENIDO
@@ -468,16 +466,15 @@ int envioAlSwap ( t_header * header, int serverSocket, char * contenido)
 	  	 * 0 = Hubo un error.
 	  	 * 1 = Todo ok.
  	 	*/
-		recv(serverSocket, &flag, sizeof(int),0);
+		recv(serverSocket, flag, sizeof(int),0);
 
-		if(flag==1) //si no hubo error
+		if(*flag==1) //si no hubo error
 		{
 			if(header->type_ejecution==0) //si hice una lectura, devuelve la pag
 			{
 				recv(serverSocket, (void *)contenido, miContexto.tamanioMarco,0);
 			}
 		}
-	 return flag;
 }
 bool numeroDePaginaIgualA(int * pagina_number)
 {
@@ -647,15 +644,23 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	// SI SE TRATA DE UNA ESCRITURA
 	if (header->type_ejecution == 1)
 	{
-		t_header * header_escritura = crearHeaderEscritura( header->PID, paginaASwapear->pag, miContexto.tamanioMarco);
+		t_header * header_escritura = crearHeaderEscritura( header->PID, paginaASwapear->pag, strlen(mensaje));
 
-		int status_escritura = envioAlSwap(header_escritura, serverSocket, paginaASwapear->direccion_fisica);
+		int * status_escritura = malloc(sizeof(int));
+		envioAlSwap(header_escritura, serverSocket, paginaASwapear->direccion_fisica, status_escritura);
+
+		if ( *status_escritura != 1)
+		{
+			log_error(logger, "No se pudo escribir en swap");
+			return 0;
+		}
 
 		// LE PIDO LA PAGINA QUE QUIERO ESCRIBIR Y LA AGREGO AL FINAL DE LA LISTA
 		t_header * header_lectura = crearHeaderLectura(header);
 
+		int * status_lectura = malloc(sizeof(int));
 		char * contenido = malloc(miContexto.tamanioMarco);
-		int status_lectura = envioAlSwap(header_lectura, serverSocket, contenido);
+		envioAlSwap(header_lectura, serverSocket, contenido, status_lectura);
 
 		int num_pag = header->pagina_proceso;
 
@@ -663,28 +668,36 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		{
 			return(*(int*)p == num_pag);
 		}
+		if (*status_lectura != 1)
+		{
+			log_error(logger, "No se pudo leer de swap");
+			return 0;
+		}
 
 		// La agrego al final con la direccion del marco de la pagina que swapee ( ALGORITMO FIFO )
 		if ( !strcmp(miContexto.algoritmoReemplazo, "FIFO"))
 		{
-		list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
-		list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco));
+			list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
+			list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco));
 		} // SINO VEO LOS OTRO ALGORITMOS  ( DESPUES VEO )
-
 
 		// Escribo en mi pagina swapeada el contenido a escribir
 		log_info(logger, "Escribo el marco de mi pagina swapeada para escribir");
 		sleep(miContexto.retardoMemoria);
 		strcpy(paginaASwapear->direccion_fisica, mensaje );
 
-		if ( status_lectura == 1)
-			return 1;
-		else
-			return 0;
 		// SI SE TRATA DE UNA LECTURA
 	}else if(header->type_ejecution ==0)
 	{
-		int status_lectura = envioAlSwap(header, serverSocket, NULL);
+		int * status_lectura = malloc(sizeof(int));
+		envioAlSwap(header, serverSocket, NULL, status_lectura);
+
+		if ( *status_lectura != 1)
+		{
+			log_error(logger, "No se pudo leer de swap");
+			return 0;
+		}
+
 		log_info(logger, "Escribo el marco de mi pagina swapeada para leer");
 		sleep(miContexto.retardoMemoria);
 		strcpy(paginaASwapear->direccion_fisica, mensaje );
@@ -699,13 +712,6 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		// La agrego al final con la direccion del marco de la pagina que swapee
 		process_pag * paginaALeer = list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
 		list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco));
-
-
-		if ( status_lectura == 1)
-			return 1;
-		else
-			return 0;
-
 	}
 	return 1;
 }

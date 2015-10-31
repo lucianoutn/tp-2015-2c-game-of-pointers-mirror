@@ -69,7 +69,7 @@ void traigoContexto();
 /* RESERVO UNA CANTIDAD DE MEMORIA PASADA EN BYTES POR PARAMATRO
  * SE USA PARA RESERVAR EL TAMAÑO DE LA MEMORIA REAL
  */
-char * reservarMemoria(int);
+char * reservarMemoria(int, int);
 
 // SE SOBREENTIENDE LA FUNCION
 void liberarMemoria(char *);
@@ -89,7 +89,7 @@ void lectura(t_header *, t_list*, char*, char*, t_list *, process_pag *);
 // SOLO CONEXION //
 int meConectoAlSwap();
 // ENVIO DE HEADER RETORNA UN 1 EN CASO DE EXITO Y 0 SI HUBO ALGUN ERROR EN SWAP PARA RECIBIR
-int envioAlSwap(t_header *, int, char *);
+void envioAlSwap(t_header *, int, char *, int *);
 // PREGUNTO SI LA TLB ESTA LLENA, DEVUELVE TRUE SI ESTA LLENA
 bool tlbLlena(t_list *);
 // FUNCION PARA FINALIZAR PROCESOS
