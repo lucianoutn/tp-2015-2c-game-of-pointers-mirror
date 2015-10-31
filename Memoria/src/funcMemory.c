@@ -12,7 +12,7 @@ void traigoContexto()
  // LEVANTO EL ARCHIVO CONFIG Y VERIFICO QUE LO HAYA HECHO CORRECTAMENTE /
  t_config * config_memory = config_create("resources/config.cfg");
 
- if( config_memory  )
+ if( config_memory == NULL )
  {
   puts("Final feliz");
   abort();
@@ -61,9 +61,9 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			if (!strcmp(miContexto.tlbHabilitada, "SI"))
 			{
 				pthread_mutex_lock (&mutexTLB);
-				flag=leerDesdeTlb(socketCliente,TLB, registro_prueba->PID, registro_prueba->pagina_proceso);
+				int flagg=leerDesdeTlb(socketCliente,TLB, registro_prueba->PID, registro_prueba->pagina_proceso);
 				pthread_mutex_unlock (&mutexTLB);
-				if(!flag)
+				if(!flagg)
 				{
 					pthread_mutex_lock (&mutexMem);
 					leerEnMemReal(tabla_adm,TLB, registro_prueba, serverSocket,socketCliente, memoria_real);
@@ -153,16 +153,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, TLB);
 							pthread_mutex_unlock (&mutexTLB);
 							// ACTUALIZO LA TABLA DEL PROCESO CON LA DRIECCION FISICA, DEPENDIENDO EL ALGORITMO DEL CONTEXTO
-							if(!strcmp(miContexto.algoritmoReemplazo, "FIFO"))
-							{
-								actualizarTablaProcesoFifo(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, TLB);
-							}else if (!strcmp(miContexto.algoritmoReemplazo, "LRU"))
-							{
-								actualizarTablaProcesoLru(registro_prueba->PID, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, TLB);
-							}else
-							{
-								//actualizarTablaProcesoClock();
-							}
+							actualizoTablaProceso(tablaProceso, marco_a_llenar, registro_prueba);
 						// SI NO ME QUEDAN MARCOS EN TODA LA MEMORIA PARA GUARDAR UNA PAGINA, CHAU
 						}else
 						{
@@ -293,7 +284,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		return(*(int *)p == package->PID);
 	}
 
-	int  * flag;
+	int  * flag = malloc(sizeof(int));
 	t_tabla_adm * reg_tabla_tablas = list_find(tabla_adm, (void*)_numeroDePid);
 
 	bool _numeroDePagina (void * p)
@@ -316,7 +307,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 			char * contenido = malloc(miContexto.tamanioMarco);
 			envioAlSwap(package, serverSocket, contenido, flag);
 			//SI TODO SALIO BIEN, EL SWAP CARGO LA PAGINA A LEER EN "CONTENIDO"
-			if(flag)
+			if(*flag)
 			{
 				log_info(logger, "Se hizo conexion con swap, se envio paquete a leer y este fue recibido correctamente");
 				lectura(package, tabla_adm, memoria_real, contenido, TLB, pagina_proc);
@@ -640,7 +631,6 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	process_pag * paginaASwapear = list_remove_by_condition(tablaProceso, (void*)_numeroDePagina);
 	list_add(tablaProceso, pag_proc_create(paginaASwapear->pag, "Swap", -1) );
 
-
 	// SI SE TRATA DE UNA ESCRITURA
 	if (header->type_ejecution == 1)
 	{
@@ -716,6 +706,21 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	return 1;
 }
 
+void actualizoTablaProceso(t_list * tablaProceso, t_marco_hueco * marco_a_llenar , t_header * registro_prueba)
+{
+	if(!strcmp(miContexto.algoritmoReemplazo, "FIFO"))
+	{
+		actualizarTablaProcesoFifo(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
+	}else if (!strcmp(miContexto.algoritmoReemplazo, "LRU"))
+	{
+		actualizarTablaProcesoLru(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
+	}else
+	{
+		//actualizarTablaProcesoClock();
+	}
+}
+
+
 void actualizarTablaProcesoLru(t_list * tabla_proceso, int num_pagina, char * direccion_marco, int num_marco)
 {
 	bool _numeroDePagina (void * p)
@@ -730,8 +735,6 @@ void actualizarTablaProcesoLru(t_list * tabla_proceso, int num_pagina, char * di
 
 void actualizarTablaProcesoFifo(t_list * tabla_proceso, int num_pagina, char * direccion_marco, int num_marco)
 {
-	int x = 0;
-
 	bool _numeroDePagina (void * p)
 	{
 		return(*(int*)p == num_pagina);

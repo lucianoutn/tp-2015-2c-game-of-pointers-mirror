@@ -127,6 +127,8 @@ int marcosProcesoLlenos(t_list *);
  */
 void actualizarTlb(int, int, char*, t_list *);
 
+void actualizoTablaProceso(t_list*, t_marco_hueco* ,t_header *);
+
 /* ACTUALIZA LA TABLA PARA ALGORITMO LRU!!, AGREGANDO LA DIRECCION DE MEMORIA DEL MARCO A LA PAGINA
  * PERO A LA VEZ, LA ELIMINA DE LA TABLA Y LA PONE AL FINAL, PARA SEGUIR LA LOGICA
  * DE QUE SE VAYAN ELIMINANDO LAS PRIMERAS QUE SE CARGARON CUANDO ESTE LLENA (CANTIDAD DE MARCOS
