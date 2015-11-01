@@ -75,15 +75,18 @@ int main()
 	}
 	void limpiar()
 	{
-		parametros * param;
+		puts("Entre a limpiar");
+		parametros * param=malloc(sizeof(parametros));
 
 		param->memoria= memoria_real;
 		param->tabla_adm = tablaAdm;
 
+		puts("Llegue aca");
+
 		int err= pthread_create(&(senial[1]), NULL, (void*)limpiarMemoria,param);
 		if (err != 0)
 			printf("no se pudo crear el hilo de limpiarMemoria :[%s]", strerror(err));
-		pthread_join(senial[1], NULL);
+		pthread_join(senial[0], NULL);
 	}
 	void dump()
 	{

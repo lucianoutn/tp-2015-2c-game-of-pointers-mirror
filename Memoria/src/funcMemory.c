@@ -897,11 +897,15 @@ void limpiarMemoria(void * args)
 		{
 			process_pag * pagina_proc = list_get(tablaProceso, j); //Traigo una pagina
 			//Actualizo la pagina
-			pagina_proc->direccion_fisica = NULL;
+			pagina_proc->direccion_fisica=NULL;
 			pagina_proc->marco=-1;
+			pagina_proc->dirty=0;
+			pagina_proc->accessed=0;
+			puts("Hago esto");
 		}
 	}
 	//Actualizo marcos
+	puts("Actualice marcos");
 	list_destroy_and_destroy_elements(listaFramesMemR,(void *)marco_destroy);
 	list_destroy_and_destroy_elements(listaFramesHuecosMemR,(void *)marco_hueco_destroy);
 	listaFramesMemR = crearListaFrames();
