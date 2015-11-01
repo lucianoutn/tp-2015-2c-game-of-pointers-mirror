@@ -119,7 +119,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				process_pag * paginaProceso = obtenerPaginaProceso(tablaProceso, registro_prueba->pagina_proceso);
 
 				// SI ESTA EN SWAP
-				if (!strcmp(paginaProceso->direccion_fisica,"Swap"))
+				if ( paginaProceso->direccion_fisica == NULL)
 				{
 					cantFallosPag++;
 					/* SI NO TENGO ESPACIO PARA TRAERLA (TODOS LOS MARCOS DISPONIBLES PARA ESE
@@ -236,7 +236,7 @@ void iniciarProceso(t_list* tabla_adm, t_header * proceso)
 		// MIENTRAS FALTEN PAGINAS PARA INICIAR //
 		while (x<proceso->pagina_proceso)
 		{
-			list_add(lista_proceso,pag_proc_create(x, "Swap" , -1, 0 , 0));
+			list_add(lista_proceso,pag_proc_create(x, NULL, -1, 0 , 0));
 			//cuando la creo el marco lo pongo en -1
 			x++;
 		}
@@ -292,7 +292,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		process_pag * pagina_proc = list_find(tabla_proc, (void *)_numeroDePagina);
 
 		// SI LA DIRECCION CONTIENE = "Swap" ES PORQUE ESTA EN SWAP, SINO YA LA ENCONTRE EN MEMORIA
-		if (!strcmp(pagina_proc->direccion_fisica,"Swap"))
+		if ( pagina_proc->direccion_fisica == NULL)
 		{
 			cantFallosPag++;
 			char * contenido = malloc(miContexto.tamanioMarco);
@@ -446,7 +446,7 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB)
 					return(*(char *)p == pagina_removida->marco);
 				}
 
-				if (strcmp(pagina_removida->direccion_fisica,"Swap"))
+				if ( pagina_removida->direccion_fisica != NULL)
 				{
 					//ENCONTRO PAGINA A REMOVER QUE TENIA UN MARCO ASIGNADO
 					t_marco * marco_a_remover = list_remove_by_condition(listaFramesMemR, (void*)_numMarco);
@@ -556,7 +556,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	//ESTO ESTA PARA EL ORTO, BUSCAR UNA FORMA MAS EFICIENTE
 
 	process_pag * paginaASwapear = list_remove_by_condition(tablaProceso, (void*)_numeroDePagina);
-	list_add(tablaProceso, pag_proc_create(paginaASwapear->pag, "Swap", -1, 0, 0) );
+	list_add(tablaProceso, pag_proc_create(paginaASwapear->pag, NULL, -1, 0, 0) );
 
 	// SI SE TRATA DE UNA ESCRITURA
 	if (header->type_ejecution == 1)
@@ -667,7 +667,7 @@ void actualizarTablaProcesoFifo(t_list * tabla_proceso, int num_pagina, char * d
 	}
 
 	process_pag * pagina = list_find(tabla_proceso, (void*)_numeroDePagina);
-	if( !strcmp(pagina->direccion_fisica, "Swap"))
+	if( pagina->direccion_fisica == NULL)
 	{
 		list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
 		pagina->direccion_fisica = direccion_marco;
@@ -713,7 +713,7 @@ process_pag * paginaARemoverFifoLru(t_list * tablaProceso)
 	while (x < cantidad_paginas)
 	{
 		process_pag * pagina = list_get(tablaProceso, x);
-		if (strcmp(pagina->direccion_fisica, "Swap"))
+		if (pagina->direccion_fisica != NULL)
 		{
 			return pagina;
 		}
@@ -789,13 +789,12 @@ int marcosProcesoLlenos(t_list * lista_proceso)
 	while ( paginas_ocupadas+paginas_disponibles < cantidad_paginas )
 	{
 		process_pag * reg = list_get(lista_proceso, x);
-		if ( strcmp(reg->direccion_fisica, "Swap"))
+		if ( reg->direccion_fisica != NULL )
 			paginas_ocupadas++;
 		else
 			paginas_disponibles++;
 
 		x++;
-
 	}
 	if (paginas_ocupadas == miContexto.maxMarcos)
 		return 1;
