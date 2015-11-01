@@ -75,13 +75,13 @@ int main()
 	}
 	void limpiar()
 	{
-		puts("Entre a limpiar");
 		parametros * param=malloc(sizeof(parametros));
 
 		param->memoria= memoria_real;
 		param->tabla_adm = tablaAdm;
+		param->tlb=TLB;
 
-		puts("Llegue aca");
+		printf("La direccion de la mem real es: %p \n",memoria_real);
 
 		int err= pthread_create(&(senial[1]), NULL, (void*)limpiarMemoria,param);
 		if (err != 0)
@@ -121,14 +121,14 @@ int main()
 
 void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 {
-	t_header * package = malloc(sizeof(t_header));
+	//t_header * package = malloc(sizeof(t_header));
 	char * mensaje = malloc(miContexto.tamanioMarco);
 	int socketCPU;
 	int resultadoSelect;
 	fd_set readset;
 	int status = 1;
 	sem_t *semConexion= sem_open("semConexion", 0);
-
+/*
 	//CONEXION AL CPU
 	int listenningSocket=crearServer(miContexto.puertoServidor);
 
@@ -143,12 +143,12 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	socketCPU = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen);
 	printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
 	printf("Conexion aceptada Socket= %d \n",socketCPU);
-
+*/
 	sem_wait(semConexion);
 	// ME CONECTO AL SWAP PARA ENVIARLE LO QUE VOY A RECIBIR DE LA CPU
 	int serverSocket = crearCliente(IP,miContexto.puertoCliente);
 	sem_post(semConexion);
-
+/*
 	while(status!=0)
 	{
 		// RECIBO EL PAQUETE(t_header) ENVIADO POR LA CPU
@@ -159,28 +159,43 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 		// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
 		ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 	}
-/*
-	t_header * package = package_create(2,15,5,0);
-	char * mensaje_inicializacion = malloc(1);
-	ejecutoInstruccion(package, mensaje_inicializacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 
-	t_header * package_escritura = package_create(1,15,0,strlen("Hola"));
-	char * mensaje_escritura = malloc(5);
-	strcpy(mensaje_escritura,"Hola");
-	ejecutoInstruccion(package_escritura, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
-
-	t_header * package_escritura1 = package_create(1,15,1,strlen("Aldu"));
-	strcpy(mensaje_escritura,"Aldu");
-	ejecutoInstruccion(package_escritura1, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
-
-	t_header * package_escritura2 = package_create(1,15,2,strlen("Aldu"));
-	strcpy(mensaje_escritura,"Chau");
-	ejecutoInstruccion(package_escritura2, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
-
-	t_header * package_finalizacion = package_create(3,15,0,0);
-	char * mensaje_finalizacion = malloc(1);
-	ejecutoInstruccion(package_finalizacion, mensaje_finalizacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 */
+	t_header * package = package_create(2,15,5,0);
+	 char * mensaje_inicializacion = malloc(1);
+	 ejecutoInstruccion(package, mensaje_inicializacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	 t_header * package_escritura = package_create(1,15,0,strlen("Hola"));
+	 char * mensaje_escritura = malloc(5);
+	 strcpy(mensaje_escritura,"Hola");
+	 ejecutoInstruccion(package_escritura, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	 t_header * package_escritura1 = package_create(1,15,1,strlen("Aldu"));
+	 strcpy(mensaje_escritura,"Aldu");
+	 ejecutoInstruccion(package_escritura1, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	 t_header * package_escritura2 = package_create(1,15,2,strlen("Aldu"));
+	 strcpy(mensaje_escritura,"Chau");
+	 ejecutoInstruccion(package_escritura2, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+	 t_header * package_escritura3 = package_create(1,15,2,strlen("Aldu"));
+	 strcpy(mensaje_escritura,"Tutu");
+	 ejecutoInstruccion(package_escritura3, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	 t_header * package_escritura4 = package_create(1,15,3,strlen("Aldu"));
+	 strcpy(mensaje_escritura,"Gege");
+	 ejecutoInstruccion(package_escritura4, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	 t_header * package_escritura5 = package_create(1,15,4,strlen("Aldu"));
+	 strcpy(mensaje_escritura,"Palo");
+	 ejecutoInstruccion(package_escritura5, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	 t_header * package_escritura6 = package_create(1,15,3,strlen("Aldu"));
+	 strcpy(mensaje_escritura,"Pali");
+	 ejecutoInstruccion(package_escritura6, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	 t_header * package_finalizacion = package_create(3,15,0,0);
+	 char * mensaje_finalizacion = malloc(1);
+	 ejecutoInstruccion(package_finalizacion, mensaje_finalizacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 	/* SELECT primera version no borrar
   do {
      FD_ZERO(&readset); 	//esto abre y limpia la estructura cada vez q se reinicia el select luego de un error

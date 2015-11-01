@@ -144,7 +144,6 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 					{
 						if ( listaFramesHuecosMemR->elements_count != 0)
 						{
-
 							t_marco_hueco * marco_a_llenar = list_remove(listaFramesHuecosMemR, 0);
 							log_info(logger, "Traje la pagina del swap, voy a escribir el marco %d", marco_a_llenar->numero_marco);
 							sleep(miContexto.retardoMemoria);
@@ -396,7 +395,7 @@ void envioAlSwap ( t_header * header, int serverSocket, char * contenido, int * 
 		//SI EL TIPO DE EJECUCION ES ESCRITURA, MANDO EL CONTENIDO
 		if (header->type_ejecution == 1)
 		{
-			send(serverSocket, contenido, header->tamanio_msj, 0);
+			send(serverSocket, contenido, miContexto.tamanioMarco, 0);
 		}
 		/*
 		 * Una vez enviado el registro, recibo la notificación por parte del swap.
@@ -602,16 +601,16 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 			list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco, 0 , 0));
 		} // SINO VEO LOS OTRO ALGORITMOS  ( DESPUES VEO )
 
+			// Escribo en mi pagina swapeada el contenido a escribir
+		log_info(logger, "Escribo el marco de mi pagina swapeada para escribir");
+		sleep(miContexto.retardoMemoria);
+		strcpy(paginaASwapear->direccion_fisica, mensaje );
+
 		// ACTUALIZO LA PAGINA A SWAPEAR, DIRECCION_FISICA = NULL
 		paginaASwapear->direccion_fisica=  NULL;
 		paginaASwapear->marco = -1;
 		paginaASwapear->accessed = 0;
 		paginaASwapear->dirty = 0;
-
-		// Escribo en mi pagina swapeada el contenido a escribir
-		log_info(logger, "Escribo el marco de mi pagina swapeada para escribir");
-		sleep(miContexto.retardoMemoria);
-		strcpy(paginaASwapear->direccion_fisica, mensaje );
 
 		// SI SE TRATA DE UNA LECTURA
 	}else if(header->type_ejecution ==0)
@@ -865,6 +864,7 @@ t_header * crearHeaderEscritura(int pid, int pagina, int tamanio)
 void tlbFlush(t_list * TLB)
 {
 	puts("Recibi SIGUSR1\n");
+	log_info(logger,"Se recibio señal SIGUSR1, se va a limpiar la TLB");
 	pthread_mutex_lock (&mutexTLB);
 	if (!strcmp(miContexto.tlbHabilitada,"SI"))
 	{
@@ -895,16 +895,17 @@ void limpiarMemoria(void * args)
 	parametros * param;
 	param = (parametros * ) args;
 
+	printf("La direccion recibida de la memoria es: %p \n", param->memoria);
 	puts("Recibi SIGUSR2 \n");
 	//Vacio la memoria
 	pthread_mutex_lock (&mutexMem);
-	puts("Pase el lock");
 	strcpy(param->memoria,"\0");
 
 	//Actualizo las listas
 	int i = 0, j = 0;
 	for(;i<param->tabla_adm->elements_count;i++) //Recorro la tabla de tablas
 	{
+		puts("Actualizo listas");
 		//Traigo una tabla
 		t_tabla_adm * entrada_tabla_tablas = list_get(param->tabla_adm,i);
 		t_list * tablaProceso = entrada_tabla_tablas->direc_tabla_proc;
@@ -926,10 +927,12 @@ void limpiarMemoria(void * args)
 	list_destroy_and_destroy_elements(listaFramesHuecosMemR,(void *)marco_hueco_destroy);
 	listaFramesMemR = crearListaFrames();
 	listaFramesHuecosMemR = crearListaHuecosFrames(miContexto.cantidadMarcos, miContexto.tamanioMarco, param->memoria);
+	pthread_mutex_lock (&mutexTLB);
+	tlbFlush(param->tlb);
+	pthread_mutex_unlock (&mutexTLB);
 	pthread_mutex_unlock (&mutexMem);
 	puts("Mostrame esto");
 }
-
 /*
  * Cuando recibe esta señal se deberá realizar un volcado (dump) del contenido de la memoria principal,
  * en el archivo log de Administrador de Memoria, creando para tal fin un proceso nuevo.
