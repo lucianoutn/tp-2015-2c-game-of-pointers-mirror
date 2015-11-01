@@ -7,6 +7,11 @@
 #include <SharedLibs/manejoListas.h>
 #include "funcMemory.h"
 
+void despuesSeBorra()
+{
+	printf("SE PUSHEO TODO PIOLA? \n");
+}
+
 void traigoContexto()
 {
  // LEVANTO EL ARCHIVO CONFIG Y VERIFICO QUE LO HAYA HECHO CORRECTAMENTE /
@@ -637,7 +642,6 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	cantFallosPag++;
 	return 1;
 }
-
 
 void actualizoTablaProceso(t_list * tablaProceso, t_marco_hueco * marco_a_llenar , t_header * registro_prueba)
 {
