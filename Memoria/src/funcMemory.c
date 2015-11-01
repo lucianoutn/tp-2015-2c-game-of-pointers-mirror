@@ -601,16 +601,16 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 			list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco, 0 , 0));
 		} // SINO VEO LOS OTRO ALGORITMOS  ( DESPUES VEO )
 
-			// Escribo en mi pagina swapeada el contenido a escribir
-		log_info(logger, "Escribo el marco de mi pagina swapeada para escribir");
-		sleep(miContexto.retardoMemoria);
-		strcpy(paginaASwapear->direccion_fisica, mensaje );
-
 		// ACTUALIZO LA PAGINA A SWAPEAR, DIRECCION_FISICA = NULL
 		paginaASwapear->direccion_fisica=  NULL;
 		paginaASwapear->marco = -1;
 		paginaASwapear->accessed = 0;
 		paginaASwapear->dirty = 0;
+
+		// Escribo en mi pagina swapeada el contenido a escribir
+		log_info(logger, "Escribo el marco de mi pagina swapeada para escribir");
+		sleep(miContexto.retardoMemoria);
+		strcpy(paginaASwapear->direccion_fisica, mensaje );
 
 		// SI SE TRATA DE UNA LECTURA
 	}else if(header->type_ejecution ==0)
