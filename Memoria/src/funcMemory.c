@@ -86,11 +86,12 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 
 	 	case 1:
 			log_info(logger, "Solicitud de escritura recibida del PID: %d y pagina: %d", registro_prueba->PID, registro_prueba->pagina_proceso);
-
+			int okTlb=0;
 			// DECLARO UN FLAG PARA SABER SI ESTABA EN LA TLB Y SE ESCRIBIO, O SI NO ESTABA
-			pthread_mutex_lock (&mutexMem);
-			int okTlb = verificarTlb(TLB,registro_prueba->tamanio_msj, mensaje, registro_prueba);
-			pthread_mutex_unlock (&mutexMem);
+			pthread_mutex_lock (&mutexTLB);
+			if (!strcmp(miContexto.tlbHabilitada, "SI"))
+				okTlb = verificarTlb(TLB,registro_prueba->tamanio_msj, mensaje, registro_prueba);
+			pthread_mutex_unlock (&mutexTLB);
 
 			// SI ESTABA EN LA TLB, YA LA FUNCION ESCRIBIO Y LISTO
 			if(okTlb == 1)
@@ -214,7 +215,6 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			printf ("*********************Se recibio orden de finalizacion de proceso :)********************* \n");
 			pthread_mutex_lock (&mutexMem);
 			matarProceso(registro_prueba, tabla_adm, TLB);
-			pthread_mutex_unlock (&mutexMem);
 			envioAlSwap(registro_prueba, serverSocket, NULL, flag );
 
 			if(flag)
@@ -223,6 +223,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				mostrarVersus();
 			}else
 				log_error(logger, "Hubo un problema con la conexion/envio al swap");
+
+			pthread_mutex_unlock (&mutexMem);
 	 		break;
 	 	default:
 			printf ("El tipo de ejecucion recibido no es valido\n");
@@ -862,7 +864,7 @@ t_header * crearHeaderEscritura(int pid, int pagina, int tamanio)
 void tlbFlush(t_list * TLB)
 {
 	puts("Recibi SIGUSR1\n");
-	log_info(logger,"Se recibio señal SIGUSR1, se va a limpiar la TLB");
+
 	pthread_mutex_lock (&mutexTLB);
 	if (!strcmp(miContexto.tlbHabilitada,"SI"))
 	{
@@ -890,13 +892,14 @@ void tlbFlush(t_list * TLB)
  */
 void limpiarMemoria(void * args)
 {
+	pthread_mutex_lock (&mutexMem);
 	parametros * param;
 	param = (parametros * ) args;
 
 	printf("La direccion recibida de la memoria es: %p \n", param->memoria);
 	puts("Recibi SIGUSR2 \n");
 	//Vacio la memoria
-	pthread_mutex_lock (&mutexMem);
+	puts("Recibi el lock");
 	strcpy(param->memoria,"\0");
 
 	//Actualizo las listas
@@ -925,11 +928,9 @@ void limpiarMemoria(void * args)
 	list_destroy_and_destroy_elements(listaFramesHuecosMemR,(void *)marco_hueco_destroy);
 	listaFramesMemR = crearListaFrames();
 	listaFramesHuecosMemR = crearListaHuecosFrames(miContexto.cantidadMarcos, miContexto.tamanioMarco, param->memoria);
-	pthread_mutex_lock (&mutexTLB);
 	tlbFlush(param->tlb);
-	pthread_mutex_unlock (&mutexTLB);
-	pthread_mutex_unlock (&mutexMem);
 	puts("Mostrame esto");
+	pthread_mutex_unlock (&mutexMem);
 }
 /*
  * Cuando recibe esta señal se deberá realizar un volcado (dump) del contenido de la memoria principal,

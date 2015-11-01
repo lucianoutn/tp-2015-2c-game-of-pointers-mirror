@@ -42,80 +42,6 @@ int main()
 	lista_paginas = crearListaPaginas();
 	lista_huecos = crearListaHuecos(contexto->cant_paginas);
 
-/*
-	// PARA PROBAR COMPACTACION CON 8 PAGINAS
-	t_header * package1 = malloc(sizeof(t_header));
-
-	package1->type_ejecution=2;
-	package1->PID=0;
-	package1->pagina_proceso=3;
-	analizoPaquete(package1,0);
-
-	package1->type_ejecution=2;
-	package1->PID=1;
-	package1->pagina_proceso=2;
-	analizoPaquete(package1,0);
-
-	package1->type_ejecution=2;
-	package1->PID=2;
-	package1->pagina_proceso=2;
-	analizoPaquete(package1,0);
-
-	package1->type_ejecution=1;
-	package1->PID=0;
-	package1->pagina_proceso=0;
-	package1->tamanio_msj=strlen("Holasir")+1;
-	analizoPaquete(package1,0);
-
-	package1->type_ejecution=1;
-	package1->PID=0;
-	package1->pagina_proceso=2;
-	package1->tamanio_msj=strlen("Holasir")+1;
-	analizoPaquete(package1,0);
-
-	package1->type_ejecution=1;
-	package1->PID=1;
-	package1->pagina_proceso=1;
-	package1->tamanio_msj=strlen("Holasir")+1;
-	analizoPaquete(package1,0);
-
-
-	package1->type_ejecution=3;
-	package1->PID=1;
-	package1->pagina_proceso=2;
-	analizoPaquete(package1,0);
-
-	package1->type_ejecution=2;
-	package1->PID=3;
-	package1->pagina_proceso=3;
-	analizoPaquete(package1,0);
-
-	package1->type_ejecution=1;
-	package1->PID=3;
-	package1->pagina_proceso=0;
-	package1->tamanio_msj=strlen("Holasir")+1;
-	analizoPaquete(package1,0);
-
-	package1->type_ejecution=0;
-	package1->PID=0;
-	package1->pagina_proceso=0;
-	analizoPaquete(package1,0);
-
-	package1->type_ejecution=0;
-	package1->PID=2;
-	package1->pagina_proceso=1;
-	analizoPaquete(package1,0);
-
-	package1->type_ejecution=0;
-	package1->PID=3;
-	package1->pagina_proceso=0;
-	analizoPaquete(package1,0);
-
-	package1->type_ejecution=0;
-	package1->PID=3;
-	package1->pagina_proceso=1;
-	analizoPaquete(package1,0);
-*/
 	reciboDelAdminMem();
 
 	//Cierro particion
@@ -130,8 +56,6 @@ int main()
 
 void reciboDelAdminMem()
 {
-	semConexion = sem_open("semConexion", O_CREAT, 0644, 1);
-	sem_wait(semConexion); //hasta que no cree el server, que no opere la memoria
 	int listenningSocket=crearServer(contexto->puerto);
 
 	//Estructura que tendra los datos de la conexion del cliente MEMORIA
@@ -142,7 +66,6 @@ void reciboDelAdminMem()
 	if (L==-1)
 		perror("LISTEN");
 
-	sem_post(semConexion);
 	int socketCliente = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen);
 	printf("Conexion aceptada Socket= %d \n",socketCliente);
 
