@@ -7,11 +7,6 @@
 #include <SharedLibs/manejoListas.h>
 #include "funcMemory.h"
 
-void despuesSeBorra()
-{
-	printf("SE PUSHEO TODO PIOLA? \n");
-}
-
 void traigoContexto()
 {
  // LEVANTO EL ARCHIVO CONFIG Y VERIFICO QUE LO HAYA HECHO CORRECTAMENTE /
@@ -948,6 +943,7 @@ void limpiarMemoria(void * args)
  * en el archivo log de Administrador de Memoria, creando para tal fin un proceso nuevo.
  * Se recomienda usar fork().
  */
+
 void dumpEnLog(char * memoria_real, t_list * tablaAdm)
 {
 	puts("Recibi SIGPOLL");
