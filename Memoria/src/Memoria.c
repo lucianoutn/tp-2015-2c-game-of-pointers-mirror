@@ -43,7 +43,6 @@ int main()
 	log_info(logger, "Inicio Log MEMORIA", NULL);
 
 	//RESERVO ESPACIO PARA LA MEMORIA REAL /
-	int tamanio_memoria_real = miContexto.tamanioMarco * miContexto.cantidadMarcos;
 	char * memoria_real = reservarMemoria(miContexto.cantidadMarcos, miContexto.tamanioMarco);
 	t_list * TLB = NULL;
 	// CREO UNA LISTA PARA REFERENCIAR A LAS LISTAS DE PROCESOS //
@@ -58,7 +57,6 @@ int main()
 	{
 		TLB = crearListaTlb();
 		printf ("La TLB esta habilitada \n");
-		int tamanio_memoria_cache = miContexto.tamanioMarco * 4;
 		//t_list * TLB = crearListaTlb();
 	}
  	//Me quedo atenta a las señales, y si las recibe ejecuta esa funcion
@@ -98,35 +96,44 @@ int main()
 			log_error(logger,"Error en la creacion del hijo");
 			break;
 		case 0:
+			puts("Entro en case 0");
 			dumpEnLog(memoria_real,tablaAdm);
+			exit(0);
 			break;
-		/*
+
 		default:
 			sleep(3);
 			puts("Entro al default");
-		*/
+
 		}
 	}
 
 	signal(SIGUSR1,flush);
-	signal(SIGINT,limpiar);
-	signal(SIGPOLL,dump);
+	signal(SIGUSR2,limpiar);
+	signal(SIGINT,dump);
 
 	reciboDelCpu(memoria_real, TLB, tablaAdm);
 
+	free(memoria_real);
+
+	list_destroy_and_destroy_elements(tablaAdm,(void*)tabla_adm_destroy);
+	list_destroy_and_destroy_elements(TLB,(void*)reg_tlb_destroy);
+	list_destroy_and_destroy_elements(listaFramesHuecosMemR,(void*)marco_hueco_destroy);
+	list_destroy_and_destroy_elements(listaFramesMemR,(void*)marco_destroy);
 	log_destroy(logger);
-	return 0;
+
+	return 1;
 }
 
 void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 {
-	t_header * package = malloc(sizeof(t_header));
+	//_header * package = malloc(sizeof(t_header));
 	char * mensaje = malloc(miContexto.tamanioMarco);
 	int socketCPU;
 	int resultadoSelect;
 	fd_set readset;
 	int status = 1;
-
+/*
 	//CONEXION AL CPU
 	int listenningSocket=crearServer(miContexto.puertoServidor);
 
@@ -141,10 +148,10 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	socketCPU = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen);
 	printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
 	printf("Conexion aceptada Socket= %d \n",socketCPU);
-
+*/
 	// ME CONECTO AL SWAP PARA ENVIARLE LO QUE VOY A RECIBIR DE LA CPU
 	int serverSocket = crearCliente(IP,miContexto.puertoCliente);
-
+/*
 	while(status!=0)
 	{
 		// RECIBO EL PAQUETE(t_header) ENVIADO POR LA CPU
@@ -155,8 +162,8 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 		// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
 		ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 	}
+*/
 
-/*
 	t_header * package = package_create(2,15,5,0);
 	 char * mensaje_inicializacion = malloc(1);
 	 ejecutoInstruccion(package, mensaje_inicializacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
@@ -192,7 +199,22 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	 t_header * package_finalizacion = package_create(3,15,0,0);
 	 char * mensaje_finalizacion = malloc(1);
 	 ejecutoInstruccion(package_finalizacion, mensaje_finalizacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
-*/
+
+	 free(mensaje);
+	 free(mensaje_inicializacion);
+	 free(mensaje_escritura);
+	 free(mensaje_finalizacion);
+	 free(package);
+	 free(package_escritura);
+	 free(package_escritura1);
+	 free(package_escritura2);
+	 free(package_escritura3);
+	 free(package_escritura4);
+	 free(package_escritura5);
+	 free(package_escritura6);
+	 free(package_finalizacion);
+
+
 	 /* SELECT primera version no borrar
   do {
      FD_ZERO(&readset); 	//esto abre y limpia la estructura cada vez q se reinicia el select luego de un error

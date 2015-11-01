@@ -96,7 +96,7 @@ t_tabla_adm * tabla_adm_create (int pid, t_list * lista_proceso)
  return adm_proc;
 }
 
-static void tabla_adm_destroy(t_tabla_adm * self)
+void tabla_adm_destroy(t_tabla_adm * self)
 {
  free(self);
 }

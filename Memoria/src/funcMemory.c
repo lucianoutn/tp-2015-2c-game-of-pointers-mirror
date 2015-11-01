@@ -19,8 +19,11 @@ void traigoContexto()
 
  if( config_memory == NULL )
  {
-  puts("Final feliz");
-  abort();
+	 puts("Final feliz");
+	 free(config_memory->path);
+	 free(config_memory->properties);
+	 free(config_memory);
+	 abort();
  }
 
  // OBTENGO CONFIGURACION DEL CONFIG /
@@ -33,6 +36,10 @@ void traigoContexto()
  miContexto.tlbHabilitada = config_get_string_value(config_memory, "TLB_HABILITADA");
  miContexto.retardoMemoria = config_get_int_value(config_memory, "RETARDO_MEMORIA");
  miContexto.algoritmoReemplazo = config_get_string_value(config_memory, "ALGORITMO_REEMPLAZO");
+
+ free(config_memory->path);
+ free(config_memory->properties);
+ free(config_memory);
 }
 
 char * reservarMemoria(int cantidadMarcos, int capacidadMarco)
@@ -230,6 +237,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			printf ("El tipo de ejecucion recibido no es valido\n");
 	 		break;
 	 	}
+	free(flag);
 }
 
 void iniciarProceso(t_list* tabla_adm, t_header * proceso)
@@ -381,7 +389,7 @@ void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_rea
 	strcpy(pagina_proceso->direccion_fisica, contenido);
 
 	// LIBERO EL NODO/MARCO DE LA LISTA DE MARCOS HUECOS PORQUE AHORA ESTA EN LA DE OCUPADOS.
-	list_remove(listaFramesHuecosMemR, 0);
+	list_remove_and_destroy_element(listaFramesHuecosMemR, 0,(void*)marco_hueco_destroy);
 
 	// SI LA TLB ESTA HABILITADA Y NO ESTA LLENA, ENTONCES LE CREO LA ENTRADA DE LA PAGINA LEIDA
 	pthread_mutex_lock (&mutexTLB);
@@ -472,7 +480,7 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB)
 			// ELIMINO TODOS LOS ELEMENTOS DE LA TABLA Y LA TABLA
 			list_destroy_and_destroy_elements(tabla_proceso, (void *)pag_destroy);
 			//ELIMINO LA REFERENCIA DE ESA TABLA DE PROCESO, DESDE LA TABLA DE PROCESOS
-			list_remove_by_condition(tabla_adm, (void*)_numeroDePid);
+			list_remove_and_destroy_by_condition(tabla_adm, (void*)_numeroDePid,(void*)tabla_adm_destroy);
 			printf ("LA TABLA DE TABLAS DE PROCESOS TIENE %d ELEMENTOS DESPUES DE MATAR \n", tabla_adm->elements_count);
 			// ME FIJO SI EN LA TLB (SI ESTA HABILITADA) HABIA ALGUNA REFERENCIA A ALGUNA DE SUS PAGINAS Y LAS ELIMINO
 			pthread_mutex_lock (&mutexTLB);
@@ -499,7 +507,7 @@ int removerEntradasTlb(t_list * TLB, t_header * header)
 	while ( list_find(TLB,(void*)_numeroDePid) != NULL )
 	{
 		printf("ELEMENTOS DE LA TLB ANTES DE MATAR -> %d \n", TLB->elements_count);
-		list_remove_by_condition(TLB,(void*)_numeroDePid);
+		list_remove_and_destroy_by_condition(TLB,(void*)_numeroDePid,(void*)reg_tlb_destroy);
 		printf("ELEMENTOS DE LA TLB DESPUES DE MATAR -> %d \n", TLB->elements_count);
 	}
 	return 1;
@@ -509,7 +517,7 @@ int verificarTlb (t_list * TLB, int tamanio_msg, char * message, t_header * pagi
 {
 	int * parametro = malloc(sizeof(int));
 	t_tlb * registro_tlb = buscarEntradaProcesoEnTlb(TLB, pagina, parametro);
-
+	free(parametro);
 	if (registro_tlb != NULL)
 	{
 		cantPagAccessed++;
@@ -607,7 +615,11 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		strcpy(paginaASwapear->direccion_fisica, mensaje );
 
 		num_pag = paginaASwapear->pag;
-
+		free(contenido);
+		free(status_escritura);
+		free(status_lectura);
+		free(header_escritura);
+		free(header_lectura);
 		// SI SE TRATA DE UNA LECTURA
 	}else if(header->type_ejecution ==0)
 	{
@@ -665,7 +677,7 @@ void actualizarTablaProcesoLru(t_list * tabla_proceso, int num_pagina, char * di
 		return(*(int*)p == num_pagina);
 	}
 
-	list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
+	list_remove_and_destroy_by_condition(tabla_proceso, (void*)_numeroDePagina,(void*)pag_proc_create);
 	process_pag * pagina = pag_proc_create(num_pagina, direccion_marco, num_marco, 0, 0);
 	list_add(tabla_proceso,pagina);
 }
@@ -837,7 +849,6 @@ void actualizarTlb (int pid, int pagina, char * direccion_memoria, t_list * TLB)
 			list_add(TLB, reg_tlb_create(pid, pagina, direccion_memoria));
 		}
 	}
-
 }
 
 void mostrarVersus()
@@ -873,7 +884,7 @@ void tlbFlush(t_list * TLB)
 		int cant_elementos = TLB->elements_count;
 		for(;i<cant_elementos;i++)
 		{
-			list_remove(TLB, 0);
+			list_remove_and_destroy_element(TLB, 0,(void*)reg_tlb_destroy);
 		}
 	}
 	else
@@ -975,7 +986,7 @@ process_pag * pag_proc_create (int pagina, char * direccion_fisica, int marco, i
 
 void pag_proc_destroy(process_pag * self)
 {
- free(self);
+	free(self);
 }
 // --------------------------------------------------------//
 

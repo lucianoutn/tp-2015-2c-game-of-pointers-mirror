@@ -110,7 +110,7 @@ void reg_tlb_destroy(t_tlb * self);
 
 t_tabla_adm * tabla_adm_create(int, t_list*);
 
-static void tabla_adm_destroy(t_tabla_adm *);
+void tabla_adm_destroy(t_tabla_adm *);
 
 /* VER SI SE PUEDE PASAR ACA
 pag_proceso * pag_proc_create(int, char*);
