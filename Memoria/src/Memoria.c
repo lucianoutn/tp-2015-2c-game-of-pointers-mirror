@@ -83,10 +83,10 @@ int main()
 
 		printf("La direccion de la mem real es: %p \n",memoria_real);
 
-		int err= pthread_create(&(senial[1]), NULL, (void*)limpiarMemoria,param);
+		int err= pthread_create(&(senial[0]), NULL, (void*)limpiarMemoria,param);
 		if (err != 0)
 			printf("no se pudo crear el hilo de limpiarMemoria :[%s]", strerror(err));
-		pthread_join(senial[0], NULL);
+		//pthread_join(senial[0], NULL);
 	}
 	void dump()
 	{
@@ -106,7 +106,6 @@ int main()
 			puts("Entro al default");
 		*/
 		}
-
 	}
 
 	signal(SIGUSR1,flush);
@@ -121,14 +120,13 @@ int main()
 
 void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 {
-	//t_header * package = malloc(sizeof(t_header));
+	t_header * package = malloc(sizeof(t_header));
 	char * mensaje = malloc(miContexto.tamanioMarco);
 	int socketCPU;
 	int resultadoSelect;
 	fd_set readset;
 	int status = 1;
-	sem_t *semConexion= sem_open("semConexion", 0);
-/*
+
 	//CONEXION AL CPU
 	int listenningSocket=crearServer(miContexto.puertoServidor);
 
@@ -143,12 +141,10 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	socketCPU = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen);
 	printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
 	printf("Conexion aceptada Socket= %d \n",socketCPU);
-*/
-	sem_wait(semConexion);
+
 	// ME CONECTO AL SWAP PARA ENVIARLE LO QUE VOY A RECIBIR DE LA CPU
 	int serverSocket = crearCliente(IP,miContexto.puertoCliente);
-	sem_post(semConexion);
-/*
+
 	while(status!=0)
 	{
 		// RECIBO EL PAQUETE(t_header) ENVIADO POR LA CPU
@@ -160,7 +156,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 		ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 	}
 
-*/
+/*
 	t_header * package = package_create(2,15,5,0);
 	 char * mensaje_inicializacion = malloc(1);
 	 ejecutoInstruccion(package, mensaje_inicializacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
@@ -196,7 +192,8 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	 t_header * package_finalizacion = package_create(3,15,0,0);
 	 char * mensaje_finalizacion = malloc(1);
 	 ejecutoInstruccion(package_finalizacion, mensaje_finalizacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
-	/* SELECT primera version no borrar
+*/
+	 /* SELECT primera version no borrar
   do {
      FD_ZERO(&readset); 	//esto abre y limpia la estructura cada vez q se reinicia el select luego de un error
      FD_SET(socketCliente, &readset);
