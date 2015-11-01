@@ -130,9 +130,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 						int verific = swapeando(tablaProceso,tabla_adm ,TLB, mensaje, serverSocket, registro_prueba);
 						if (verific == 1)
 						{
-							pthread_mutex_lock (&mutexTLB);
-							actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
-							pthread_mutex_unlock (&mutexTLB);
+
 						}
 						else
 							log_error(logger, "Error al intentar swapear");
@@ -552,14 +550,13 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	process_pag * paginaASwapear = traerPaginaARemover(tablaProceso);
 	log_info(logger, "Acceso a swap: Voy a swapear para traer la pagina %d porque no tengo lugar para este proceso", header->pagina_proceso);
 	sleep(miContexto.retardoMemoria);
-	/*
-	int num_pag_to_remove = pagina_a_remover->pag;
 
-	bool _numeroDePagina (void * p)
+	int num_pag;
+
+	bool _numeroDePag (void * p)
 	{
-		return(*(int*)p == num_pag_to_remove);
+		return(*(int*)p == num_pag);
 	}
-	 */
 
 	// SI SE TRATA DE UNA ESCRITURA
 	if (header->type_ejecution == 1)
@@ -582,12 +579,9 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		char * contenido = malloc(miContexto.tamanioMarco);
 		envioAlSwap(header_lectura, serverSocket, contenido, status_lectura);
 
-		int num_pag = header->pagina_proceso;
+		num_pag = header->pagina_proceso;
 
-		bool _numeroDePag (void * p)
-		{
-			return(*(int*)p == num_pag);
-		}
+
 		if (*status_lectura != 1)
 		{
 			log_error(logger, "No se pudo leer de swap");
@@ -608,9 +602,6 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 
 		num_pag = paginaASwapear->pag;
 
-		list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
-		list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco, 0, 0));
-
 		// SI SE TRATA DE UNA LECTURA
 	}else if(header->type_ejecution ==0)
 	{
@@ -627,17 +618,21 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		sleep(miContexto.retardoMemoria);
 		strcpy(paginaASwapear->direccion_fisica, mensaje );
 
-		int num_pag = header->pagina_proceso;
+		num_pag = header->pagina_proceso;
 
-		bool _numeroDePag (void * p)
-		{
-			return(*(int*)p == num_pag);
-		}
 		// La agrego al final con la direccion del marco de la pagina que swapee
 		list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
 		list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco, 0, 0));
-
 	}
+
+	pthread_mutex_lock (&mutexTLB);
+	actualizarTlb(header->PID, header->pagina_proceso, paginaASwapear->direccion_fisica, TLB);
+	pthread_mutex_unlock (&mutexTLB);
+
+	// ACTUALIZO LA PAGINA QUE SWAPEE ( LA ELIMINO Y LA VUELVO A AGREGAR VACIA DEL TODO )
+	list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
+	list_add(tablaProceso, pag_proc_create(paginaASwapear->pag, NULL, -1, 0, 0));
+
 	cantPagAccessed++;
 	cantFallosPag++;
 	return 1;
