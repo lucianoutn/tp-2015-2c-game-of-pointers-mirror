@@ -82,7 +82,6 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				leerEnMemReal(tabla_adm, TLB,registro_prueba, serverSocket,socketCliente, memoria_real);
 				pthread_mutex_unlock (&mutexMem);
 			}
-			cantPagAccessed++;
 	 		break;
 
 	 	case 1:

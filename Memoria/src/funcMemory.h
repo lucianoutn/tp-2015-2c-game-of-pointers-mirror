@@ -175,6 +175,8 @@ process_pag * ambosBitsEnCero(t_list *);
 // VA ACTUALIZANDO A = 0, SI RECORRIO TODO Y NO LA ENCONTRO, VUELVE A HACER AMBOSBITSENCERO
 process_pag * bitDirtyEnUno(t_list*);
 
+void mostrarVersus();
+
 int removerEntradasTlb(t_list *, t_header*);
 
 //------SEÑALES QUE TIENE QUE RECIBIR LA MEMORIA-------------//
