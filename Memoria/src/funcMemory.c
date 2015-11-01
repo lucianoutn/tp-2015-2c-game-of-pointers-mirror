@@ -121,7 +121,6 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				// SI ESTA EN SWAP
 				if ( paginaProceso->direccion_fisica == NULL)
 				{
-					cantFallosPag++;
 					/* SI NO TENGO ESPACIO PARA TRAERLA (TODOS LOS MARCOS DISPONIBLES PARA ESE
 					 * PROCESO YA ESTAN LLENOS), SWAPEO LA PRIMER PAGINA CARGADA (FIFO)
 					 * Y ESCRIBO LA QUE RECIBO DEL SWAP AL FINAL DE LA LISTA
@@ -130,7 +129,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 					{
 						int verific = swapeando(tablaProceso,tabla_adm ,TLB, mensaje, serverSocket, registro_prueba);
 						if (verific == 1)
-						{	pthread_mutex_lock (&mutexTLB);
+						{
+							pthread_mutex_lock (&mutexTLB);
 							actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
 							pthread_mutex_unlock (&mutexTLB);
 						}
@@ -144,6 +144,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 					{
 						if ( listaFramesHuecosMemR->elements_count != 0)
 						{
+
 							t_marco_hueco * marco_a_llenar = list_remove(listaFramesHuecosMemR, 0);
 							log_info(logger, "Traje la pagina del swap, voy a escribir el marco %d", marco_a_llenar->numero_marco);
 							sleep(miContexto.retardoMemoria);
@@ -159,6 +160,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							pthread_mutex_unlock (&mutexTLB);
 							// ACTUALIZO LA TABLA DEL PROCESO CON LA DRIECCION FISICA, DEPENDIENDO EL ALGORITMO DEL CONTEXTO
 							actualizoTablaProceso(tablaProceso, marco_a_llenar, registro_prueba);
+
+							cantPagAccessed++;
 						// SI NO ME QUEDAN MARCOS EN TODA LA MEMORIA PARA GUARDAR UNA PAGINA, CHAU
 						}else
 						{
@@ -166,6 +169,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							// MAXIMA DE MARCOS, SI NO HAY MÁS MARCOS PARA ASIGNAR
 							log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedido");
 							matarProceso(registro_prueba, tabla_adm, TLB);
+							mostrarVersus();
 						}
 					}
 				// SI NO ESTA EN SWAP, ENTONCES okMem TIENE LA DIRECCION DEL MARCO PARA ESCRIBIR EL MENSAJE
@@ -215,7 +219,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			if(flag)
 			{
 				log_info(logger, "Se hizo conexion con swap, se envio proceso a matar y este fue recibido correctamente");
-				log_info(logger, "Cantidad total de paginas accedidas: %d\n vs Cantidad de fallos de pagina %d", cantPagAccessed, cantFallosPag);
+				mostrarVersus();
 			}else
 				log_error(logger, "Hubo un problema con la conexion/envio al swap");
 	 		break;
@@ -259,6 +263,7 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, int pid, int pagina)
 	// SI LA ENCONTRO LA LEO Y SE LA ENVIO AL CPU
 	if (registro_tlb != NULL)
 	{
+		cantPagAccessed++;
 		send(socketCliente,registro_tlb->direccion_fisica,miContexto.tamanioMarco,0);
 		return 1;
 	}
@@ -294,12 +299,12 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		// SI LA DIRECCION CONTIENE = "Swap" ES PORQUE ESTA EN SWAP, SINO YA LA ENCONTRE EN MEMORIA
 		if ( pagina_proc->direccion_fisica == NULL)
 		{
-			cantFallosPag++;
 			char * contenido = malloc(miContexto.tamanioMarco);
 			envioAlSwap(package, serverSocket, contenido, flag);
 			//SI TODO SALIO BIEN, EL SWAP CARGO LA PAGINA A LEER EN "CONTENIDO"
 			if(*flag)
 			{
+				cantPagAccessed++;
 				log_info(logger, "Se hizo conexion con swap, se envio paquete a leer y este fue recibido correctamente");
 				lectura(package, tabla_adm, memoria_real, contenido, TLB, pagina_proc);
 				// Como la transferencia con el swap fue exitosa, le envio la pagina al CPU
@@ -316,6 +321,9 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 			send(socketCliente,pagina_proc->direccion_fisica,sizeof(pagina_proc->direccion_fisica),0);
 			return 1;
 		}
+	}else
+	{
+		log_info(logger, "Se esta queriendo leer una pagina de un proceso que no esta iniciado");
 	}
 	return 0;
 }
@@ -501,6 +509,7 @@ int verificarTlb (t_list * TLB, int tamanio_msg, char * message, t_header * pagi
 
 	if (registro_tlb != NULL)
 	{
+		cantPagAccessed++;
 		log_info(logger, "TLB HIT pagina: %d", registro_tlb->pagina);
 		strcpy (registro_tlb->direccion_fisica, message);
 		return 1;
@@ -541,22 +550,17 @@ t_tlb * buscarEntradaProcesoEnTlb (t_list * TLB, t_header * pagina, int * posici
 int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mensaje, int serverSocket, t_header * header)
 {
 	// TRAIGO LA PRIMER PAGINA QUE SE HAYA CARGADO EN MEMORIA, LA PONGO EN NULL Y SE LA ENVIO AL SWAP
-	process_pag * pagina_a_remover = traerPaginaARemover(tablaProceso);
+	process_pag * paginaASwapear = traerPaginaARemover(tablaProceso);
 	log_info(logger, "Acceso a swap: Voy a swapear para traer la pagina %d porque no tengo lugar para este proceso", header->pagina_proceso);
 	sleep(miContexto.retardoMemoria);
-
+	/*
 	int num_pag_to_remove = pagina_a_remover->pag;
 
 	bool _numeroDePagina (void * p)
 	{
 		return(*(int*)p == num_pag_to_remove);
 	}
-
-	// ACTUALIZO LA PAGINA A SWAPEAR, DIRECCION_FISICA = NULL
-	//ESTO ESTA PARA EL ORTO, BUSCAR UNA FORMA MAS EFICIENTE
-
-	process_pag * paginaASwapear = list_remove_by_condition(tablaProceso, (void*)_numeroDePagina);
-	list_add(tablaProceso, pag_proc_create(paginaASwapear->pag, NULL, -1, 0, 0) );
+	 */
 
 	// SI SE TRATA DE UNA ESCRITURA
 	if (header->type_ejecution == 1)
@@ -598,6 +602,12 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 			list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco, 0 , 0));
 		} // SINO VEO LOS OTRO ALGORITMOS  ( DESPUES VEO )
 
+		// ACTUALIZO LA PAGINA A SWAPEAR, DIRECCION_FISICA = NULL
+		paginaASwapear->direccion_fisica=  NULL;
+		paginaASwapear->marco = -1;
+		paginaASwapear->accessed = 0;
+		paginaASwapear->dirty = 0;
+
 		// Escribo en mi pagina swapeada el contenido a escribir
 		log_info(logger, "Escribo el marco de mi pagina swapeada para escribir");
 		sleep(miContexto.retardoMemoria);
@@ -625,11 +635,12 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		{
 			return(*(int*)p == num_pag);
 		}
-
 		// La agrego al final con la direccion del marco de la pagina que swapee
 		list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
 		list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco, 0, 0));
 	}
+	cantPagAccessed++;
+	cantFallosPag++;
 	return 1;
 }
 
@@ -827,6 +838,11 @@ void actualizarTlb (int pid, int pagina, char * direccion_memoria, t_list * TLB)
 		}
 	}
 
+}
+
+void mostrarVersus()
+{
+	log_info(logger, "Cantidad de paginas accedidas-> %d VS Cantidad de fallos de pagina-> %d", cantPagAccessed, cantFallosPag);
 }
 
 t_header* crearHeaderLectura(t_header * package)
