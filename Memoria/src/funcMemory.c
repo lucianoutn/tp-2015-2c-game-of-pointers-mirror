@@ -7,11 +7,6 @@
 #include <SharedLibs/manejoListas.h>
 #include "funcMemory.h"
 
-void despuesSeBorra()
-{
-	printf("SE PUSHEO TODO PIOLA? \n");
-}
-
 void traigoContexto()
 {
  // LEVANTO EL ARCHIVO CONFIG Y VERIFICO QUE LO HAYA HECHO CORRECTAMENTE /
@@ -193,7 +188,6 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				}
 				pthread_mutex_unlock (&mutexMem);
 			}
-			cantPagAccessed++;
 	 		break;
 	 	case 2:
 	 		/* LA INICIALIZACION SE MANDA DIRECO AL SWAP PARA QUE RESERVE ESPACIO,
