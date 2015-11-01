@@ -638,6 +638,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		// La agrego al final con la direccion del marco de la pagina que swapee
 		list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
 		list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco, 0, 0));
+
 	}
 	cantPagAccessed++;
 	cantFallosPag++;
