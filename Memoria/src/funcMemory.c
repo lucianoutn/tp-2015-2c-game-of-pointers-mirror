@@ -107,7 +107,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 
 				// SE ESCRIBIO CORRECTAMENTE PORQUE YA ESTABA CARGADA EN TLB
 				pthread_mutex_lock (&mutexTLB);
-				actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
+				if (!strcmp(miContexto.tlbHabilitada, "SI"))
+					actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
 				pthread_mutex_unlock (&mutexTLB);
 				printf ("SE ESCRIBIO CORRECTAMENTE PORQUE ESTABA EN LA TLB \n");
 			}
@@ -160,7 +161,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 
 							//AGREGO LA PAGINA A LA TLB (VERIFICO SI ESTA LLENA Y REEMPLAZO)
 							pthread_mutex_lock (&mutexTLB);
-							actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, TLB);
+							if (!strcmp(miContexto.tlbHabilitada, "SI"))
+								actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, TLB);
 							pthread_mutex_unlock (&mutexTLB);
 							// ACTUALIZO LA TABLA DEL PROCESO CON LA DRIECCION FISICA, DEPENDIENDO EL ALGORITMO DEL CONTEXTO
 							actualizoTablaProceso(tablaProceso, marco_a_llenar, registro_prueba);
@@ -183,7 +185,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 					sleep(miContexto.retardoMemoria);
 					memcpy ( paginaProceso->direccion_fisica, mensaje, registro_prueba->tamanio_msj);
 					pthread_mutex_lock (&mutexTLB);
-					actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
+					if (!strcmp(miContexto.tlbHabilitada, "SI"))
+						actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
 					pthread_mutex_unlock (&mutexTLB);
 				}
 				pthread_mutex_unlock (&mutexMem);
@@ -557,6 +560,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 {
 	// TRAIGO LA PRIMER PAGINA QUE SE HAYA CARGADO EN MEMORIA, LA PONGO EN NULL Y SE LA ENVIO AL SWAP
 	process_pag * paginaASwapear = traerPaginaARemover(tablaProceso);
+	printf("Pagina a remover: %d \n", paginaASwapear->pag);
 	log_info(logger, "Acceso a swap: Voy a swapear para traer la pagina %d porque no tengo lugar para este proceso", header->pagina_proceso);
 	sleep(miContexto.retardoMemoria);
 
@@ -639,7 +643,8 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	}
 
 	pthread_mutex_lock (&mutexTLB);
-	actualizarTlb(header->PID, header->pagina_proceso, paginaASwapear->direccion_fisica, TLB);
+	if (!strcmp(miContexto.tlbHabilitada, "SI"))
+		actualizarTlb(header->PID, header->pagina_proceso, paginaASwapear->direccion_fisica, TLB);
 	pthread_mutex_unlock (&mutexTLB);
 
 	// ACTUALIZO LA PAGINA QUE SWAPEE ( LA ELIMINO Y LA VUELVO A AGREGAR VACIA DEL TODO )
