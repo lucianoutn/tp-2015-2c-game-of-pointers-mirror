@@ -129,7 +129,7 @@ int main()
 
 	free(memoria_real);
 	list_destroy_and_destroy_elements(tablaAdm,(void*)tabla_adm_destroy);
-	list_destroy_and_destroy_elements(TLB,(void*)reg_tlb_destroy);
+	//list_destroy_and_destroy_elements(TLB,(void*)reg_tlb_destroy);
 	list_destroy_and_destroy_elements(listaFramesHuecosMemR,(void*)marco_hueco_destroy);
 	list_destroy_and_destroy_elements(listaFramesMemR,(void*)marco_destroy);
 	log_destroy(logger);
@@ -181,33 +181,38 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	 char * mensaje_inicializacion = malloc(1);
 	 ejecutoInstruccion(package, mensaje_inicializacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 
-	 t_header * package_escritura = package_create(1,15,0,strlen("Hola"));
+	 t_header * package_escritura = package_create(1,15,1,strlen("Hola"));
 	 char * mensaje_escritura = malloc(5);
 	 strcpy(mensaje_escritura,"Hola");
 	 ejecutoInstruccion(package_escritura, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 
-	 t_header * package_escritura1 = package_create(1,15,1,strlen("Aldu"));
+	 t_header * package_escritura1 = package_create(1,15,2,strlen("Aldu"));
 	 strcpy(mensaje_escritura,"Aldu");
 	 ejecutoInstruccion(package_escritura1, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 
-	 t_header * package_escritura2 = package_create(1,15,2,strlen("Aldu"));
+	 t_header * package_escritura2 = package_create(1,15,3,strlen("Aldu"));
 	 strcpy(mensaje_escritura,"Chau");
 	 ejecutoInstruccion(package_escritura2, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
-	 t_header * package_escritura3 = package_create(1,15,2,strlen("Aldu"));
+
+	 t_header * package_escritura3 = package_create(1,15,1,strlen("Aldu"));
 	 strcpy(mensaje_escritura,"Tutu");
 	 ejecutoInstruccion(package_escritura3, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 
-	 t_header * package_escritura4 = package_create(1,15,3,strlen("Aldu"));
+	 t_header * package_escritura4 = package_create(1,15,4,strlen("Aldu"));
 	 strcpy(mensaje_escritura,"Gege");
 	 ejecutoInstruccion(package_escritura4, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 
-	 t_header * package_escritura5 = package_create(1,15,4,strlen("Aldu"));
+	 t_header * package_escritura5 = package_create(1,15,2,strlen("Aldu"));
 	 strcpy(mensaje_escritura,"Palo");
 	 ejecutoInstruccion(package_escritura5, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 
 	 t_header * package_escritura6 = package_create(1,15,3,strlen("Aldu"));
 	 strcpy(mensaje_escritura,"Pali");
 	 ejecutoInstruccion(package_escritura6, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+
+	 t_header * package_escritura7 = package_create(1,15,1,strlen("Aldu"));
+	 strcpy(mensaje_escritura,"Puli");
+	 ejecutoInstruccion(package_escritura7, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 
 	 t_header * package_finalizacion = package_create(3,15,0,0);
 	 char * mensaje_finalizacion = malloc(1);
