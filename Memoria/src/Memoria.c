@@ -108,20 +108,33 @@ int main()
 		}
 	}
 
+	void mostrarTasas()
+	{
+		puts("Muestro tasas de cosas");
+
+		signal(SIGALRM,mostrarTasas);
+
+		alarm(60);
+
+	}
+
 	signal(SIGUSR1,flush);
 	signal(SIGUSR2,limpiar);
 	signal(SIGINT,dump);
 
+	signal(SIGALRM,mostrarTasas);
+	alarm(60);
+
 	reciboDelCpu(memoria_real, TLB, tablaAdm);
 
 	free(memoria_real);
-
 	list_destroy_and_destroy_elements(tablaAdm,(void*)tabla_adm_destroy);
 	list_destroy_and_destroy_elements(TLB,(void*)reg_tlb_destroy);
 	list_destroy_and_destroy_elements(listaFramesHuecosMemR,(void*)marco_hueco_destroy);
 	list_destroy_and_destroy_elements(listaFramesMemR,(void*)marco_destroy);
 	log_destroy(logger);
 
+//	pthread_kill(senial[0],3);
 	return 1;
 }
 

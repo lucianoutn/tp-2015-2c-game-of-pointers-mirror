@@ -942,6 +942,7 @@ void limpiarMemoria(void * args)
  * en el archivo log de Administrador de Memoria, creando para tal fin un proceso nuevo.
  * Se recomienda usar fork().
  */
+
 void dumpEnLog(char * memoria_real, t_list * tablaAdm)
 {
 	puts("Recibi SIGPOLL");
