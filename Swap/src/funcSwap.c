@@ -141,18 +141,18 @@ int escribirSwap(t_header * package, int socketCliente)
 		return (*(int *)p == package->PID);
 	}
 
-	char * mensaje = malloc(package->tamanio_msj+1);
+	char * mensaje = malloc(contexto->tam_pagina);
 
-	recv(socketCliente, mensaje, package->tamanio_msj, 0);
+	recv(socketCliente, mensaje, contexto->tam_pagina, 0);
 	t_pag * pag = list_find(lista_paginas, (void *)_numeroDePid);
 	//strcpy(mensaje,"Holasir");
 	if(pag!= NULL)
 	{
 		fseek(archivo,pag->inicio + ((package->pagina_proceso) * contexto->tam_pagina),SEEK_SET);
-		fwrite(mensaje, strlen(mensaje), 1, archivo);
+		fwrite(mensaje, contexto->tam_pagina, 1, archivo);
 		log_info(logger, "Se recibio orden de escritura: PID: %d Byte Inicial: %d Contenido: %s"
 										,package->PID, pag->inicio+(package->pagina_proceso * contexto->tam_pagina),mensaje);
-		//Relleno pagina
+		//Relleno paginas
 		int relleno= pag->inicio + strlen(mensaje);
 		int final_pagina= pag->inicio+((package->pagina_proceso + 1) * contexto->tam_pagina);
 

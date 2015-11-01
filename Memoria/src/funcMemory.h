@@ -47,6 +47,7 @@ typedef struct
 typedef struct{
 			char * memoria;
 			t_list *tabla_adm;
+			t_list *tlb;
 		}parametros;
 
 pthread_mutex_t mutexTLB;
