@@ -606,7 +606,12 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		{
 			list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
 			list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco, 0 , 0));
-		} // SINO VEO LOS OTRO ALGORITMOS  ( DESPUES VEO )
+		}else if (!strcmp(miContexto.algoritmoReemplazo, "LRU"))
+		{
+			printf("SWAPEA CORTE LRU \n");
+			list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
+			list_add(tablaProceso, pag_proc_create(header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco, 0 , 0));
+		}
 
 		// Escribo en mi pagina swapeada el contenido a escribir
 		log_info(logger, "Escribo el marco de mi pagina swapeada para escribir");
@@ -660,18 +665,21 @@ void actualizoTablaProceso(t_list * tablaProceso, t_marco_hueco * marco_a_llenar
 {
 	if(!strcmp(miContexto.algoritmoReemplazo, "FIFO"))
 	{
+		printf("Entra a actualizar corte LRU \n");
 		if(marco_a_llenar!=NULL)
 			actualizarTablaProcesoFifo(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
 		else
 			actualizarTablaProcesoFifo(tablaProceso, registro_prueba->pagina_proceso, NULL, NULL);
 	}else if (!strcmp(miContexto.algoritmoReemplazo, "LRU"))
 	{
+		printf("Entra a actualizar corte LRU \n");
 		if(marco_a_llenar!=NULL)
 			actualizarTablaProcesoLru(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
 		else
 			actualizarTablaProcesoLru(tablaProceso, registro_prueba->pagina_proceso, NULL, NULL);
 	}else
 	{
+		printf("Entra a actualizar corte LRU \n");
 		if(marco_a_llenar!=NULL)
 			actualizarTablaProcesoClock(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
 		else
