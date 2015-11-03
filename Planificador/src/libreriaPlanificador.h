@@ -41,14 +41,21 @@ t_list *lstPcbs;
 //tipo de dato t_pcb que es una estructura que almacena el PCB de cada proceso
 typedef struct PCB {
 	int PID; //numero del proceso
-	//estado del proceso
+	/*
+	 * 0 new
+	 * 1 ready
+	 * 2 executing
+	 * 3 block
+	 * 4 finish
+	 */
+	unsigned int estado;
 	unsigned int instructionPointer; //numero de instruccion actual
 	unsigned int numInstrucciones; //numero total de instrucciones
 	int prioridad; // prioridad (usar mas adelante)
 	int permisos; // sin uso por ahora
 	char *ruta; //ruta del archivo mCod que tiene las instrucciones a procesar
 	bool finalizar;
-	//struct PCB *sig;
+
 }t_pcb;
 
 //Protocolo de envio Planificador->CPU
@@ -94,14 +101,8 @@ void traigoContexto();
 
 //void crearSocket ();
 
-//Funcion que permite crear una cola
-void encolar (t_pcb *, t_pcb *);
 
-//Funcion que permite quitar un elemento de la cola
-t_pcb desencolar (t_pcb *);
-
-
-void iniciarPlanificador(t_list *, t_queue *);
+void encolar(t_list *, t_queue *);
 
 void dispatcher(t_queue *);
 

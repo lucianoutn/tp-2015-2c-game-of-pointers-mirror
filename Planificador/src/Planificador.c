@@ -54,9 +54,10 @@ int main() {
 	sem_wait(&semEsperaCPU); //semaforo espera conexiones
 
 
-	//Se crea la cola de readys
+	//Se crea la cola de ready's
 	t_queue *cola_ready = queue_create();
-
+	//Se crea la cola de bloqueados
+	t_queue *cola_block = queue_create();
 	//creo la lista de TODOS los pcb
 	lstPcbs= list_create();
 
@@ -67,30 +68,34 @@ int main() {
 
 	pthread_t hilo_consola;
 	pthread_create(&hilo_consola, NULL, consola, NULL);
-
+	//creo hilo despachador aca?
 
 	int recivoOrden=1;
-	while (recivoOrden){
-	sem_wait(&ordenIngresada);
-
+	while (recivoOrden)
+	{
+		sem_wait(&ordenIngresada);
 		switch (orden)
 		{
 			case 0: //orden correr
 			{
-				iniciarPlanificador(lstPcbs, cola_ready);
+				encolar(lstPcbs, cola_ready);
 
 				if	(!strcmp(miContexto.algoritmoPlanificacion, "FIFO")){ //por FIFO
 					puts("FIFO");
 
 					dispatcher(cola_ready);
 					/*
+					 *
 					 *si se acaba el quanto de tiempo vuelvo a encolar
 					 *si hay instruccion de entrada-salida (recibe orden del cpu) agrego el proceso a
-				  	  cola_bloqueados, cuando termina vuelvo a encolar en la cola_ready
+				  	  cola_bloqueados
+				  	 *cuando termina de ejecutar entrada-salida recibe interrupcion y saco de la
+				  	  cola de bloqueados y meto en la cola de ready
 					 *si termina de procesar el proceso no encolo y mato el pcb
 					 */
 
-				}else{
+				}
+				else{
 				//por RoundRobin
 					puts("RoundRobin");
 				}

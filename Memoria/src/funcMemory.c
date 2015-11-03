@@ -188,6 +188,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 					if (!strcmp(miContexto.tlbHabilitada, "SI"))
 						actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB);
 					pthread_mutex_unlock (&mutexTLB);
+					actualizoTablaProceso(tablaProceso, NULL, registro_prueba);
 				}
 				pthread_mutex_unlock (&mutexMem);
 			}
@@ -659,13 +660,22 @@ void actualizoTablaProceso(t_list * tablaProceso, t_marco_hueco * marco_a_llenar
 {
 	if(!strcmp(miContexto.algoritmoReemplazo, "FIFO"))
 	{
-		actualizarTablaProcesoFifo(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
+		if(marco_a_llenar!=NULL)
+			actualizarTablaProcesoFifo(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
+		else
+			actualizarTablaProcesoFifo(tablaProceso, registro_prueba->pagina_proceso, NULL, NULL);
 	}else if (!strcmp(miContexto.algoritmoReemplazo, "LRU"))
 	{
-		actualizarTablaProcesoLru(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
+		if(marco_a_llenar!=NULL)
+			actualizarTablaProcesoLru(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
+		else
+			actualizarTablaProcesoLru(tablaProceso, registro_prueba->pagina_proceso, NULL, NULL);
 	}else
 	{
-		actualizarTablaProcesoClock(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
+		if(marco_a_llenar!=NULL)
+			actualizarTablaProcesoClock(tablaProceso, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
+		else
+			actualizarTablaProcesoClock(tablaProceso, registro_prueba->pagina_proceso, NULL, NULL);
 	}
 }
 
@@ -676,8 +686,12 @@ void actualizarTablaProcesoLru(t_list * tabla_proceso, int num_pagina, char * di
 		return(*(int*)p == num_pagina);
 	}
 
-	list_remove_and_destroy_by_condition(tabla_proceso, (void*)_numeroDePagina,(void*)pag_proc_create);
-	process_pag * pagina = pag_proc_create(num_pagina, direccion_marco, num_marco, 0, 0);
+	process_pag * pag = list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
+	process_pag * pagina;
+	if(direccion_marco!=NULL)
+		pagina = pag_proc_create(num_pagina, direccion_marco, num_marco, 0, 0);
+	else
+		pagina = pag_proc_create(num_pagina, pag->direccion_fisica, pag->marco, 0, 0);
 	list_add(tabla_proceso,pagina);
 }
 
@@ -818,6 +832,8 @@ int marcosProcesoLlenos(t_list * lista_proceso)
 
 		x++;
 	}
+	printf("Paginas ocupadas: %d \n",paginas_ocupadas);
+	printf("Paginas disponibles: %d \n",paginas_disponibles);
 	if (paginas_ocupadas == miContexto.maxMarcos)
 		return 1;
 	else

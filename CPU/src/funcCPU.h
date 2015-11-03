@@ -48,13 +48,21 @@ typedef struct{
 //tipo de dato t_pcb que es una estructura que almacena el PCB de cada proceso
 typedef struct PCB {
 	int PID; //numero del proceso
-	//estado del proceso
+	/*
+	 * 0 new
+	 * 1 ready
+	 * 2 executing
+	 * 3 block
+	 * 4 finish
+	 */
+	unsigned int estado;
 	unsigned int instructionPointer; //numero de instruccion actual
 	unsigned int numInstrucciones; //numero total de instrucciones
 	int prioridad; // prioridad (usar mas adelante)
 	int permisos; // sin uso por ahora
 	char *ruta; //ruta del archivo mCod que tiene las instrucciones a procesar
 	bool finalizar;
+
 }t_pcb;
 
 //Protocolo de envio Planificador->CPU

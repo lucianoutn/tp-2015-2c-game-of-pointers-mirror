@@ -31,7 +31,7 @@ void traigoContexto()
 }
 
 
-void iniciarPlanificador(t_list* lstPcbs, t_queue* cola_ready)
+void encolar(t_list* lstPcbs, t_queue* cola_ready)
 {
 	char *ruta=(char*)malloc(sizeof(char));
 
@@ -75,6 +75,7 @@ void dispatcher(t_queue *cola_ready)
 	}
 	
 
+	//TODA LA PARTE DE ACA EN ADELANTE TIENE QUE FUNCIONAR COMO UN HILO!!!
 	if(!conexiones.CPUS[I].enUso){
 		//bloqueo la cpu
 		conexiones.CPUS[I].enUso = true;
@@ -90,19 +91,20 @@ void dispatcher(t_queue *cola_ready)
 		puts("PCB enviado a la CPU para procesamiento\n");
 
 		sem_post(semProduccionMsjs);
-		//BLOQUEO HASTA QUE CAMBIE PARA COBRAR
-		/*while(pcb->PID==2)
-		{
-			printf("%d\n",pcb->PID);
-		}
-		printf("%d\n",pcb->PID); //CAMBIA!!
-		*/
 
 		log_info(logger,"Comienzo ejecucion PID: %d Nombre: %s", pcb->PID, pcb->ruta);
 
-		//RECIBE RESPUESTA
-		//esta bien que reciba la respuesta el despachador???
-		//porque sino se bloquea habria que poner semaforos creo
+		//ESPERO RESPUESTA CON SEMAFORO
+		/*
+		 *compruebo el estado
+		 *hago switch y encolo o desencolo segun el estado!!
+		 switch(estado)
+		 {
+		 	 case 1 //ready
+		 	 case 3 //bloqueado
+		 	 case 4 //finalizado
+		 */
+
 
 		//sem_wait(semRespuestaCpu); preparo semaforos x si no bloquea al rcv. lucho
 
@@ -142,6 +144,7 @@ t_pcb* procesarPCB(char *path)
 
 	//armo PCB
 	pcb->PID= PID_actual+1;
+	pcb->estado=0;
 	pcb->instructionPointer = 0;
 	pcb->numInstrucciones = 0;
 	pcb->prioridad=0;
@@ -161,4 +164,29 @@ void preparoHeader(t_headcpu *header)
 	key_pcb++;
 	key_ruta++;
 	
+}
+
+char* estadoActual (int estado)
+{
+
+	if(estado==0)
+	{
+		return "new";
+	}
+	else if(estado==1)
+	{
+		return "ready";
+	}
+	else if(estado==2)
+	{
+		return "executing";
+	}
+	else if(estado==3)
+	{
+		return "block";
+	}
+	else
+	{
+		return "finish";
+	}
 }
