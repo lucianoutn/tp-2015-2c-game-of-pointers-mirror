@@ -230,7 +230,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 
     fd_set master;   // conjunto maestro de descriptores de fichero
     fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
-    struct sockaddr_in myaddr;     // dirección del servidor
+   // struct sockaddr_in myaddr;     // dirección del servidor
     struct sockaddr_in remoteaddr; // dirección del cliente
     int fdmax;        // número máximo de descriptores de fichero
     int listener;     // descriptor de socket a la escucha
@@ -312,7 +312,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
     					{    // actualizar el máximo
     						fdmax = newfd;
     					}
-    					printf("Nueva conexion");
+    					printf("Nueva conexion\n ");
     				}
     			} else
     			{
@@ -339,9 +339,12 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
     					{
     						if (FD_ISSET(j, &master))
     						{
-    							printf ("El tipo de ejecucion recibido es %d \n", package->type_ejecution);
-								// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
-								ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, j, serverSocket);
+    							if(j!=listener)
+    							{
+    								printf ("El tipo de ejecucion recibido es %d \n", package->type_ejecution);
+    								// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
+    								ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, j, serverSocket);
+    							}
  							}
     					}
     				}
