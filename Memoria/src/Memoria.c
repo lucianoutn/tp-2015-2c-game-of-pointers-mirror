@@ -31,9 +31,6 @@
 #define BACKLOG 10
 #define N 50
 
-int descriptoresVec[N], maxDescriptor, j;
-fd_set readset;
-
 void reciboDelCpu(char *, t_list *, t_list *);
 
 int main()
@@ -140,12 +137,9 @@ int main()
 
 void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 {
-	//_header * package = malloc(sizeof(t_header));
+	t_header * package = malloc(sizeof(t_header));
 	char * mensaje = malloc(miContexto.tamanioMarco);
-	int socketCPU;
-	int resultadoSelect;
-	fd_set readset;
-	int status = 1;
+	//int socketCPU;
 /*
 	//CONEXION AL CPU
 	int listenningSocket=crearServer(miContexto.puertoServidor);
@@ -176,6 +170,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 		ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 	}
 */
+/*
 
 	t_header * package = package_create(2,15,5,0);
 	 char * mensaje_inicializacion = malloc(1);
@@ -231,61 +226,134 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	 free(package_escritura5);
 	 free(package_escritura6);
 	 free(package_finalizacion);
+*/
 
+    fd_set master;   // conjunto maestro de descriptores de fichero
+    fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
+    struct sockaddr_in myaddr;     // dirección del servidor
+    struct sockaddr_in remoteaddr; // dirección del cliente
+    int fdmax;        // número máximo de descriptores de fichero
+    int listener;     // descriptor de socket a la escucha
+    int newfd;        // descriptor de socket de nueva conexión aceptada
+    int nbytes;
+    int yes=1;        // para setsockopt() SO_REUSEADDR, más abajo
+    int addrlen;
+    int i, j;
+    FD_ZERO(&master);    // borra los conjuntos maestro y temporal
+    FD_ZERO(&read_fds);        // obtener socket a la escucha
 
-	 /* SELECT primera version no borrar
-  do {
-     FD_ZERO(&readset); 	//esto abre y limpia la estructura cada vez q se reinicia el select luego de un error
-     FD_SET(socketCliente, &readset);
-     resultadoSelect = select(socketCliente + 1, &readset, NULL, NULL, NULL); //el 1ºparametro es el socket +1, 2º el conjunto de lecutra, 3º el de escritura, 4º no se, 5º el time out
-  } while (resultadoSelect == -1 && errno == EINTR); //captura el error
+    struct addrinfo hints; //estructura que almacena los datos de conexion
+    struct addrinfo *serverInfo; //estructura que almacena los datos de conexion
 
-  if (resultadoSelect > 0) {	//>0 implica el nº de sockets disponibles para la lectura
-     if (FD_ISSET(socketCliente, &readset)) {
-        /* si estoy aca es que hay info para leer */
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = AF_UNSPEC;		// No importa si uso IPv4 o IPv6
+    hints.ai_flags = AI_PASSIVE;// Asigna el address del localhost: 127.0.0.1
+    hints.ai_socktype = SOCK_STREAM;	// Indica que usaremos el protocolo TCP
+
+    getaddrinfo(NULL, miContexto.puertoServidor, &hints, &serverInfo); // Carga en serverInfo los datos de la conexion
+    if ((listener = socket(serverInfo->ai_family, serverInfo->ai_socktype,
+			serverInfo->ai_protocol)) == -1)
+    {
+    	perror("socket");
+    	exit(1);
+    }
+    // obviar el mensaje "address already in use" (la dirección ya se está usando)
+    if (setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes,sizeof(int)) == -1)
+    {
+    	perror("setsockopt");
+    	exit(1);
+    }
+    // enlazar
     /*
-	resultadoSelect = recv(socketCliente, mensaje, package->tamanio_msj,0);
-    if (resultadoSelect == 0)
-    {
-       // si estoy aca es xq se cerro la conexion desde el otro lado //
-       close(socketCliente);
-    }
-    else if (resultadoSelect < 0)
-    {
-    	// error, lo muestro
-    	printf("Error con el select(): %s\n ", strerror(errno));
-    }
+    myaddr.sin_family = AF_INET;
+    myaddr.sin_addr.s_addr = INADDR_ANY;
+    myaddr.sin_port = htons(miContexto.puertoServidor);
+    memset(&(myaddr.sin_zero), '\0', 8);
     */
-    // fin primera version
-  /* tercera version
-  iDEM ARRIBA, SE COMENTA PARA PRUEBAS
-
-  // inicializar el conjunto
-  FD_ZERO(&readset); //esto abre y limpia la estructura cada vez q se reinicia el select luego de un error
-  maxDescriptor = 0;
-  for (j=0; j<N; j++) {
-     FD_SET(descriptoresVec[j], &readset);
-     //maxDescriptores = (maxDescriptores>descriptoresVec[j])?maxDescriptores:descriptoresVec[j];
-     if (descriptoresVec[j] > maxDescriptor )
-       	 maxDescriptor = descriptoresVec[j];
-  }
-
-  // se fija si hay algo para leer
-  resultadoSelect = select(maxDescriptor + 1, &readset, NULL, NULL, NULL);  //el 1ºparametro es el socket +1, 2º el conjunto de lecutra, 3º el de escritura, 4º no se, 5º el time out
-  if (resultadoSelect < 0) {
-	  /* error, lo muestro
-	 printf("Error con el select()");
-  }
-  else { 								//>0 implica el nº de sockets disponibles para la lectura
-     for (j=0; j<N; j++) {
-        if (FD_ISSET(descriptoresVec[j], &readset)) {
-        	 /* si estoy aca es que hay info para leer
-
-        }
-     }
-  }
-  FIN COMENTARIO DE PRUEBAS
-  fin tercera version */
-  //FIN SELECT
+    if (bind(listener, serverInfo->ai_addr, serverInfo->ai_addrlen) == -1)
+    {
+    	perror("bind");
+        exit(1);
+    }
+    // escuchar
+    if (listen(listener, 10) == -1)
+    {
+    	perror("listen");
+    	exit(1);
+    }
+    // añadir listener al conjunto maestro
+    FD_SET(listener, &master);        // seguir la pista del descriptor de fichero mayor
+    fdmax = listener; // por ahora es éste
+    // bucle principal
+    for(;;)
+    {
+    	read_fds = master; // cópialo
+    	if (select(fdmax+1, &read_fds, NULL, NULL, NULL) == -1)
+    	{
+    		perror("select");
+    		exit(1);
+    	}
+    	// explorar conexiones existentes en busca de datos que leer
+    	for(i = 0; i <= fdmax; i++)
+    	{
+    		if (FD_ISSET(i, &read_fds))
+    		{ // ¡¡tenemos datos!!
+    			if (i == listener)
+    			{
+    				// gestionar nuevas conexiones
+    				addrlen = sizeof(remoteaddr);
+    				if ((newfd = accept(listener, (struct sockaddr *)&remoteaddr, &addrlen)) == -1)
+    				{
+    					perror("accept");
+    				} else
+    				{
+    					FD_SET(newfd, &master); // añadir al conjunto maestro
+    					if (newfd > fdmax)
+    					{    // actualizar el máximo
+    						fdmax = newfd;
+    					}
+    					printf("Nueva conexion");
+    				}
+    			} else
+    			{
+    				// gestionar datos de un cliente
+    				if ((nbytes = recv(i, package, sizeof(t_header), 0)) <= 0)
+    				{
+    					// error o conexión cerrada por el cliente
+    					if (nbytes == 0)
+    					{
+    						// conexión cerrada
+    						printf("selectserver: socket %d hung up\n", i);
+    					} else
+    					{
+    						perror("recv");
+    					}
+    					close(i);
+    					// ¡Hasta luego!
+    					FD_CLR(i, &master);
+    					// eliminar del conjunto maestro
+    				} else
+    				{
+    					// tenemos datos de algún cliente
+    					for(j = 0; j <= fdmax; j++)
+    					{
+    						if (FD_ISSET(j, &master))
+    						{
+    							printf ("El tipo de ejecucion recibido es %d \n", package->type_ejecution);
+								// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
+								ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, j, serverSocket);
+ 							}
+    					}
+    				}
+    			} // Esto es ¡TAN FEO!
+    		}
+    	}
+    }
 
 }
+
+
+
+
+
+
