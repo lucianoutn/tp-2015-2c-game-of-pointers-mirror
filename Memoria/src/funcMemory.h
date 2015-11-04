@@ -94,7 +94,7 @@ void envioAlSwap(t_header *, int, char *, int *);
 // PREGUNTO SI LA TLB ESTA LLENA, DEVUELVE TRUE SI ESTA LLENA
 bool tlbLlena(t_list *);
 // FUNCION PARA FINALIZAR PROCESOS
-void matarProceso(t_header *, t_list*, t_list *);
+void matarProceso(t_header *, t_list*, t_list *, t_list*);
 
 /* ME DEVUELVE NULL SI LA PAGINA ESTA EN SWAP Y SINO ME DEVUELVE LA DIRECCION DEL MARCO */
 //direccionDePag();

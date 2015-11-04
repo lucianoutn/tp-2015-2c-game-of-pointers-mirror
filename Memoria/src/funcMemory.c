@@ -177,7 +177,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							// POR ISSUE #25, SE FINALIZA EL PROCESO AUNQUE TENGA LUGAR RESPECTO A SU CANTIDAD
 							// MAXIMA DE MARCOS, SI NO HAY MÁS MARCOS PARA ASIGNAR
 							log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedido");
-							matarProceso(registro_prueba, tabla_adm, TLB);
+							matarProceso(registro_prueba, tabla_adm, TLB, tablaAccesos);
 							mostrarVersus();
 						}
 					}
@@ -227,7 +227,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 	case 3:
 			printf ("*********************Se recibio orden de finalizacion de proceso :)********************* \n");
 			pthread_mutex_lock (&mutexMem);
-			matarProceso(registro_prueba, tabla_adm, TLB);
+			matarProceso(registro_prueba, tabla_adm, TLB, tablaAccesos);
 			envioAlSwap(registro_prueba, serverSocket, NULL, flag );
 
 			if(flag)
@@ -376,7 +376,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 				}else
 				{
 					log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedido");
-					matarProceso(package, tabla_adm, TLB);
+					matarProceso(package, tabla_adm, TLB, tablaAccesos);
 					mostrarVersus();
 				}
 
@@ -492,7 +492,7 @@ bool tlbLlena(t_list * TLB)
 	return false;
 }
 
-void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB)
+void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB, t_list* tablaAccesos)
 {
 	int numero_de_pid = proceso_entrante->PID;
 
@@ -501,6 +501,8 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB)
 		return(*(int *)p == numero_de_pid);
 	}
 	t_tabla_adm * registro_tabla_proc = list_find(tabla_adm, (void*)_numeroDePid);
+
+	//list_remove_by_condition(tablaAccesos, (void*)_numeroDePid); LO COMENTO HASTA QUE ME REC. LA STRUCT
 
 	if (registro_tabla_proc != NULL)
 	{
