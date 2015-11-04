@@ -19,7 +19,7 @@
 #include <semaphore.h>
 #include "comun.h"
 
-#define MAX_CPUS 1
+#define MAX_CPUS 4
 
 typedef struct{
 	int socket;

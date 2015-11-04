@@ -66,9 +66,11 @@ int main() {
 
 	//consola(); //sin hilo
 
-	pthread_t hilo_consola;
-	pthread_create(&hilo_consola, NULL, consola, NULL);
+	pthread_t hilo_consola, hilo_dispatcher;
+	pthread_create(&hilo_consola, NULL, (void*)consola, NULL);
 	//creo hilo despachador aca?
+	pthread_create(&hilo_dispatcher, NULL, (void*)dispatcher, &cola_ready);
+
 
 	int recivoOrden=1;
 	while (recivoOrden)
@@ -83,7 +85,12 @@ int main() {
 				if	(!strcmp(miContexto.algoritmoPlanificacion, "FIFO")){ //por FIFO
 					puts("FIFO");
 
-					dispatcher(cola_ready);
+					//AGREGAR SEMAFORO PRODUCTOR CONSUMIDOR PARA EL DISPATCHER
+					sem_post(&semEnvioPcb);
+
+
+
+					//dispatcher(cola_ready);
 					/*
 					 *
 					 *si se acaba el quanto de tiempo vuelvo a encolar

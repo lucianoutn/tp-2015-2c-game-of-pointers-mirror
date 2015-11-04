@@ -84,6 +84,8 @@ sem_t *semProduccionMsjs;
 sem_t *semRespuestaCpu;
 sem_t ordenIngresada;
 sem_t semConsola;
+sem_t semCpuLibre;
+sem_t semEnvioPcb;
 
 contexto miContexto;
 
@@ -105,6 +107,8 @@ void traigoContexto();
 void encolar(t_list *, t_queue *);
 
 void dispatcher(t_queue *);
+
+void enviaACpu(t_cpu);
 
 t_pcb* procesarPCB(char *);
 

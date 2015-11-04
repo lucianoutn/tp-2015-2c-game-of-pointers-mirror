@@ -67,66 +67,74 @@ void dispatcher(t_queue *cola_ready)
 	 * tamanio_mensaje: tamanio del char * o del PCB
 	 */
 
-	//busca la primer CPU que no este en uso
-	int I = 0;
-	while((conexiones.CPUS[I].enUso) && (I <= MAX_CPUS))
-	{
-		I++;
-	}
-	
+	pthread_t hilo_CPU[MAX_CPUS];
 
-	//TODA LA PARTE DE ACA EN ADELANTE TIENE QUE FUNCIONAR COMO UN HILO!!!
-	if(!conexiones.CPUS[I].enUso){
-		//bloqueo la cpu
-		conexiones.CPUS[I].enUso = true;
-		//CPU DISPONIBLE  saco de la cola y envio msj
-		t_pcb *pcb = queue_pop(cola_ready);
-		//chequeo el flag FINALIZAR. si esta prendido le pogno el IP al final, para cuando vuelva a ejecutar finalice. lucho
-		if (pcb->finalizar) pcb->instructionPointer = pcb->numInstrucciones;
+	while(1){
 
-		t_headcpu *header = malloc(sizeof(t_headcpu));
-		preparoHeader(header);
-		//Envio el header
-		send(conexiones.CPUS[I].socket, header, sizeof(t_headcpu),0);
-		puts("PCB enviado a la CPU para procesamiento\n");
+		//espera que alguien libere alguna CPU y alguien quiera enviar un PCB
+		sem_wait(&semEnvioPcb);
+		sem_wait(&semCpuLibre);
 
-		sem_post(semProduccionMsjs);
+		//busca la primer CPU que no este en uso
+		int I = 0;
+		while((conexiones.CPUS[I].enUso) && (I <= MAX_CPUS)){
+			I++;
+		}
 
-		log_info(logger,"Comienzo ejecucion PID: %d Nombre: %s", pcb->PID, pcb->ruta);
-
-		//ESPERO RESPUESTA CON SEMAFORO
-		/*
-		 *compruebo el estado
-		 *hago switch y encolo o desencolo segun el estado!!
-		 switch(estado)
-		 {
-		 	 case 1 //ready
-		 	 case 3 //bloqueado
-		 	 case 4 //finalizado
-		 */
-
-
-		//sem_wait(semRespuestaCpu); preparo semaforos x si no bloquea al rcv. lucho
-
-		/*flag recibi = false;
-
-		recv(conexiones.CPUS[I].socket, &recibi, sizeof(flag),0);
-		if(recibi)
-			puts("RECIBI OK");
-		else
-			puts("RECIBI FAIL");*/
-
-		//libero la cpu
-		conexiones.CPUS[I].enUso = false;
-		}else{
-		//sino hay cpu disponible no hago nada
-		puts("CPUs ocupadas");
-
-		//deberia volver a ejecutar el despachador o mandar algun aviso que esta ocupado???
-
+		//Crea un hilo por cada CPU
+		if(pthread_create(&hilo_CPU[I],NULL,(void*)enviaACpu,&conexiones.CPUS[I])<0)
+		perror("Error HILO CPU!");
 	}
 
 }
+
+void enviaACpu(t_cpu CPU)
+{
+	//bloqueo la cpu
+	CPU.enUso = true;
+	//CPU DISPONIBLE  saco de la cola y envio msj
+	t_pcb *pcb = queue_pop(cola_ready);
+	//chequeo el flag FINALIZAR. si esta prendido le pogno el IP al final, para cuando vuelva a ejecutar finalice. lucho
+	if (pcb->finalizar) pcb->instructionPointer = pcb->numInstrucciones;
+
+	t_headcpu *header = malloc(sizeof(t_headcpu));
+	preparoHeader(header);
+	//Envio el header
+	send(CPU.socket, header, sizeof(t_headcpu),0);
+	puts("PCB enviado a la CPU para procesamiento\n");
+
+	sem_post(semProduccionMsjs);
+
+	log_info(logger,"Comienzo ejecucion PID: %d Nombre: %s", pcb->PID, pcb->ruta);
+
+	//ESPERO RESPUESTA CON SEMAFORO
+	/*
+	 *compruebo el estado
+	 *hago switch y encolo o desencolo segun el estado!!
+	 switch(estado)
+	 {
+		 case 1 //ready
+		 case 3 //bloqueado
+		 case 4 //finalizado
+	 */
+
+
+	//sem_wait(semRespuestaCpu); preparo semaforos x si no bloquea al rcv. lucho
+
+	/*flag recibi = false;
+
+	recv(conexiones.CPUS[I].socket, &recibi, sizeof(flag),0);
+	if(recibi)
+		puts("RECIBI OK");
+	else
+		puts("RECIBI FAIL");*/
+
+	//libero la cpu
+	CPU.enUso = false;
+	sem_post(&semEnvioPcb);
+	sem_post(&semCpuLibre);
+}
+
 
 //Funcion que permite procesar el PCB creado a partir del comando correr PATH
 t_pcb* procesarPCB(char *path)
