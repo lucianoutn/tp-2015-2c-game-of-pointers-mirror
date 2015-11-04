@@ -36,7 +36,10 @@
 #define WORD_SIZE 35 //comentar
 
 t_list *lstPcbs;
-
+//Se crea la cola de ready's
+t_queue *cola_ready;
+//Se crea la cola de bloqueados
+t_queue *cola_block;
 
 //tipo de dato t_pcb que es una estructura que almacena el PCB de cada proceso
 typedef struct PCB {

@@ -137,8 +137,8 @@ void ejecutoPCB(int socketMemoria, t_pcb *PCB){
 	//guardo las intrucciones
 	instrucciones = (leermCod(PCB->ruta, &PCB->numInstrucciones));
 
-	//CONTROLO INSTRUCCION POR INSTRUCCION QUE NO QUIERA FINALIZAR
-	while(PCB->numInstrucciones > PCB->instructionPointer)
+	//Itera hasta llegar a la ultima instruccion
+	while(PCB->estado!=4)
 	{
 		//Switch que verifica el tipo de cada instruccion
 		switch(procesaInstruccion(instrucciones[PCB->instructionPointer],&pagina))
@@ -206,12 +206,34 @@ void ejecutoPCB(int socketMemoria, t_pcb *PCB){
 					break;
 
 			default:
-
-			puts("default");
-			break;
+			{
+				puts("default");
+				break;
+			}
+			//PASO A LA OTRA INSTRUCCION
+			PCB->instructionPointer	++;
+			//VERIFICO
+			if(instrucciones[PCB->instructionPointer]!="entrada-salida")
+			{
+				PCB->estado=3; //bloqueo proceso
+				//señal al plani
+				//espero a que el plani mande señal de le toca el turno al proceso denuevo
+			}
+			/*else if para RR
+			 *{
+			 	PCB->estado=1; //proceso en ready
+			 	señal al plani
+			 	espero a que el plani mande señal de le toca el turno al proceso denuevo
+			 *}
+			*/
+			else //si entra aca es porque completo todas las intrucciones
+			{
+				PCB->estado=4; //proceso en finalizar
+				//señal al plani
+			}
 
 		}
-	PCB->instructionPointer	++;
+
 	}	//FIN WHILE
 
 	/*if(strcmp(instrucciones[PCB->instructionPointer - 1], "finalizar"))
@@ -227,6 +249,8 @@ void ejecutoPCB(int socketMemoria, t_pcb *PCB){
 			puts("Error");
 		printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
 	}*/
+
+
 	free(header);
 
 }
@@ -279,7 +303,9 @@ void iniciarCPU(t_sockets *sockets){
 				    perror("shmat");
 
 				printf("PCB Recibido. PID:%d\n",PCB->PID);
-
+				//cambio estado de PCB a ejecutando
+				PCB->estado=2;
+				//ejecuto
 				ejecutoPCB(sockets->socketMemoria,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
 
 				break;

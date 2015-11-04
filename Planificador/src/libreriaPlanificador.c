@@ -109,15 +109,39 @@ void enviaACpu(t_cpu CPU)
 
 	//ESPERO RESPUESTA CON SEMAFORO
 	/*
-	 *compruebo el estado
+	 *La respuesta va a ser un signal que mande la CPU una vez que haya termiando de modificar el PCB
+	 *compruebo el estado en el que esta el pcb
 	 *hago switch y encolo o desencolo segun el estado!!
-	 switch(estado)
-	 {
-		 case 1 //ready
-		 case 3 //bloqueado
-		 case 4 //finalizado
-	 */
+	*/
+	switch(pcb->estado)
+	{
+		case 1: //ready //solo aplica en rr
+		{
+			//si vuelve a estado ready es pq termino el cuanto
+			//encolo denuevo en la cola de readys pq termino el cuanto pero no termino de usar la cpu
+			queue_push(cola_ready, pcb);
+			break;
+		}
+		case 3: //bloqueado
+		{
+			queue_pop(cola_block, pcb);
+			//espera tantos segundos
+			//lo vuelve a meter en la lista de readys
+			queue_push(cola_ready, pcb);
+			break;
+		}
+		case 4: //finalizado
+		{
+			//libero todo el PCB!
+			//lo saco de la lista tmb
+			free(pcb);
+			break;
+		}
+		default:
+		{
 
+		}
+	}
 
 	//sem_wait(semRespuestaCpu); preparo semaforos x si no bloquea al rcv. lucho
 
