@@ -31,7 +31,7 @@
 #define BACKLOG 10
 #define N 50
 
-void reciboDelCpu(char *, t_list *, t_list *);
+void reciboDelCpu(char *, t_list *, t_list *, t_list*);
 
 int main()
 {
@@ -47,6 +47,8 @@ int main()
 	// CREO LISTAS PARA LOS FRAMES LLENOS Y VACIOS DE MEMORIA REAL
 	listaFramesMemR = crearListaFrames();
 	listaFramesHuecosMemR = crearListaHuecosFrames(miContexto.cantidadMarcos, miContexto.tamanioMarco, memoria_real);
+	// CREO LISTA PARA GUARDAR LAS PAGINAS ACCEDIDAS Y LOS FALLOS DE CADA PROCESO
+	t_list * tablaAccesos = crearListaVersus();
 
 
 	/* SI LA TLB NO ESTA HABILTIADA, VA A APUNTAR A NULL */
@@ -122,7 +124,7 @@ int main()
 	signal(SIGALRM,mostrarTasas);
 	alarm(60);
 
-	reciboDelCpu(memoria_real, TLB, tablaAdm);
+	reciboDelCpu(memoria_real, TLB, tablaAdm, tablaAccesos);
 
 	free(memoria_real);
 	list_destroy_and_destroy_elements(tablaAdm,(void*)tabla_adm_destroy);
@@ -135,11 +137,9 @@ int main()
 	return 1;
 }
 
-void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
+void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* tablaAccesos)
 {
-	t_header * package = malloc(sizeof(t_header));
-	char * mensaje = malloc(miContexto.tamanioMarco);
-	//int socketCPU;
+	int socketCPU;
 /*
 	//CONEXION AL CPU
 	int listenningSocket=crearServer(miContexto.puertoServidor);
@@ -170,50 +170,50 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 		ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 	}
 */
-/*
+
+	char * mensaje = malloc(1);
 
 	t_header * package = package_create(2,15,5,0);
 	 char * mensaje_inicializacion = malloc(1);
-	 ejecutoInstruccion(package, mensaje_inicializacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+	 ejecutoInstruccion(package, mensaje_inicializacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
 
 	 t_header * package_escritura = package_create(1,15,1,strlen("Hola"));
 	 char * mensaje_escritura = malloc(5);
 	 strcpy(mensaje_escritura,"Hola");
-	 ejecutoInstruccion(package_escritura, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+	 ejecutoInstruccion(package_escritura, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
 
 	 t_header * package_escritura1 = package_create(1,15,2,strlen("Aldu"));
 	 strcpy(mensaje_escritura,"Aldu");
-	 ejecutoInstruccion(package_escritura1, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+	 ejecutoInstruccion(package_escritura1, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
 
 	 t_header * package_escritura2 = package_create(1,15,3,strlen("Aldu"));
 	 strcpy(mensaje_escritura,"Chau");
-	 ejecutoInstruccion(package_escritura2, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+	 ejecutoInstruccion(package_escritura2, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
 
 	 t_header * package_escritura3 = package_create(1,15,1,strlen("Aldu"));
 	 strcpy(mensaje_escritura,"Tutu");
-	 ejecutoInstruccion(package_escritura3, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+	 ejecutoInstruccion(package_escritura3, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
 
 	 t_header * package_escritura4 = package_create(1,15,4,strlen("Aldu"));
 	 strcpy(mensaje_escritura,"Gege");
-	 ejecutoInstruccion(package_escritura4, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+	 ejecutoInstruccion(package_escritura4, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
 
 	 t_header * package_escritura5 = package_create(1,15,2,strlen("Aldu"));
 	 strcpy(mensaje_escritura,"Palo");
-	 ejecutoInstruccion(package_escritura5, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+	 ejecutoInstruccion(package_escritura5, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
 
 	 t_header * package_escritura6 = package_create(1,15,3,strlen("Aldu"));
 	 strcpy(mensaje_escritura,"Pali");
-	 ejecutoInstruccion(package_escritura6, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+	 ejecutoInstruccion(package_escritura6, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
 
 	 t_header * package_escritura7 = package_create(1,15,1,strlen("Aldu"));
 	 strcpy(mensaje_escritura,"Puli");
-	 ejecutoInstruccion(package_escritura7, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+	 ejecutoInstruccion(package_escritura7, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
 
 	 t_header * package_finalizacion = package_create(3,15,0,0);
 	 char * mensaje_finalizacion = malloc(1);
-	 ejecutoInstruccion(package_finalizacion, mensaje_finalizacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
+	 ejecutoInstruccion(package_finalizacion, mensaje_finalizacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
 
-	 free(mensaje);
 	 free(mensaje_inicializacion);
 	 free(mensaje_escritura);
 	 free(mensaje_finalizacion);
@@ -226,7 +226,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
 	 free(package_escritura5);
 	 free(package_escritura6);
 	 free(package_finalizacion);
-*/
+
 
     fd_set master;   // conjunto maestro de descriptores de fichero
     fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
@@ -343,7 +343,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm)
     							{
     								printf ("El tipo de ejecucion recibido es %d \n", package->type_ejecution);
     								// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
-    								ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, j, serverSocket);
+    								ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, j, serverSocket, tablaAccesos);
     							}
  							}
     					}

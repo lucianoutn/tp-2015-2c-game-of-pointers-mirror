@@ -81,7 +81,7 @@ void liberarMemoria(char *);
 
 /* RECIBE LA INSTRUCCION RECIBIDA DEL CPU Y SE HACE UN CASE DEL TIPO DE EJECUCION PARA SABER
    LAS ESTRUCTURAS A CREAR, QUE MANDAR AL SWAP, QUE RECIBIR, ETC... */
-void ejecutoInstruccion(t_header *, char*,char*, t_list*, t_list*, int, int);
+void ejecutoInstruccion(t_header *, char*,char*, t_list*, t_list*, int, int, t_list *);
 
 /* AGREGO UN FRAME A LA LISTA DE FRAMES, SACO UNO DE LA LISTA DE FRAMES HUECOS. ESCRIBO EL FRAME CON LA
  	PAGINA RECIBIDA DEL SWAP */
@@ -127,7 +127,7 @@ int marcosProcesoLlenos(t_list *);
  * 1. SI LA TLB ESTA LLENA, SE ELIMINA EL QUE ESTA HACE MAS TIEMPO (EL ULTIMO) Y SE AGREGA EL REGISTRO RECIEN LLEGADO
  * 2. SI LA TLB TIENE ESPACIO, SE AGREGA
  */
-void actualizarTlb(int, int, char*, t_list *);
+void actualizarTlb(int, int, char*, t_list *, int);
 
 void actualizoTablaProceso(t_list*, t_marco_hueco* ,t_header *);
 
@@ -174,6 +174,9 @@ process_pag * ambosBitsEnCero(t_list *);
 // VERIFICA SI HAY ALGUNA PAGINA CON A = 0, D = 1, MIENTRAS NO LA ENCUENTRE,
 // VA ACTUALIZANDO A = 0, SI RECORRIO TODO Y NO LA ENCONTRO, VUELVE A HACER AMBOSBITSENCERO
 process_pag * bitDirtyEnUno(t_list*);
+
+void upPaginasAccedidas(t_list*, int);
+void upFallosPagina(t_list*, int);
 
 void mostrarVersus();
 

@@ -60,6 +60,7 @@ typedef struct
  int pid;
  int pagina;
  char * direccion_fisica;
+ int marco;
 } t_tlb;
 // -------------------//
 
@@ -79,7 +80,13 @@ typedef struct
 } pag_proceso;
 // ------------------------------------//
 
-
+// STRUCT PAGINAS ACCEDIDAS VS FALLOS DE PAGINA
+typedef struct
+{
+	int pid;
+	int cantPagAccessed;
+	int cantFallosPag;
+} t_versus;
 
 // ---------- SWAP ----------------//
 t_pag * pag_create(int,int, int, int, int);
@@ -102,17 +109,21 @@ t_marco * marco_create (char *, int);
 
 void marco_destroy(t_marco *);
 
-t_marco_hueco * marco_hueco_create (char * direc_mem, int);
+t_marco_hueco * marco_hueco_create (char *, int);
 
 void marco_hueco_destroy(t_marco_hueco * self);
 
-t_tlb * reg_tlb_create (int pid, int marco, char * direc_mem);
+t_tlb * reg_tlb_create (int, int, char *, int);
 
 void reg_tlb_destroy(t_tlb * self);
 
 t_tabla_adm * tabla_adm_create(int, t_list*);
 
 void tabla_adm_destroy(t_tabla_adm *);
+
+t_versus * versus_create(int, int, int);
+
+void versus_destroy(t_versus *);
 
 /* VER SI SE PUEDE PASAR ACA
 pag_proceso * pag_proc_create(int, char*);
@@ -130,6 +141,8 @@ t_list * crearListaTlb();
 t_list * crearListaProceso();
 
 t_list * crearListaAdm();
+
+t_list * crearListaVersus();
 
 // -------------------------------------- //
 

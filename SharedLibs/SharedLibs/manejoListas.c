@@ -104,13 +104,31 @@ void tabla_adm_destroy(t_tabla_adm * self)
 }
 /* ---------------------------------------------------------*/
 
+/*------------------ MANEJO DE ESTRUCTURA VERSUS ---------------------*/
+
+t_versus * versus_create(int pid, int cantPagAccessed, int cantFallosPag)
+{
+t_versus * reg = malloc(sizeof(t_versus));
+reg->pid =pid;
+reg->cantPagAccessed = cantPagAccessed;
+reg->cantFallosPag = cantFallosPag;
+return reg;
+}
+
+void versus_destroy(t_versus * self)
+{
+	free(self);
+}
+/* -------------------------------------------------------------------------*/
+
 /* ---------------------- MANEJO TLB ----------------------*/
-t_tlb * reg_tlb_create (int pid, int pagina, char * direccion_fisica)
+t_tlb * reg_tlb_create (int pid, int pagina, char * direccion_fisica, int marco)
 {
  t_tlb * prueba = malloc(sizeof(t_tlb));
  prueba->pid = pid;
  prueba->pagina = pagina;
  prueba->direccion_fisica = direccion_fisica;
+ prueba->marco = marco;
  return prueba;
 }
 
@@ -174,4 +192,10 @@ t_list * crearListaAdm()
 {
 	 t_list * lista_administracion = list_create();
 	 return lista_administracion;
+}
+
+t_list * crearListaVersus()
+{
+	 t_list * lista_versus = list_create();
+	 return lista_versus;
 }
