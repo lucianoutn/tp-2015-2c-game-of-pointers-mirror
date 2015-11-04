@@ -103,6 +103,13 @@ int finalizarProc(t_header*);
  */
 void compactarSwap();
 
+/*
+ * Recibe la lista de paginas que cada uno tiene su nodo t_pag con la cantidad de veces
+ * que fue leida y escrita esa pag.
+ * Realiza la sumatoria y la loggea.
+ */
+void leidasYEscritas(t_list *);
+
 void rellenarParticion(int, int);
 
 /*

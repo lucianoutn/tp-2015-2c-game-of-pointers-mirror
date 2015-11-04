@@ -22,6 +22,8 @@ typedef struct {
  int pid;
  int inicio;
  int paginas;
+ int leidas;
+ int escritas;
 } t_pag;
 
 typedef struct {
@@ -80,7 +82,7 @@ typedef struct
 
 
 // ---------- SWAP ----------------//
-t_pag * pag_create(int,int, int);
+t_pag * pag_create(int,int, int, int, int);
 
 void pag_destroy(t_pag *);
 

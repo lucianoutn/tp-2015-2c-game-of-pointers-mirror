@@ -11,13 +11,15 @@
 
 
 /* MANEJO SWAP */
-t_pag * pag_create (int pid, int start, int paginas)
+t_pag * pag_create (int pid, int start, int paginas, int leidas, int escritas)
 {
- t_pag * prueba = malloc(sizeof(t_pag));
- prueba->pid = pid;
- prueba->inicio = start;
- prueba->paginas = paginas;
- return prueba;
+ t_pag * pag= malloc(sizeof(t_pag));
+ pag->pid = pid;
+ pag->inicio = start;
+ pag->paginas = paginas;
+ pag->leidas= leidas;
+ pag->escritas= escritas;
+ return pag;
 }
 
 void pag_destroy(t_pag * self)

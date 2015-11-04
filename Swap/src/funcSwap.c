@@ -126,6 +126,7 @@ void leerSwap(t_header * package,char * contenido)
 		fread(contenido, contexto->tam_pagina, 1, archivo);
 		log_info(logger, "Se recibio orden de lectura: PID: %d Byte Inicial: %d Contenido: %s"
 								,package->PID, pag->inicio+(package->pagina_proceso * contexto->tam_pagina),contenido);
+		pag->leidas=pag->leidas+1;
 	}
 	else
 	{
@@ -152,6 +153,8 @@ int escribirSwap(t_header * package, int socketCliente)
 		fwrite(mensaje, contexto->tam_pagina, 1, archivo);
 		log_info(logger, "Se recibio orden de escritura: PID: %d Byte Inicial: %d Contenido: %s"
 										,package->PID, pag->inicio+(package->pagina_proceso * contexto->tam_pagina),mensaje);
+		//Actualizo cant escritas
+		pag->escritas= pag->escritas+1;
 		//Relleno paginas
 		int relleno= pag->inicio + strlen(mensaje);
 		int final_pagina= pag->inicio+((package->pagina_proceso + 1) * contexto->tam_pagina);
@@ -180,7 +183,7 @@ int inicializarProc(t_header * package) {
 	if (hueco != NULL)
 	{
 		//Inicializo
-		list_add(lista_paginas,pag_create(package->PID, hueco->inicio, package->pagina_proceso));
+		list_add(lista_paginas,pag_create(package->PID, hueco->inicio, package->pagina_proceso,0,0));
 		log_info(logger, "Se recibio orden de inicializacion: PID: %d Inicio: %d Bytes: %d"
 				,package->PID, hueco->inicio,package->pagina_proceso * contexto->tam_pagina);
 		rellenarParticion(hueco->inicio, package->pagina_proceso);
@@ -212,6 +215,8 @@ int finalizarProc(t_header* package)
 		list_add(lista_huecos, hueco_create(pag->inicio, pag->paginas));
 		log_info(logger, "Se recibio orden de finalizacion: PID: %d Inicio: %d Bytes: %d"
 						,package->PID, pag->inicio,pag->paginas * contexto->tam_pagina);
+		//Mostrar paginas leidas y paginas escritas
+		leidasYEscritas(lista_paginas);
 		//Actualizo lista paginas
 		list_remove_and_destroy_by_condition(lista_paginas, (void *)_numeroDePid, (void *)pag_destroy);
 
@@ -320,6 +325,21 @@ t_hueco* buscarHueco(int tamanio) {
 	}
 
 	return NULL;
+}
+void leidasYEscritas(t_list * lista_paginas)
+{
+	int tamanio = lista_paginas->elements_count;
+	int totalLeidas = 0;
+	int totalEscritas = 0;
+	int i=0;
+	for(;i<tamanio;i++)
+	{
+		t_pag * pag = list_get(lista_paginas, i);
+		totalLeidas = totalLeidas + pag->leidas;
+		totalEscritas = totalEscritas + pag->escritas;
+	}
+	log_info(logger, "La cantidad de paginas leidas de este proceso fue: %d", totalLeidas);
+	log_info(logger, "La cantidad de paginas escritas de este proceso fue: %d", totalEscritas);
 }
 
 void rellenarParticion(int inicio, int paginas) {
