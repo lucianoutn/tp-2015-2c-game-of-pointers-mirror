@@ -99,7 +99,7 @@ void matarProceso(t_header *, t_list*, t_list *);
 /* ME DEVUELVE NULL SI LA PAGINA ESTA EN SWAP Y SINO ME DEVUELVE LA DIRECCION DEL MARCO */
 //direccionDePag();
 
-int leerEnMemReal(t_list*,t_list *, t_header *, int,int, char *);
+int leerEnMemReal(t_list*,t_list *, t_header *, int,int, char *, t_list*);
 
 /* VERIFICA SI LA TABLA ESTA CARGADA EN LA TABLA DE TABLAS DE PROCESOS Y LA DEVUELVE */
 t_list * obtenerTablaProceso(t_list*, int);
@@ -107,7 +107,7 @@ t_list * obtenerTablaProceso(t_list*, int);
 /* DEVUELVE LA PAGINA DE LA TABLA DEL PROCESO */
 process_pag * obtenerPaginaProceso(t_list *, int);
 
-int leerDesdeTlb(int , t_list * , int, int);
+int leerDesdeTlb(int , t_list * , int, int, t_list*);
 
 /*
  * Unicamente crea las tablas para manejarlo
@@ -116,9 +116,9 @@ int leerDesdeTlb(int , t_list * , int, int);
 void iniciarProceso();
 
 /* BUSCA SI LA PAGINA A ESCRIBIR YA ESTA CARGADA EN TLB, SI LO ESTA LA ESCRIBE Y DEVUELVE 1, SINO DEVUELVE 0 */
-int verificarTlb (t_list *,int, char*, t_header *);
+int verificarTlb (t_list *,int, char*, t_header *, t_list*);
 
-int swapeando(t_list*, t_list* , t_list *, char *, int, t_header *);
+int swapeando(t_list*, t_list* , t_list *, char *, int, t_header *, t_list*);
 
 // LE MANDO LA TABLA DEL PROCESO Y ME DEVUELVE 1 SI YA TIENE TODOS SUS MARCOS DISPONIBLES OCUPADOS
 int marcosProcesoLlenos(t_list *);
