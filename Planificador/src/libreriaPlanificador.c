@@ -118,6 +118,8 @@ void enviaACpu(t_cpu CPU)
 	 *(lucho) pero un semaforo no puede ser, xq no sabe CUAL es el pcb q se modifico. tendria q ser algo q le indique
 	 *
 	*/
+	sem_wait(semRespuestaCpu); //lo pongo para q frene aca pero hay q cambiarlo
+
 	switch(pcb->estado)
 	{
 		case 1: //ready //solo aplica en rr //puede aplicar a fifo tmb cuando termina todo. hay q encolarlo una vez mas para q finalice solito
