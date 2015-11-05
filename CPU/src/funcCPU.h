@@ -78,6 +78,7 @@ typedef struct{
 typedef struct {
 	int socketPlanificador;
 	int socketMemoria;
+	int numeroCPU;
 }t_sockets;
 
 //preparo semaforos.lucho
@@ -85,7 +86,7 @@ typedef struct {
 sem_t semSalir;
 sem_t *semProduccionMsjs;
 sem_t *semRespuestaCpu;
-//sem_t semVCPU[configuracion.cantHilos];
+sem_t *semVCPU;
 pthread_mutex_t mutex;
 //ptrhead_mutex_unlock(&mutex);
 //fin semaforos

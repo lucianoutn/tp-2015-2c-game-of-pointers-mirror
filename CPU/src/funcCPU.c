@@ -200,7 +200,7 @@ void ejecutoPCB(int socketMemoria, t_pcb *PCB){
 					//aca habria que hacer un send al plani indicando que termino
 					//preparo semaforo para envio de msj al plani si hace falta sincro
 					//sem_post(semRespuestaCpu);
-
+					//sem_post(se)
 					//libero el PCB si ejecuto todas las instrucciones
 					free(PCB);
 					break;
@@ -261,8 +261,9 @@ void ejecutoPCB(int socketMemoria, t_pcb *PCB){
 void iniciarCPU(t_sockets *sockets){
 
 	//pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
-	unsigned int tid = process_get_thread_id();
-	printf("CPU hilo ID: %d conectado\n", tid); //se puede usar "htop" en la consola para verlos
+	//unsigned int tid = process_get_thread_id(); //no borrar puede servir mas adelante
+	//printf("CPU hilo ID: %d conectado\n", tid); //se puede usar "htop" en la consola para verlos
+	printf("CPU hilo ID: %d conectado\n", sockets->numeroCPU); //se puede usar "htop" en la consola para verlos
 	//printf("CPU hilo ID: %lu conectado\n", pthread_self());
 	int status=1;		// Estructura que manjea el status de los recieve.
 
