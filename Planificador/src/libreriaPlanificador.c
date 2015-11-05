@@ -39,6 +39,30 @@ void traigoContexto()
 }
 
 
+//Funcion encargada de acceptar nuevas peticiones de conexion
+void *escuchar (struct Conexiones* conexion){
+	int i =0;
+	semEsperaCPU.__align =0; // inicializa semaforo
+
+	while( i< miContexto.cantHilosCpus ) //hasta q recorra todos los hilos de cpus habilitados
+	{
+		//guarda las nuevas conexiones para acceder a ellas desde cualquier parte del codigo
+		conexion->CPUS[i].socket = accept(conexion->socket_escucha, (struct sockaddr *) &conexion->direccion, &conexion->tamanio_direccion);
+		if(conexion->CPUS[i].socket==-1)
+		{
+			perror("ACCEPT");	//control error
+		}
+		conexion->CPUS[i].enUso = false;
+		sem_post(&semEsperaCPU); //avisa que hay 1 CPU disponible
+		puts("NUEVO HILO ESCUCHA!\n");
+		log_info(logger, "CPU %d conectado", i);
+		i++;
+	}
+
+	return NULL;
+}
+
+
 void encolar(t_list* lstPcbs, t_queue* cola_ready)
 {
 	char *ruta=(char*)malloc(sizeof(char));
@@ -75,10 +99,10 @@ void dispatcher(t_queue *cola_ready)
 	 * tamanio_mensaje: tamanio del char * o del PCB
 	 */
 
-	pthread_t hilo_CPU[MAX_CPUS];
+	pthread_t hilo_CPU[miContexto.cantHilosCpus];
 
 	puts ("aca1");
-	sem_init(&semCpuLibre,0,MAX_CPUS);
+	sem_init(&semCpuLibre,0,miContexto.cantHilosCpus);
 	while(1){
 		puts ("aca1,5");
 		//espera que alguien libere alguna CPU y alguien quiera enviar un PCB
@@ -88,7 +112,7 @@ void dispatcher(t_queue *cola_ready)
 		printf("cant hilos cpu: %d", miContexto.cantHilosCpus);
 		//busca la primer CPU que no este en uso
 		int I = 0;
-		while((conexiones.CPUS[I].enUso) && (I <= MAX_CPUS)){
+		while((conexiones.CPUS[I].enUso) && (I <= miContexto.cantHilosCpus)){
 			I++;
 		}
 

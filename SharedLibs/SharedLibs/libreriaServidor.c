@@ -7,30 +7,6 @@
 
 #include "libreriaServidor.h"
 
-//Funcion encargada de acceptar nuevas peticiones de conexion
-void *escuchar (struct Conexiones* conexion){
-	int i =0;
-	semEsperaCPU.__align =0; // inicializa semaforo
-
-	while( i<MAX_CPUS ) //limite temporal de 1 CPUS conectada
-	{
-		//guarda las nuevas conexiones para acceder a ellas desde cualquier parte del codigo
-		conexion->CPUS[i].socket = accept(conexion->socket_escucha, (struct sockaddr *) &conexion->direccion, &conexion->tamanio_direccion);
-		if(conexion->CPUS[i].socket==-1)
-		{
-			perror("ACCEPT");	//control error
-		}
-		conexion->CPUS[i].enUso = false;
-		sem_post(&semEsperaCPU); //avisa que hay 1 CPU disponible
-		puts("NUEVO HILO ESCUCHA!\n");
-		log_info(logger, "CPU %d conectado", i);
-		i++;
-	}
-
-	return NULL;
-}
-
-
 //Funcion que permite configurar la conexion y crear el socket. Devuelve el descriptor del socket nuevo.
 int crearServer(const char *PUERTO)
 {

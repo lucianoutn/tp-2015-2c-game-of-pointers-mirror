@@ -46,6 +46,7 @@ int main() {
 	 * Se crea un hilo nuevo que se queda a la espera de nuevas conexiones del CPU
 	 * y almacena los sockets de las nuevas conexiones en la variable conexiones.CPU[]
 	 */
+	conexiones.CPUS= malloc(sizeof(t_cpu) * (miContexto.cantHilosCpus));// alojo memoria dinamicamente
 	pthread_t hilo_conexiones;
 	if(pthread_create(&hilo_conexiones, NULL, (void*)escuchar,&conexiones)<0)
 		perror("Error HILO ESCUCHAS!");
@@ -121,7 +122,7 @@ int main() {
 	puts("FINALIZANDO PROGRAMA\n");
 	close(conexiones.socket_escucha);
 	int i=0;
-	while(i<MAX_CPUS)
+	while(i<miContexto.cantHilosCpus)
 	{
 		close(conexiones.CPUS[i++].socket);
 	}

@@ -42,6 +42,28 @@ t_queue *cola_ready;
 //Se crea la cola de bloqueados
 t_queue *cola_block;
 
+
+//Estructura que almacena los datos del archivo de configuracion
+typedef struct{
+	char * puertoEscucha;
+	char * algoritmoPlanificacion;
+	int quantum;
+	int cantHilosCpus;
+} contexto;
+
+contexto miContexto;
+
+//struct para conexiones
+struct Conexiones {
+	int socket_escucha;					// Socket de conexiones entrantes
+	struct sockaddr_in direccion;		// Datos de la direccion del servidor
+	socklen_t tamanio_direccion;		// Tamaño de la direccion
+	//t_cpu CPUS[miContexto.cantHilosCpus];						// Sockets de conexiones ACEPTADAS
+	//hago el vector de arriba de forma dinamica
+	t_cpu *CPUS; //apunta al primer elemento del vector dinamico
+} conexiones;
+
+
 //tipo de dato t_pcb que es una estructura que almacena el PCB de cada proceso
 typedef struct PCB {
 	int PID; //numero del proceso
@@ -71,16 +93,6 @@ typedef struct{
 }t_headcpu;
 
 
-
-//Estructura que almacena los datos del archivo de configuracion
-typedef struct{
-	char * puertoEscucha;
-	char * algoritmoPlanificacion;
-	int quantum;
-	int cantHilosCpus;
-} contexto;
-
-contexto miContexto;
 
 //Flag
 typedef bool flag;
@@ -112,6 +124,9 @@ void traigoContexto();
 
 
 void encolar(t_list *, t_queue *);
+
+//Funcion encargada de acceptar nuevas peticiones de conexion
+void *escuchar (struct Conexiones* conexion);
 
 void dispatcher(t_queue *);
 

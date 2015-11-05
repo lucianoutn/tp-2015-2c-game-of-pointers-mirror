@@ -117,7 +117,7 @@ void consola (void* arg)
 			{
 				orden=1;
 
-				for(m=0;m<MAX_CPUS;m++)
+				for(m=0;m<miContexto.cantHilosCpus;m++)
 				{
 					t_headcpu header;
 					header.tipo_ejecucion=0;
