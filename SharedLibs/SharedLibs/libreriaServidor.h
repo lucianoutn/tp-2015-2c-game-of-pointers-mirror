@@ -19,25 +19,16 @@
 #include <semaphore.h>
 #include "comun.h"
 
-#define MAX_CPUS 4
+//#define MAX_CPUS 4
 
 typedef struct{
 	int socket;
 	bool enUso;
 } t_cpu;
 
-//struct para conexiones
-struct Conexiones {
-	int socket_escucha;					// Socket de conexiones entrantes
-	struct sockaddr_in direccion;		// Datos de la direccion del servidor
-	socklen_t tamanio_direccion;		// Tamaño de la direccion
-	t_cpu CPUS[MAX_CPUS];						// Sockets de conexiones ACEPTADAS
-} conexiones;
 
 sem_t semEsperaCPU;
 
-//Funcion encargada de acceptar nuevas peticiones de conexion
-void *escuchar (struct Conexiones* conexion);
 
 int crearServer ( const char *PUERTO);
 
