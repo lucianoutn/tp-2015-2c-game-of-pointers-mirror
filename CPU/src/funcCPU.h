@@ -45,6 +45,8 @@ typedef struct{
 	int retardo;
 } config;
 
+config configuracion;
+
 //tipo de dato t_pcb que es una estructura que almacena el PCB de cada proceso
 typedef struct PCB {
 	int PID; //numero del proceso
@@ -78,18 +80,17 @@ typedef struct {
 	int socketMemoria;
 }t_sockets;
 
+//preparo semaforos.lucho
 
 sem_t semSalir;
 sem_t *semProduccionMsjs;
 sem_t *semRespuestaCpu;
-
-//preparo semaforos.lucho
+//sem_t semVCPU[configuracion.cantHilos];
 pthread_mutex_t mutex;
-//ptrhead_mutex_lock(&mutex);
 //ptrhead_mutex_unlock(&mutex);
 //fin semaforos
 
-config configuracion;
+
 
 pthread_t cpu[0];
 

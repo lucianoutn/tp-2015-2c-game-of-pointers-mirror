@@ -77,7 +77,10 @@ typedef struct{
 	char * puertoEscucha;
 	char * algoritmoPlanificacion;
 	int quantum;
+	int cantHilosCpus;
 } contexto;
+
+contexto miContexto;
 
 //Flag
 typedef bool flag;
@@ -91,7 +94,7 @@ sem_t semConsola;
 sem_t semCpuLibre;
 sem_t semEnvioPcb;
 
-contexto miContexto;
+
 
 flag CPUenUso; //Flag que permite verificar si una CPU esta en uso o no
 

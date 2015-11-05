@@ -17,17 +17,25 @@ void traigoContexto()
 {
  // LEVANTO EL ARCHIVO CONFIG Y VERIFICO QUE LO HAYA HECHO CORRECTAMENTE /
  t_config * config_planificador = config_create("resources/config.cfg");
+ t_config * configHilos = config_create("../CPU/resources/config.cfg");
 
  if( config_planificador == NULL )
  {
-  puts("No se cargo el archivo de configuracion");
+  puts("No se cargo el archivo de configuracion del panificador");
   abort();
  }
+
+ if( configHilos == NULL )
+  {
+   puts("No se cargo el archivo de configuracion de la cantidad de hilos del cpu");
+   abort();
+  }
 
  // OBTENGO CONFIGURACION DEL CONFIG /
  miContexto.puertoEscucha = config_get_string_value(config_planificador, "PUERTO_ESCUCHA" );
  miContexto.algoritmoPlanificacion = config_get_string_value(config_planificador, "ALGORITMO_PLANIFICACION" );
  miContexto.quantum= config_get_int_value(config_planificador, "QUANTUM" );
+ miContexto.cantHilosCpus = config_get_int_value(configHilos, "CANTIDAD_HILOS");
 }
 
 
@@ -77,6 +85,7 @@ void dispatcher(t_queue *cola_ready)
 		sem_wait(&semEnvioPcb); //revisar si estos dos semaforos no estan siempre juntos y se comprotan igual. lucho
 		sem_wait(&semCpuLibre);//revisar si estos dos semaforos no estan siempre juntos y se comprotan igual. lucho
 		puts ("aca2");
+		printf("cant hilos cpu: %d", miContexto.cantHilosCpus);
 		//busca la primer CPU que no este en uso
 		int I = 0;
 		while((conexiones.CPUS[I].enUso) && (I <= MAX_CPUS)){
