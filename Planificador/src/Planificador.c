@@ -85,12 +85,7 @@ int main() {
 				if	(!strcmp(miContexto.algoritmoPlanificacion, "FIFO")){ //por FIFO
 					puts("FIFO");
 
-					//AGREGAR SEMAFORO PRODUCTOR CONSUMIDOR PARA EL DISPATCHER
-					sem_post(&semEnvioPcb);
-
-
-
-					//dispatcher(cola_ready);
+					dispatcher(cola_ready);
 					/*
 					 *
 					 *si se acaba el quanto de tiempo vuelvo a encolar

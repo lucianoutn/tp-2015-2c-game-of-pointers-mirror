@@ -35,6 +35,7 @@
 #define PACKAGESIZE 1024 //comentar
 #define WORD_SIZE 35 //comentar
 
+//se crea la lista de todos los pcbs
 t_list *lstPcbs;
 //Se crea la cola de ready's
 t_queue *cola_ready;

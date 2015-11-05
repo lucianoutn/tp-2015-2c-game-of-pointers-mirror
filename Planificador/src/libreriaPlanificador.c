@@ -49,7 +49,7 @@ void encolar(t_list* lstPcbs, t_queue* cola_ready)
 	queue_push(cola_ready, pcb);
 
 	puts("PCB creado y encolado\n");
-
+	sem_post(&semEnvioPcb); //habilito el dispacher.(lo pongo aca para q sirva tanto para fifo como RR) lucho
 	//sem_wait(&semSalir); //es para pruebas
 	//free(path);
 }
@@ -69,12 +69,14 @@ void dispatcher(t_queue *cola_ready)
 
 	pthread_t hilo_CPU[MAX_CPUS];
 
+	puts ("aca1");
+	sem_init(&semCpuLibre,0,MAX_CPUS);
 	while(1){
-
+		puts ("aca1,5");
 		//espera que alguien libere alguna CPU y alguien quiera enviar un PCB
-		sem_wait(&semEnvioPcb);
-		sem_wait(&semCpuLibre);
-
+		sem_wait(&semEnvioPcb); //revisar si estos dos semaforos no estan siempre juntos y se comprotan igual. lucho
+		sem_wait(&semCpuLibre);//revisar si estos dos semaforos no estan siempre juntos y se comprotan igual. lucho
+		puts ("aca2");
 		//busca la primer CPU que no este en uso
 		int I = 0;
 		while((conexiones.CPUS[I].enUso) && (I <= MAX_CPUS)){
@@ -89,7 +91,7 @@ void dispatcher(t_queue *cola_ready)
 }
 
 void enviaACpu(t_cpu CPU)
-{
+{	puts ("aca3");
 	//bloqueo la cpu
 	CPU.enUso = true;
 	//CPU DISPONIBLE  saco de la cola y envio msj
@@ -112,10 +114,13 @@ void enviaACpu(t_cpu CPU)
 	 *La respuesta va a ser un signal que mande la CPU una vez que haya termiando de modificar el PCB
 	 *compruebo el estado en el que esta el pcb
 	 *hago switch y encolo o desencolo segun el estado!!
+	 *
+	 *(lucho) pero un semaforo no puede ser, xq no sabe CUAL es el pcb q se modifico. tendria q ser algo q le indique
+	 *
 	*/
 	switch(pcb->estado)
 	{
-		case 1: //ready //solo aplica en rr
+		case 1: //ready //solo aplica en rr //puede aplicar a fifo tmb cuando termina todo. hay q encolarlo una vez mas para q finalice solito
 		{
 			//si vuelve a estado ready es pq termino el cuanto
 			//encolo denuevo en la cola de readys pq termino el cuanto pero no termino de usar la cpu
@@ -124,17 +129,17 @@ void enviaACpu(t_cpu CPU)
 		}
 		case 3: //bloqueado
 		{
-			queue_pop(cola_block, pcb);
+			//queue_pop(cola_block, pcb);
 			//espera tantos segundos
-			//lo vuelve a meter en la lista de readys
+			//lo vuelve a meter en la cola de readys
 			queue_push(cola_ready, pcb);
 			break;
 		}
 		case 4: //finalizado
 		{
 			//libero todo el PCB!
-			//lo saco de la lista tmb
-			free(pcb);
+			//lo saco de la cola NO DE LA LISTA
+			//free(pcb); //no lo liberen aca xq dsp no los puedo ver como finalizados en el comando PS. luego podemos liberarlos desde la lista
 			break;
 		}
 		default:
