@@ -64,48 +64,55 @@ int main()
 	pthread_mutex_init (&mutexTLB, NULL);
 	pthread_mutex_init (&mutexMem, NULL);
 	void flush ()
-	{
-		int err= pthread_create(&(senial[0]), NULL, (void*)tlbFlush,TLB);
-		if (err != 0)
-			printf("no se pudo crear el hilo de TLBFlush :[%s]", strerror(err));
-		pthread_join(senial[0], NULL);
-	}
-	void limpiar()
-	{
-		parametros * param=malloc(sizeof(parametros));
-
-		param->memoria= memoria_real;
-		param->tabla_adm = tablaAdm;
-		param->tlb=TLB;
-
-		printf("La direccion de la mem real es: %p \n",memoria_real);
-
-		int err= pthread_create(&(senial[0]), NULL, (void*)limpiarMemoria,param);
-		if (err != 0)
-			printf("no se pudo crear el hilo de limpiarMemoria :[%s]", strerror(err));
-		//pthread_join(senial[0], NULL);
-	}
-	void dump()
-	{
-		pid_t idProceso;
-		idProceso =fork();
-		switch(idProceso)
 		{
-		case -1:
-			log_error(logger,"Error en la creacion del hijo");
-			break;
-		case 0:
-			puts("Entro en case 0");
-			dumpEnLog(memoria_real,tablaAdm);
-			exit(0);
-			break;
-
-		default:
-			sleep(3);
-			puts("Entro al default");
-
+			log_info(logger, "Se recibio SIGUSR1, si corresponde se vacia la TLB \n");
+			int err= pthread_create(&(senial[0]), NULL, (void*)tlbFlush,TLB);
+			if (err != 0)
+				printf("no se pudo crear el hilo de TLBFlush :[%s]", strerror(err));
+			pthread_join(senial[0], NULL);
+			log_info(logger, "Tratamiento de la señal SIGUSR1 terminado. \n");
 		}
-	}
+		void limpiar()
+		{
+			log_info(logger, "Se recibio SIGUSR2, se limpia la memoria \n");
+			parametros * param=malloc(sizeof(parametros));
+
+			param->memoria= memoria_real;
+			param->tabla_adm = tablaAdm;
+			param->tlb=TLB;
+
+			//printf("La direccion de la mem real es: %p \n",memoria_real);
+
+			int err= pthread_create(&(senial[0]), NULL, (void*)limpiarMemoria,param);
+			if (err != 0)
+				printf("No se pudo crear el hilo de limpiarMemoria :[%s]", strerror(err));
+			//pthread_join(senial[0], NULL);
+
+			log_info(logger, "Se finalizo el tratamiento de la señal SIGUSR2 \n");
+		}
+		void dump()
+		{
+			log_info(logger, "Se rcibio SIGPOLL, se muestra el contenido de la memoria actualmente \n");
+			pid_t idProceso;
+			idProceso =fork();
+			switch(idProceso)
+			{
+			case -1:
+				log_error(logger,"Error en la creacion del hijo \n");
+				break;
+			case 0:
+
+				dumpEnLog(memoria_real,tablaAdm);
+				exit(0);
+				break;
+
+			default:
+				sleep(1);
+				//puts("Entro al default");
+
+			}
+			log_info(logger, "Tratamiento de la señal SIGPOLL terminado \n");
+		}
 
 	void mostrarTasas()
 	{

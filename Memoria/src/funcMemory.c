@@ -1000,12 +1000,9 @@ t_header * crearHeaderEscritura(int pid, int pagina, int tamanio)
  */
 void tlbFlush(t_list * TLB)
 {
-	log_info(logger, "Se recibio SIGUSR1, se vacia la TLB");
-
 	pthread_mutex_lock (&mutexTLB);
 	if (!strcmp(miContexto.tlbHabilitada,"SI"))
 	{
-		printf("La TLB tiene %d elementos \n", TLB->elements_count);
 		int i=0;
 		int cant_elementos = TLB->elements_count;
 		for(;i<cant_elementos;i++)
@@ -1015,11 +1012,8 @@ void tlbFlush(t_list * TLB)
 	}
 	else
 	{
-		puts("La TLB NO esta habilitada campeon.\n");
+		puts("La TLB NO esta habilitada. \n");
 	}
-
-	printf("La TLB tiene %d elementos \n", TLB->elements_count);
-	log_info(logger, "Tratamiento de TLBFlush terminado");
 	pthread_mutex_unlock (&mutexTLB);
 }
 
@@ -1033,8 +1027,6 @@ void limpiarMemoria(void * args)
 	parametros * param;
 	param = (parametros * ) args;
 
-	printf("La direccion recibida de la memoria es: %p \n", param->memoria);
-	log_info(logger, "Se recibio SIGUSR2, se limpia la memoria \n");
 	//Vacio la memoria
 	puts("Recibi el lock");
 	strcpy(param->memoria,"\0");
@@ -1056,17 +1048,15 @@ void limpiarMemoria(void * args)
 			pagina_proc->marco=-1;
 			pagina_proc->dirty=0;
 			pagina_proc->accessed=0;
-			puts("Hago esto");
+
 		}
 	}
 	//Actualizo marcos
-	puts("Actualice marcos");
 	list_destroy_and_destroy_elements(listaFramesMemR,(void *)marco_destroy);
 	list_destroy_and_destroy_elements(listaFramesHuecosMemR,(void *)marco_hueco_destroy);
 	listaFramesMemR = crearListaFrames();
 	listaFramesHuecosMemR = crearListaHuecosFrames(miContexto.cantidadMarcos, miContexto.tamanioMarco, param->memoria);
 	tlbFlush(param->tlb);
-	log_info(logger, "Tratamiento de limpiarMemoria terminado");
 	pthread_mutex_unlock (&mutexMem);
 }
 /*
@@ -1077,7 +1067,7 @@ void limpiarMemoria(void * args)
 
 void dumpEnLog(char * memoria_real, t_list * tablaAdm)
 {
-	log_info(logger, "Se rcibio SIGPOLL, se muestra el contenido de la memoria actualmente");
+	pthread_mutex_lock (&mutexMem);
 	int i = 0, j = 0;
 	for(;i<tablaAdm->elements_count;i++) //Recorro la tabla de tablas
 	{
@@ -1094,7 +1084,7 @@ void dumpEnLog(char * memoria_real, t_list * tablaAdm)
 			}
 		}
 	}
-	log_info(logger, "Tratamiento de dump terminado");
+	pthread_mutex_unlock (&mutexMem);
 
 }
 //-----------------------------------------------------------//
