@@ -50,13 +50,15 @@ int main()
 	// CREO LISTA PARA GUARDAR LAS PAGINAS ACCEDIDAS Y LOS FALLOS DE CADA PROCESO
 	t_list * tablaAccesos = crearListaVersus();
 
-
 	/* SI LA TLB NO ESTA HABILTIADA, VA A APUNTAR A NULL */
 	if (!strcmp(miContexto.tlbHabilitada,"SI"))
 	{
 		TLB = crearListaTlb();
 		printf ("La TLB esta habilitada \n");
 		//t_list * TLB = crearListaTlb();
+		//Inicializo contadores
+		cantAccesosTlb=0;
+		cantHitTlb=0;
 	}
  	//Me quedo atenta a las señales, y si las recibe ejecuta esa funcion
 	// Se inicializa el mutex
@@ -116,7 +118,8 @@ int main()
 
 	void mostrarTasas()
 	{
-		puts("Muestro tasas de cosas");
+		if (!strcmp(miContexto.tlbHabilitada,"SI"))
+			tasasDeTLB();
 
 		signal(SIGALRM,mostrarTasas);
 
@@ -129,7 +132,7 @@ int main()
 	signal(SIGINT,dump);
 
 	signal(SIGALRM,mostrarTasas);
-	alarm(60);
+	alarm(15);
 
 	reciboDelCpu(memoria_real, TLB, tablaAdm, tablaAccesos);
 
@@ -189,6 +192,10 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
 	 strcpy(mensaje_escritura,"Hola");
 	 ejecutoInstruccion(package_escritura, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
 
+	 t_header * package_lectura = package_create(0,15,2,0);
+	 ejecutoInstruccion(package_lectura, NULL, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
+
+
 	 t_header * package_escritura1 = package_create(1,15,2,strlen("Aldu"));
 	 strcpy(mensaje_escritura,"Aldu");
 	 ejecutoInstruccion(package_escritura1, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
@@ -197,6 +204,9 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
 	 strcpy(mensaje_escritura,"Chau");
 	 ejecutoInstruccion(package_escritura2, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
 
+	 t_header * package_lectura2 = package_create(0,15,3,0);
+ 	 ejecutoInstruccion(package_lectura2, NULL, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
+
 	 t_header * package_escritura3 = package_create(1,15,1,strlen("Aldu"));
 	 strcpy(mensaje_escritura,"Tutu");
 	 ejecutoInstruccion(package_escritura3, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
@@ -204,6 +214,12 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
 	 t_header * package_escritura4 = package_create(1,15,4,strlen("Aldu"));
 	 strcpy(mensaje_escritura,"Gege");
 	 ejecutoInstruccion(package_escritura4, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
+
+	 t_header * package_lectura3 = package_create(0,15,1,0);
+ 	 ejecutoInstruccion(package_lectura3, NULL, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
+
+ 	 t_header * package_lectura4 = package_create(0,15,4,0);
+	 ejecutoInstruccion(package_lectura4, NULL, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
 
 	 t_header * package_escritura5 = package_create(1,15,2,strlen("Aldu"));
 	 strcpy(mensaje_escritura,"Palo");
@@ -234,7 +250,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
 	 free(package_escritura6);
 	 free(package_finalizacion);
 
-
+/*
     fd_set master;   // conjunto maestro de descriptores de fichero
     fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
    // struct sockaddr_in myaddr;     // dirección del servidor
@@ -271,12 +287,6 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
     	exit(1);
     }
     // enlazar
-    /*
-    myaddr.sin_family = AF_INET;
-    myaddr.sin_addr.s_addr = INADDR_ANY;
-    myaddr.sin_port = htons(miContexto.puertoServidor);
-    memset(&(myaddr.sin_zero), '\0', 8);
-    */
     if (bind(listener, serverInfo->ai_addr, serverInfo->ai_addrlen) == -1)
     {
     	perror("bind");
@@ -359,7 +369,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
     		}
     	}
     }
-
+*/
 }
 
 

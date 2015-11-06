@@ -54,6 +54,9 @@ pthread_mutex_t mutexTLB;
 pthread_mutex_t mutexMem;
 pthread_mutex_t mutexDump;
 
+//DECLARACIONES GLOBALES PARA MOSTRAR TASA DE ACIERTOS DE LA TLB.
+int cantAccesosTlb;
+int cantHitTlb;
 
 // DECLARACIONES GLOBALES PARA MOSTRAR FALLOS DE PAGINA VS TOTAL DE PAGINAS ACCEDIDAS
 int cantPagAccessed;
@@ -189,6 +192,7 @@ void limpiarMemoria(void *);
 
 void dumpEnLog();
 //-----------------------------------------------------------//
+void tasasDeTLB();
 
 
 /* PASAR A MANEJOLISTAS */

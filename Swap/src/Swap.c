@@ -81,7 +81,6 @@ void reciboDelAdminMem()
 		//Recibido el paquete lo proceso..
 		if(status > 0){
 			analizoPaquete(package,socketCliente);
-			sleep(contexto->retardo_swap);
 		}
 	}
 

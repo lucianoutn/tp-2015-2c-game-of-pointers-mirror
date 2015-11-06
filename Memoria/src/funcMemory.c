@@ -583,12 +583,16 @@ int verificarTlb (t_list * TLB, int tamanio_msg, char * message, t_header * pagi
 {
 	int * posicion = malloc(sizeof(int));
 	t_tlb * registro_tlb = buscarEntradaProcesoEnTlb(TLB, pagina, posicion);
+	//Actualizo cantidad de accesos a TLB;
+	cantAccesosTlb=cantAccesosTlb+1;
 	free(posicion);
 	if (registro_tlb != NULL)
 	{
 		upPaginasAccedidas(tablaAccesos, pagina->PID);
 		// No me reconoce el argumento "marco" de la estructura tlb y los demas si, es una joda esto
 		log_info(logger, "TLB HIT pagina: %d en el marco numero: %d", registro_tlb->pagina/*registro_tlb->marco*/);
+		//Actualizo cantidad de aciertos
+		cantHitTlb= cantHitTlb +1;
 		strcpy (registro_tlb->direccion_fisica, message);
 		return 1;
 	}else
@@ -1026,10 +1030,19 @@ void limpiarMemoria(void * args)
 	pthread_mutex_lock (&mutexMem);
 	parametros * param;
 	param = (parametros * ) args;
+	puts("Recibi el lock");
 
 	//Vacio la memoria
-	puts("Recibi el lock");
-	strcpy(param->memoria,"\0");
+	int k = 0;
+	char * punteroAMemoria=  param->memoria;
+	while(k<miContexto.cantidadMarcos*miContexto.tamanioMarco)
+	{
+		strcpy(punteroAMemoria,"");
+		punteroAMemoria++;
+		k++;
+	}
+	free(punteroAMemoria);
+
 
 	//Actualizo las listas
 	int i = 0, j = 0;
@@ -1048,9 +1061,9 @@ void limpiarMemoria(void * args)
 			pagina_proc->marco=-1;
 			pagina_proc->dirty=0;
 			pagina_proc->accessed=0;
-
 		}
 	}
+
 	//Actualizo marcos
 	list_destroy_and_destroy_elements(listaFramesMemR,(void *)marco_destroy);
 	list_destroy_and_destroy_elements(listaFramesHuecosMemR,(void *)marco_hueco_destroy);
@@ -1086,6 +1099,14 @@ void dumpEnLog(char * memoria_real, t_list * tablaAdm)
 	}
 	pthread_mutex_unlock (&mutexMem);
 
+}
+
+void tasasDeTLB()
+{
+	int porcentajeHit = (cantHitTlb * 100)/cantAccesosTlb;
+	log_info(logger, "La cantidad de accesos a la TLB es: %d \n", cantAccesosTlb);
+	log_info(logger, "La cantidad de aciertos de la TLB es: %d \n", cantHitTlb);
+	log_info(logger, "La tasa de aciertos de la TLB es: %d%\n", porcentajeHit);
 }
 //-----------------------------------------------------------//
 
