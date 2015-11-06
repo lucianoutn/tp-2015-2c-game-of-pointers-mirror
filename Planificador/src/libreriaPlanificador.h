@@ -29,6 +29,7 @@
 #include <sys/stat.h>        /* para las constantes de modo de los semaforos ipc */
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <sys/sem.h>
 
 
 #define BACKLOG 10 //comentar
@@ -100,12 +101,11 @@ typedef bool flag;
 sem_t semSalir;
 sem_t semEsperaCPU;
 sem_t *semProduccionMsjs;
-sem_t *semRespuestaCpu;
 sem_t ordenIngresada;
 sem_t semConsola;
 sem_t semCpuLibre;
 sem_t semEnvioPcb;
-
+int semVCPU; //vector de semaforos dinamicos compartido
 
 
 flag CPUenUso; //Flag que permite verificar si una CPU esta en uso o no

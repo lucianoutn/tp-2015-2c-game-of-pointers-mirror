@@ -10,6 +10,8 @@
 
 #include <commons/log.h>
 #include <semaphore.h>
+#include <fcntl.h>           // para las constantes O_* de los semaforos ipc
+#include <sys/stat.h>      //  para las constantes de modo de los semaforos ipc
 /*
  * Utilizamos esta libreria para poner todas las declaraciones
  * de variables que van a ser globales a TODOS los procesos.
@@ -25,5 +27,6 @@ t_log* logger;
 char* cwd();
 
 void creoLogger(int pantalla);
+
 
 #endif /* SHAREDLIBS_COMUN_H_ */

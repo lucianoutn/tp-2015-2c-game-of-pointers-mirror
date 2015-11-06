@@ -122,7 +122,7 @@ int procesaInstruccion(char* instruccion, int *pagina){
 /* Procesa los MSJ recibidos
  * y envia el MSJ correspondiente a la memoria
  */
-void ejecutoPCB(int socketMemoria, t_pcb *PCB){
+void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 
 	int pagina = 0;
 	//reservo espacio para el header
@@ -197,10 +197,17 @@ void ejecutoPCB(int socketMemoria, t_pcb *PCB){
 						puts("Error");
 					printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
 
-					//aca habria que hacer un send al plani indicando que termino
-					//preparo semaforo para envio de msj al plani si hace falta sincro
-					//sem_post(semRespuestaCpu);
-					//sem_post(se)
+					//aviso al plani indicando que termino con este send:
+					flag termino=true;
+					send(socketPlanificador, &termino, sizeof(flag), 0);
+
+					//aviso al plani indicando que termino con este semaforo:
+				/*	struct sembuf semOperacion;		//estructura q contiene la operacion sobre el semaforo
+					semOperacion.sem_num = numeroCpu ;	//el indice del semaforo q quiero modificar
+					semOperacion.sem_op = 1;	//la cant de operaciones siempre 1
+					semOperacion.sem_flg = 0; //un flag siempre en0
+					semop (semVCPU, &semOperacion, 1); //aplico la operacion sobre el semaforo
+		     	*/
 					//libero el PCB si ejecuto todas las instrucciones
 					free(PCB);
 					break;
@@ -307,7 +314,7 @@ void iniciarCPU(t_sockets *sockets){
 				//cambio estado de PCB a ejecutando
 				PCB->estado=2;
 				//ejecuto
-				ejecutoPCB(sockets->socketMemoria,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
+				ejecutoPCB(sockets->socketMemoria,sockets->socketPlanificador,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
 
 				break;
 			}

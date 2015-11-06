@@ -24,6 +24,7 @@
 #include "mAnsisOp.h"
 #include <pthread.h>
 #include <sys/ipc.h>
+#include <sys/sem.h>
 #include <sys/shm.h>
 #include <fcntl.h>           // para las constantes O_* de los semaforos ipc
 #include <sys/stat.h>      //  para las constantes de modo de los semaforos ipc
@@ -86,7 +87,8 @@ typedef struct {
 sem_t semSalir;
 sem_t *semProduccionMsjs;
 sem_t *semRespuestaCpu;
-sem_t *semVCPU;
+int semVCPU; // vector de semaforos dinamico compartidos
+
 pthread_mutex_t mutex;
 //ptrhead_mutex_unlock(&mutex);
 //fin semaforos
@@ -95,7 +97,7 @@ pthread_mutex_t mutex;
 
 pthread_t cpu[0];
 
-//t_sockets sockets;
+t_sockets *sockets;
 
 int numero_de_pid;
 
@@ -109,7 +111,7 @@ int palabraAValor(char *palabra);
 
 int procesaInstruccion(char*,int *);
 
-void ejecutoPCB(int,t_pcb *);
+void ejecutoPCB(int,int, t_pcb *);
 
 void iniciarCPU(t_sockets *);
 

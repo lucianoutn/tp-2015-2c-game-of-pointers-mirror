@@ -109,10 +109,10 @@ void dispatcher(t_queue *cola_ready)
 		sem_wait(&semEnvioPcb); //revisar si estos dos semaforos no estan siempre juntos y se comprotan igual. lucho
 		sem_wait(&semCpuLibre);//revisar si estos dos semaforos no estan siempre juntos y se comprotan igual. lucho
 		puts ("aca2");
-		printf("cant hilos cpu: %d", miContexto.cantHilosCpus);
+		printf("cant hilos cpu: %d\n", miContexto.cantHilosCpus);
 		//busca la primer CPU que no este en uso
 		int I = 0;
-		while((conexiones.CPUS[I].enUso) && (I <= miContexto.cantHilosCpus)){
+		while((conexiones.CPUS[I].enUso) && (I < miContexto.cantHilosCpus)){
 			I++;
 		}
 
@@ -142,6 +142,13 @@ void enviaACpu(t_cpu CPU)
 
 	log_info(logger,"Comienzo ejecucion PID: %d Nombre: %s", pcb->PID, pcb->ruta);
 
+	//ESPERO RESPUESTA CON RCV
+	flag termino=false;
+	recv(CPU.socket, &termino, sizeof(flag),0);		//espero recibir la respuesta
+	if(termino)	//Controlo que haya llegado bien
+		puts("***test*** Volvio el pcb");
+
+
 	//ESPERO RESPUESTA CON SEMAFORO
 	/*
 	 *La respuesta va a ser un signal que mande la CPU una vez que haya termiando de modificar el PCB
@@ -151,8 +158,13 @@ void enviaACpu(t_cpu CPU)
 	 *(lucho) pero un semaforo no puede ser, xq no sabe CUAL es el pcb q se modifico. tendria q ser algo q le indique
 	 *
 	*/
-	sem_wait(semRespuestaCpu); //lo pongo para q frene aca pero hay q cambiarlo
-
+	/*//estructura que hace el "wait" del semaforo:
+	struct sembuf semOperacion;		//estructura q contiene la operacion sobre el semaforo
+	semOperacion.sem_num = numeroCpu ;	//el indice del semaforo q quiero modificar
+	semOperacion.sem_op = -1;  //este -1 seria el wait
+	semOperacion.sem_flg = 0; //un flag siempre en0
+	semop (semVCPU, &semOperacion, 1); //aplico la operacion sobre el semaforo
+*/
 	switch(pcb->estado)
 	{
 		case 1: //ready //solo aplica en rr //puede aplicar a fifo tmb cuando termina todo. hay q encolarlo una vez mas para q finalice solito
