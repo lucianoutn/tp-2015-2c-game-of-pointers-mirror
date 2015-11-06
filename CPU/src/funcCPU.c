@@ -311,8 +311,6 @@ void iniciarCPU(t_sockets *sockets){
 				    perror("shmat");
 
 				printf("PCB Recibido. PID:%d\n",PCB->PID);
-				//cambio estado de PCB a ejecutando
-				PCB->estado=2;
 				//ejecuto
 				ejecutoPCB(sockets->socketMemoria,sockets->socketPlanificador,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
 
