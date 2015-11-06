@@ -135,7 +135,7 @@ void enviaACpu(t_cpu CPU)
 	t_headcpu *header = malloc(sizeof(t_headcpu));
 	preparoHeader(header);
 	//cambio estado de PCB a ejecutando
-	PCB->estado=2;
+	pcb->estado=2;
 	//Envio el header
 	send(CPU.socket, header, sizeof(t_headcpu),0);
 	puts("PCB enviado a la CPU para procesamiento\n");
