@@ -110,6 +110,7 @@ t_list * obtenerTablaProceso(t_list*, int);
 /* DEVUELVE LA PAGINA DE LA TABLA DEL PROCESO */
 process_pag * obtenerPaginaProceso(t_list *, int);
 
+// Se fija si la encuentra cargada en tlb, en ese caso se la envia al cpu
 int leerDesdeTlb(int , t_list * , int, int, t_list*);
 
 /*

@@ -130,7 +130,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				// SI ESTA EN SWAP
 				if ( paginaProceso->direccion_fisica == NULL)
 				{
-					log_info(logger, "PAGE FAULT");
+					log_info(logger, "PAGE FAULT, PID = %d y PAGINA = %d", registro_prueba->PID, registro_prueba->pagina_proceso);
 					/* SI NO TENGO ESPACIO PARA TRAERLA (TODOS LOS MARCOS DISPONIBLES PARA ESE
 					 * PROCESO YA ESTAN LLENOS), SWAPEO LA PRIMER PAGINA CARGADA (FIFO)
 					 * Y ESCRIBO LA QUE RECIBO DEL SWAP AL FINAL DE LA LISTA. ACTUALIZO TLB
@@ -193,6 +193,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 						actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, paginaProceso->direccion_fisica, TLB, paginaProceso->marco);
 					pthread_mutex_unlock (&mutexTLB);
 					actualizoTablaProceso(tablaProceso, NULL, registro_prueba);
+					upPaginasAccedidas(tablaAccesos, registro_prueba->PID );
+
 					// ACTUALIZO EL BIT DIRTY A 1 POR HABER ESCRITO EN LA PAGINA QUE YA ESTABA EN MEMORIA
 					if (!strcmp(miContexto.algoritmoReemplazo, "CLOCK"))
 						paginaProceso->dirty = 1;
@@ -284,7 +286,6 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, int pid, int pagina, t_list* t
 	// SI LA ENCONTRO LA LEO Y SE LA ENVIO AL CPU
 	if (registro_tlb != NULL)
 	{
-		printf("La leyo desde TLB--> %s \n", registro_tlb->direccion_fisica);
 		upPaginasAccedidas(tablaAccesos, registro_tlb->pid);
 		send(socketCliente,registro_tlb->direccion_fisica,miContexto.tamanioMarco,0);
 		return 1;
@@ -321,21 +322,17 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		// TRAIGO LA PAGINA BUSCADA
 		process_pag * pagina_proc = list_find(tabla_proc, (void *)_numeroDePagina);
 
-		// SI LA DIRECCION CONTIENE = "Swap" ES PORQUE ESTA EN SWAP, SINO YA LA ENCONTRE EN MEMORIA
+		// SI LA DIRECCION ES NULL ES PORQUE ESTA EN SWAP, SINO YA LA ENCONTRE EN MEMORIA
 		if ( pagina_proc->direccion_fisica == NULL)
 		{
 			if ( marcosProcesoLlenos(tabla_proc))
 			{
 				int verific = swapeando(tabla_proc,tabla_adm ,TLB, NULL, serverSocket, package, tablaAccesos);
-				if (verific == 1)
-				{
-				}
-				else
+				if (verific != 1)
 					log_error(logger, "Error al intentar swapear");
-
 			}
 			/* SI TENGO ESPACIO PARA TRAERLA (CANT MAX DE MARCOS PARA ESE PROCESO
-			 *NO FUE ALCANZADA TODAVÍA), SI ME QUEDA MEMORIA (MARCOS) LA TRAIGO(MENTIRA) Y LA ESCRIBO
+			 *NO FUE ALCANZADA TODAVÍA), SI ME QUEDA MEMORIA (MARCOS) LA TRAIGO(MENTIRA)
 			*/
 			else
 			{
@@ -346,7 +343,6 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 					//SI TODO SALIO BIEN, EL SWAP CARGO LA PAGINA A LEER EN "CONTENIDO"
 					if(*flag)
 					{
-
 						t_marco_hueco * marco_a_llenar = list_remove(listaFramesHuecosMemR, 0);
 						log_info(logger, "Traje la pagina del swap, voy a escribir el marco %d para leer", marco_a_llenar->numero_marco);
 						sleep(miContexto.retardoMemoria);
@@ -363,8 +359,8 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 						pthread_mutex_unlock (&mutexTLB);
 						// ACTUALIZO LA TABLA DEL PROCESO CON LA DRIECCION FISICA, DEPENDIENDO EL ALGORITMO DEL CONTEXTO
 						actualizoTablaProceso(tabla_proc, marco_a_llenar, package);
-
 						upPaginasAccedidas(tablaAccesos, package->PID);
+
 						log_info(logger, "Se hizo conexion con swap, se envio paquete a leer y este fue recibido correctamente");
 						lectura(package, tabla_adm, memoria_real, contenido, TLB, pagina_proc);
 						// Como la transferencia con el swap fue exitosa, le envio la pagina al CPU
@@ -393,6 +389,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 
 			}
 		 	actualizarTlb(package->PID, package->pagina_proceso, pagina_proc->direccion_fisica, TLB, pagina_proc->marco);
+		 	upPaginasAccedidas(tablaAccesos, package->PID );
 			send(socketCliente,pagina_proc->direccion_fisica,sizeof(pagina_proc->direccion_fisica),0);
 			return 1;
 		}
@@ -510,14 +507,10 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB,
 
 	if (registro_tabla_proc != NULL)
 	{
-		printf("ENCONTRE UN PROCESO PARA MATAR\n");
-		printf ("LA TABLA DE TABLAS DE PROCESOS TIENE %d ELEMENTOS ANTES DE MATAR \n", tabla_adm->elements_count);
 		t_list * tabla_proceso = registro_tabla_proc->direc_tabla_proc;
 
 		if (tabla_proceso != NULL)
 		{
-			printf("ENCONTRE LA TABLA DEL PROCESO A MATAR \n");
-
 			int cantidad_paginas = tabla_proceso->elements_count;
 			int x = 0;
 			while (x < cantidad_paginas)
@@ -547,7 +540,6 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB,
 			list_destroy_and_destroy_elements(tabla_proceso, (void *)pag_destroy);
 			//ELIMINO LA REFERENCIA DE ESA TABLA DE PROCESO, DESDE LA TABLA DE PROCESOS
 			list_remove_and_destroy_by_condition(tabla_adm, (void*)_numeroDePid,(void*)tabla_adm_destroy);
-			printf ("LA TABLA DE TABLAS DE PROCESOS TIENE %d ELEMENTOS DESPUES DE MATAR \n", tabla_adm->elements_count);
 			// ME FIJO SI EN LA TLB (SI ESTA HABILITADA) HABIA ALGUNA REFERENCIA A ALGUNA DE SUS PAGINAS Y LAS ELIMINO
 			pthread_mutex_lock (&mutexTLB);
 			if (!strcmp(miContexto.tlbHabilitada, "SI"))
