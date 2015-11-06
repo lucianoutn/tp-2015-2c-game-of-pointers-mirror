@@ -149,7 +149,7 @@ int main()
 
 void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* tablaAccesos)
 {
-	int socketCPU;
+	t_header * package = malloc(sizeof(t_header));
 /*
 	//CONEXION AL CPU
 	int listenningSocket=crearServer(miContexto.puertoServidor);
@@ -180,7 +180,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
 		ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 	}
 */
-
+/*
 	char * mensaje = malloc(1);
 
 	t_header * package = package_create(2,15,5,0);
@@ -250,7 +250,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
 	 free(package_escritura6);
 	 free(package_finalizacion);
 
-/*
+*/
     fd_set master;   // conjunto maestro de descriptores de fichero
     fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
    // struct sockaddr_in myaddr;     // dirección del servidor
@@ -340,7 +340,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
     					if (nbytes == 0)
     					{
     						// conexión cerrada
-    						printf("selectserver: socket %d hung up\n", i);
+    						printf("Conexion del socket %d cerrada \n", i);
     					} else
     					{
     						perror("recv");
@@ -359,6 +359,17 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
     							if(j!=listener)
     							{
     								printf ("El tipo de ejecucion recibido es %d \n", package->type_ejecution);
+
+    								char * mensaje = malloc(package->tamanio_msj);
+
+    								if(package->type_ejecution==1) //Escritura
+    								{
+    									recv(i,mensaje, package->tamanio_msj, 0);
+    								}
+    								else
+    								{
+    									strcpy(mensaje,"");
+    								}
     								// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
     								ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, j, serverSocket, tablaAccesos);
     							}
@@ -369,7 +380,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
     		}
     	}
     }
-*/
+
 }
 
 
