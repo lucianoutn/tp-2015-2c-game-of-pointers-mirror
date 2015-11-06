@@ -128,7 +128,7 @@ void encolar(t_list *, t_queue *);
 //Funcion encargada de acceptar nuevas peticiones de conexion
 void *escuchar (struct Conexiones* conexion);
 
-void dispatcher(t_queue *);
+void dispatcher();
 
 void enviaACpu(t_cpu);
 

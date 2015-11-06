@@ -87,7 +87,7 @@ void encolar(t_list* lstPcbs, t_queue* cola_ready)
 }
 
 //Funcion despachador, que sacar un proceso de la cola de ready y enviarlo a la CPU para su ejecucion.
-void dispatcher(t_queue *cola_ready)
+void dispatcher()
 {
 	/*
 	 * Protocolo de mensajes Planificador -CPU
@@ -209,7 +209,7 @@ void enviaACpu(t_cpu CPU)
 
 	//libero la cpu
 	CPU.enUso = false;
-	sem_post(&semEnvioPcb);
+	//sem_post(&semEnvioPcb); lo comento xq no se quiere enviar otro PCB cuando termina de ejecutar. Agus
 	sem_post(&semCpuLibre);
 }
 

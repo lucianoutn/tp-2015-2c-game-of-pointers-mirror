@@ -75,7 +75,7 @@ int main() {
 
 	pthread_t hilo_consola, hilo_dispatcher;
 	pthread_create(&hilo_consola, NULL, (void*)consola, NULL);
-
+	pthread_create(&hilo_dispatcher, NULL, (void*)dispatcher, NULL);
 
 	int recivoOrden=1;
 	while (recivoOrden)
@@ -91,7 +91,7 @@ int main() {
 					puts("FIFO");
 
 					//creo hilo despachador aca?
-					pthread_create(&hilo_dispatcher, NULL, (void*)dispatcher, &cola_ready);
+					sem_post(&semEnvioPcb);
 
 					//dispatcher(cola_ready); //sin threads
 					/*
