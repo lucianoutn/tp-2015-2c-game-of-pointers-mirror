@@ -113,7 +113,7 @@ int leerDesdeTlb(int , t_list * , int, int, t_list*);
  * Unicamente crea las tablas para manejarlo
  * no le asigna marcos a las paginas
  */
-void iniciarProceso();
+void iniciarProceso(t_list*, t_header*, t_list*);
 
 /* BUSCA SI LA PAGINA A ESCRIBIR YA ESTA CARGADA EN TLB, SI LO ESTA LA ESCRIBE Y DEVUELVE 1, SINO DEVUELVE 0 */
 int verificarTlb (t_list *,int, char*, t_header *, t_list*);
@@ -178,7 +178,7 @@ process_pag * bitDirtyEnUno(t_list*);
 void upPaginasAccedidas(t_list*, int);
 void upFallosPagina(t_list*, int);
 
-void mostrarVersus();
+void mostrarVersus(t_list*, int);
 
 int removerEntradasTlb(t_list *, t_header*);
 

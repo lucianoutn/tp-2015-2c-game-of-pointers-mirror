@@ -177,8 +177,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							// POR ISSUE #25, SE FINALIZA EL PROCESO AUNQUE TENGA LUGAR RESPECTO A SU CANTIDAD
 							// MAXIMA DE MARCOS, SI NO HAY MÁS MARCOS PARA ASIGNAR
 							log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedido");
+							mostrarVersus(tablaAccesos, registro_prueba->PID);
 							matarProceso(registro_prueba, tabla_adm, TLB, tablaAccesos);
-							mostrarVersus();
 						}
 					}
 					upFallosPagina(tablaAccesos, registro_prueba->PID);
@@ -209,7 +209,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 		{
 	 			//creo todas las estructuras porque el swap ya inicializo
 	 			pthread_mutex_lock (&mutexMem);
-	 			iniciarProceso(tabla_adm, registro_prueba);
+	 			iniciarProceso(tabla_adm, registro_prueba, tablaAccesos);
 	 			pthread_mutex_unlock (&mutexMem);
 	 			log_info(logger, "Proceso mProc creado, numero de PID: %d y cantidad de paginas: %d"
 	 											,registro_prueba->PID, registro_prueba->pagina_proceso);
@@ -227,13 +227,14 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 	case 3:
 			printf ("*********************Se recibio orden de finalizacion de proceso :)********************* \n");
 			pthread_mutex_lock (&mutexMem);
+			// Lo muestro aca porque si lo muestro despues de que lo mate, la tabla no tiene el registro
+			mostrarVersus(tablaAccesos, registro_prueba->PID);
 			matarProceso(registro_prueba, tabla_adm, TLB, tablaAccesos);
 			envioAlSwap(registro_prueba, serverSocket, NULL, flag );
 
 			if(flag)
 			{
 				log_info(logger, "Se hizo conexion con swap, se envio proceso a matar y este fue recibido correctamente");
-				mostrarVersus();
 			}else
 				log_error(logger, "Hubo un problema con la conexion/envio al swap");
 
@@ -246,10 +247,12 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	free(flag);
 }
 
-void iniciarProceso(t_list* tabla_adm, t_header * proceso)
+void iniciarProceso(t_list* tabla_adm, t_header * proceso, t_list* tablaAccesos)
 {
 		// PRIMERO CREO LA TABLA DEL PROCESO Y LA AGREGO A LA LISTA DE LISTAS DE PROCESOS JUNTO CON EL PID
 		t_list * lista_proceso = crearListaProceso();
+
+		list_add(tablaAccesos, versus_create(proceso->PID, 0, 0));
 
 		// AGREGO UN NODO PARA CADA PAGINA A INICIALIZAR, OBVIAMENTE APUNTANDO A NULL PORQUE NO ESTAN EN MEMORIA TODAVIA
 		int x = 0;
@@ -376,8 +379,8 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 				}else
 				{
 					log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedido");
+					mostrarVersus(tablaAccesos, package->PID);
 					matarProceso(package, tabla_adm, TLB, tablaAccesos);
-					mostrarVersus();
 				}
 
 			}
@@ -468,15 +471,16 @@ void envioAlSwap ( t_header * header, int serverSocket, char * contenido, int * 
 	  	 * 0 = Hubo un error.
 	  	 * 1 = Todo ok.
  	 	*/
+		//SI EL TIPO DE EJECUCION ES ESCRITURA, MANDO EL CONTENIDO
+		if (header->type_ejecution == 1)
+		{
+			send(serverSocket, contenido, miContexto.tamanioMarco, 0);
+		}
 		recv(serverSocket, flag, sizeof(int),0);
 
 		if(*flag==1) //si no hubo error
 		{
-			//SI EL TIPO DE EJECUCION ES ESCRITURA, MANDO EL CONTENIDO
-			if (header->type_ejecution == 1)
-			{
-				send(serverSocket, contenido, miContexto.tamanioMarco, 0);
-			}else if(header->type_ejecution==0) //si hice una lectura, devuelve la pag
+			if(header->type_ejecution==0) //si hice una lectura, devuelve la pag
 			{
 				recv(serverSocket, (void *)contenido, miContexto.tamanioMarco,0);
 			}
@@ -537,6 +541,8 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB,
 				x++;
 			}
 
+			// ELIMINO LA ENTRADA DEL PROCESO EN LA TABLA DE ACCESOS
+			list_remove_by_condition(tablaAccesos, (void*)_numeroDePid);
 			// ELIMINO TODOS LOS ELEMENTOS DE LA TABLA Y LA TABLA
 			list_destroy_and_destroy_elements(tabla_proceso, (void *)pag_destroy);
 			//ELIMINO LA REFERENCIA DE ESA TABLA DE PROCESO, DESDE LA TABLA DE PROCESOS
@@ -947,8 +953,8 @@ void upPaginasAccedidas(t_list* tablaAccesos, int pid)
 			return(*(int *)p == pid);
 	}
 
-	//versus * reg = list_find(tablaAccesos, (void*)pid);
-	//reg->cantPagAccessed++;
+	t_versus * reg = list_find(tablaAccesos, (void*)_numeroDePid);
+	reg->cantPagAccessed++;
 }
 
 void upFallosPagina(t_list* tablaAccesos, int pid)
@@ -958,15 +964,22 @@ void upFallosPagina(t_list* tablaAccesos, int pid)
 			return(*(int *)p == pid);
 	}
 
-	//versus * reg = list_find(tablaAccesos, (void*)pid);
-	//reg->cantFallosPag++;
+	t_versus * reg = list_find(tablaAccesos, (void*)_numeroDePid);
+	reg->cantFallosPag++;
 
 }
 
 
-void mostrarVersus()
+void mostrarVersus(t_list* tablaAccesos, int pid)
 {
-	log_info(logger, "Cantidad de paginas accedidas-> %d VS Cantidad de fallos de pagina-> %d", cantPagAccessed, cantFallosPag);
+	bool _numeroDePid (void * p)
+	{
+			return(*(int *)p == pid);
+	}
+
+	t_versus * reg = list_find(tablaAccesos, (void*)_numeroDePid);
+
+	log_info(logger, "Cantidad de paginas accedidas-> %d VS Cantidad de fallos de pagina-> %d", reg->cantPagAccessed, reg->cantFallosPag);
 }
 
 t_header* crearHeaderLectura(t_header * package)
