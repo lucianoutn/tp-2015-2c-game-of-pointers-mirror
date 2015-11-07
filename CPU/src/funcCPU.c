@@ -161,6 +161,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
+				sleep(configuracion.retardo); //retardo del cpu
 				if(recibi)	//Controlo que haya llegado bien
 					puts("Leido");
 				else
@@ -175,6 +176,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
+				sleep(configuracion.retardo); //retardo del cpu
 				if(recibi)	//Controlo que haya llegado bien
 					puts("Recibi ok");
 				else
@@ -188,6 +190,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
+				sleep(configuracion.retardo); //retardo del cpu
 				if(recibi)	//Controlo que haya llegado bien
 					puts("Inicializado");
 				else
@@ -201,6 +204,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
+				sleep(configuracion.retardo); //retardo del cpu
 				if(recibi)	//Controlo que haya llegado bien
 					puts("Finalizado");
 				else
@@ -226,6 +230,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 			{
 				puts("ENTRADA-SALIDA");
 				PCB->estado=3; //bloqueo proceso
+				sleep(configuracion.retardo); //retardo del cpu
 				//señal al plani avisando que cambie de estado
 				send(socketPlanificador, &cambio, sizeof(flag), 0);
 				break;
