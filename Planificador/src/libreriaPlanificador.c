@@ -232,7 +232,7 @@ t_pcb* procesarPCB(char *path)
 		perror("shmat ruta");
 
 	//armo PCB
-	pcb->PID= PID_actual+1;
+	pcb->PID= (PID_actual++);
 	pcb->estado=0;
 	pcb->instructionPointer = 0;
 	pcb->numInstrucciones = 0;
@@ -256,7 +256,7 @@ void preparoHeader(t_headcpu *header)
 	
 }
 
-char* estadoActual (int estado)
+char* estadoActual (int estado) //la uso para el comando PS del planificador.lucho
 {
 
 	if(estado==0)
