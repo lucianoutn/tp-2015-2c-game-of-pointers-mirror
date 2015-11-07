@@ -101,14 +101,14 @@ void dispatcher()
 
 	pthread_t hilo_CPU[miContexto.cantHilosCpus];
 
-	puts ("aca1");
+	puts ("DISPATCHER");
 	sem_init(&semCpuLibre,0,miContexto.cantHilosCpus);
 	while(1){
-		puts ("aca1,5");
+		puts ("WHILE DISPATCHER");
 		//espera que alguien libere alguna CPU y alguien quiera enviar un PCB
 		sem_wait(&semEnvioPcb); //revisar si estos dos semaforos no estan siempre juntos y se comprotan igual. lucho
 		sem_wait(&semCpuLibre);//revisar si estos dos semaforos no estan siempre juntos y se comprotan igual. lucho
-		puts ("aca2");
+		puts ("PASO LOS SEMAFOROS");
 		printf("cant hilos cpu: %d\n", miContexto.cantHilosCpus);
 		//busca la primer CPU que no este en uso
 		int I = 0;
@@ -124,7 +124,7 @@ void dispatcher()
 }
 
 void enviaACpu(t_cpu CPU)
-{	puts ("aca3");
+{	puts ("ENVIA A CPU");
 	//bloqueo la cpu
 	CPU.enUso = true;
 	//CPU DISPONIBLE  saco de la cola y envio msj
@@ -220,14 +220,14 @@ t_pcb* procesarPCB(char *path)
 {
 	long id_pcb = shmget(key_pcb, sizeof(t_pcb),(0666 | IPC_CREAT));//reservo espacio dentro de la seccion de memoria compartida
 	t_pcb *pcb;
-	pcb = (t_pcb*)shmat(id_pcb, NULL, 0); //creo la variable y la asocio al segmento
+	pcb = (t_pcb*)shmat(id_pcb, 0, 0); //creo la variable y la asocio al segmento
 	if (pcb == (t_pcb*)(-1))		//capturo error del shmat
-		perror("shmat");
+		perror("shmat pcb");
 
 	long id_ruta = shmget(key_ruta, sizeof(char*),(0666 | IPC_CREAT)); //reservo espacio dentro de la seccion de memoria compartida
-	pcb->ruta = (char*)shmat(id_ruta, NULL, 0); //creo la variable y la asocio al segmento
+	pcb->ruta = (char*)shmat(id_ruta, 0, 0); //creo la variable y la asocio al segmento
 	if (pcb->ruta == (char*)(-1))		//capturo error del shmat
-		perror("shmat");
+		perror("shmat ruta");
 
 	//armo PCB
 	pcb->PID= PID_actual+1;
