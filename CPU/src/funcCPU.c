@@ -128,8 +128,13 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 	//reservo espacio para el header
 	t_header *header = malloc(sizeof(t_header));
 
-	//flag para controlar la respuesta a las instrucciones
-	flag recibi=false;
+	//flag para controlar la respuesta a las instrucciones por parte de la memoria
+	flag recibi= false;
+	//flag para avisar al planificador que cambie de estado
+	flag cambio= true;
+	//flag que avisa a la CPU si es su turno de ejecutar
+	flag turno= false;
+
 
 	//reservo espacio en la memoria para guardar todas las instrucciones del archivo mCod
 	//primero leo para saber el numero de instrucciones
@@ -140,6 +145,15 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 	//Itera hasta llegar a la ultima instruccion
 	while(PCB->estado!=4)
 	{
+		if(PCB->quantum==0)
+		{
+			PCB->estado=1;
+			//señal al plani avisando que cambie de estado
+			send(socketPlanificador, &cambio, sizeof(flag), 0);
+			//recv me quedo esperando hasta que el plani me de el ok para seguir
+			recv(socketMemoria, &turno, sizeof(flag),0);
+
+		}
 		//Switch que verifica el tipo de cada instruccion
 		switch(procesaInstruccion(instrucciones[PCB->instructionPointer],&pagina))
 		{
@@ -198,8 +212,9 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 					printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
 
 					//aviso al plani indicando que termino con este send:
-					flag termino=true;
-					send(socketPlanificador, &termino, sizeof(flag), 0);
+					PCB->estado=4;
+					send(socketPlanificador, &cambio, sizeof(flag), 0);
+					//recv espero a que el plani me diga que sigo
 
 					//aviso al plani indicando que termino con este semaforo:
 				/*	struct sembuf semOperacion;		//estructura q contiene la operacion sobre el semaforo
@@ -217,27 +232,20 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				puts("default");
 				break;
 			}
+			PCB->quantum--;
 			//PASO A LA OTRA INSTRUCCION
 			PCB->instructionPointer	++;
 			//VERIFICO
 			if(instrucciones[PCB->instructionPointer]!="entrada-salida")
 			{
 				PCB->estado=3; //bloqueo proceso
-				//señal al plani
-				//espero a que el plani mande señal de le toca el turno al proceso denuevo
+				//señal al plani avisando que cambie de estado
+				send(socketPlanificador, &cambio, sizeof(flag), 0);
+				//recv espero a que el plani me diga que sigo
+				recv(socketMemoria, &recibi, sizeof(flag),0);
+
 			}
-			/*else if para RR
-			 *{
-			 	PCB->estado=1; //proceso en ready
-			 	señal al plani
-			 	espero a que el plani mande señal de le toca el turno al proceso denuevo
-			 *}
-			*/
-			else //si entra aca es porque completo todas las intrucciones
-			{
-				PCB->estado=4; //proceso en finalizar
-				//señal al plani
-			}
+
 
 		}
 

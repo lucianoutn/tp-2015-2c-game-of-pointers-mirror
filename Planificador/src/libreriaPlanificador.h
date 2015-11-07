@@ -111,6 +111,7 @@ int semVCPU; //vector de semaforos dinamicos compartido
 
 flag CPUenUso; //Flag que permite verificar si una CPU esta en uso o no
 
+
 int numero_de_pid;
 
 int PID_actual;
