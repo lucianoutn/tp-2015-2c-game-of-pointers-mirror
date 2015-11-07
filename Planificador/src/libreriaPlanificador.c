@@ -181,8 +181,10 @@ void enviaACpu(t_cpu *CPU)
 		}
 		case 3: //bloqueado
 		{
-			//queue_pop(cola_block, pcb);
-			//espera tantos segundos
+			//proceso en cola de bloqueados
+			//queue_push(cola_block, pcb);
+			//bloqueo el pcb
+			sleep(5); //cambiar
 			//lo vuelve a meter en la cola de readys
 			queue_push(cola_ready, pcb);
 			break;
