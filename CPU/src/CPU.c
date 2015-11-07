@@ -49,7 +49,7 @@ int main()
 
 
 	int i, err;
-	for (i=0; i<=0/*i<configuracion.cantHilos*/; i++){
+	for (i=0; i<configuracion.cantHilos; i++){
 		sockets->numeroCPU = i;
 		err= pthread_create(&(cpu[i]), NULL, (void*)iniciarCPU,sockets);
 		//sleep(1);
