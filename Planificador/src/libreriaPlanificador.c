@@ -136,6 +136,7 @@ void enviaACpu(t_cpu CPU)
 	preparoHeader(header);
 	//cambio estado de PCB a ejecutando
 	pcb->estado=2;
+	printf("mande un quantum de: %d\n", pcb->quantum); //teste
 	//Envio el header
 	send(CPU.socket, header, sizeof(t_headcpu),0);
 	puts("PCB enviado a la CPU para procesamiento\n");
@@ -237,6 +238,7 @@ t_pcb* procesarPCB(char *path)
 	pcb->permisos=0;
 	strcpy(pcb->ruta, path);
 	pcb->finalizar=false;
+	pcb->quantum= miContexto.quantum;
 
 	return pcb;
 }

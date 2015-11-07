@@ -29,11 +29,11 @@ int main() {
 	log_info(logger, "Inicio Log PLANIFICADOR", NULL);
 
 	//vector dinamico de semaforos. uno x cada cpu
-		key_t keySem;
+	/*	key_t keySem;
 		keySem = ftok ("/bin/ls", 33);	//genero una clave para identificar el array de semaforos en los otros procesos
 		semVCPU = semget (keySem, miContexto.cantHilosCpus, 0666 | IPC_CREAT); // creo tanto semaforos como hilos tenga
 		semctl (semVCPU, miContexto.cantHilosCpus, SETALL, 0);// inicializo todos los semaforos en 0
-
+*/
 	/*
 	 * Funcion que crea un socket nuevo y lo prepara para escuchar conexiones entrantes a travez del puerto PUERTO
 	 * y lo almacena en la variable conexiones del tipo struct Conexiones
@@ -91,7 +91,7 @@ int main() {
 					puts("FIFO");
 
 					//creo hilo despachador aca?
-					sem_post(&semEnvioPcb);
+					//sem_post(&semEnvioPcb);
 
 					//dispatcher(cola_ready); //sin threads
 					/*

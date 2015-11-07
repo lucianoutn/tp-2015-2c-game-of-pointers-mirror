@@ -63,8 +63,9 @@ typedef struct PCB {
 	unsigned int numInstrucciones; //numero total de instrucciones
 	int prioridad; // prioridad (usar mas adelante)
 	int permisos; // sin uso por ahora
-	char *ruta; //ruta del archivo mCod que tiene las instrucciones a procesar
+	int quantum; //valor que lee y guarda desde el config
 	bool finalizar;
+	char *ruta; //ruta del archivo mCod que tiene las instrucciones a procesar
 
 }t_pcb;
 
