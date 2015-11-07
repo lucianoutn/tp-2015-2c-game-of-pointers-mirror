@@ -11,8 +11,6 @@ key_t key_pcb=1235; //clave de la seccion memoria pcb
 key_t key_ruta=3212; //cable de la seccion memoria ruta
 
 
-flag turno=false; //Flag que permite ver si el pcb ejecuto por primera vez
-
 
 //Funcion que permite cargar el archivo de configuracion en el programa.
 void traigoContexto()
@@ -137,22 +135,12 @@ void enviaACpu(t_cpu CPU)
 	//cambio estado de PCB a ejecutando
 	pcb->estado=2;
 
-	if(turno==false) //si es la primera vez que ejecuta
-	{
-		t_headcpu *header = malloc(sizeof(t_headcpu));
-		preparoHeader(header);
-		send(CPU.socket, header, sizeof(t_headcpu),0);
-		turno=true;
-	}
-	else
-	{
-		send(CPU.socket, &turno, sizeof(flag), 0);
-	}
-
-
-	printf("mande un quantum de: %d\n", pcb->quantum); //teste
+	t_headcpu *header = malloc(sizeof(t_headcpu));
+	preparoHeader(header);
 	//Envio el header
+	printf("mande un quantum de: %d\n", pcb->quantum); //teste
 
+	send(CPU.socket, header, sizeof(t_headcpu),0);
 	puts("PCB enviado a la CPU para procesamiento\n");
 
 	sem_post(semProduccionMsjs);
