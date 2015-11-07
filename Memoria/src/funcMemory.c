@@ -517,58 +517,32 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB,
 	}
 	t_tabla_adm * registro_tabla_proc = list_find(tabla_adm, (void*)_numeroDePid);
 
-	//list_remove_by_condition(tablaAccesos, (void*)_numeroDePid); LO COMENTO HASTA QUE ME REC. LA STRUCT
-	t_marco_hueco * marco_p = list_get(listaFramesMemR,0 );
-	printf("------**PRINCIPIO**--------- MARCO NUMERO %d y DIRECCION --> %s", marco_p->numero_marco, marco_p->direccion_inicio);
+	list_remove_by_condition(tablaAccesos, (void*)_numeroDePid);
 
 	if (registro_tabla_proc != NULL)
 	{
-		t_marco_hueco * marco_pru2 = list_get(listaFramesMemR,0 );
-		printf("------**TaB PROC**--------- MARCO NUMERO %d y DIRECCION --> %s", marco_pru2->numero_marco, marco_pru2->direccion_inicio);
-
 		t_list * tabla_proceso = registro_tabla_proc->direc_tabla_proc;
 
 		if (tabla_proceso != NULL)
 		{
-			t_marco_hueco * marco_pru = list_get(listaFramesMemR,0 );
-			printf("------**AFUERA WHILE**--------- MARCO NUMERO %d y DIRECCION --> %s", marco_pru->numero_marco, marco_pru->direccion_inicio);
-
 			int cantidad_paginas = tabla_proceso->elements_count;
 			int x = 0;
 			while (x < cantidad_paginas)
 			{
-				t_marco_hueco * marco_prue = list_get(listaFramesMemR,0 );
-				printf("------**WHILE**--------- MARCO NUMERO %d y DIRECCION --> %s", marco_prue->numero_marco, marco_prue->direccion_inicio);
-
 				process_pag * pagina_removida = list_remove(tabla_proceso, 0);
-
-				t_marco_hueco * marco_prue2 = list_get(listaFramesMemR,0 );
-				printf("------**ARRIBA NUM MARCO**--------- MARCO NUMERO %d y DIRECCION --> %s", marco_prue2->numero_marco, marco_prue2->direccion_inicio);
 
 				bool _numMarco (void * p)
 				{
 					return(*(char *)p == pagina_removida->marco);
 				}
 
-				t_marco_hueco * marco_prue3 = list_get(listaFramesMemR,0 );
-				printf("------**ARRIBA IF**--------- MARCO NUMERO %d y DIRECCION --> %s", marco_prue3->numero_marco, marco_prue3->direccion_inicio);
-
 				if ( pagina_removida->direccion_fisica == NULL)
 				{
 
 				}
 				else{
-
 					//ENCONTRO PAGINA A REMOVER QUE TENIA UN MARCO ASIGNADO
-					t_marco_hueco * marco_prueba = list_remove_by_condition(listaFramesMemR,(void*)_numMarco);
-					printf("------**ADENTRO**--------- MARCO NUMERO %d y DIRECCION --> %s", marco_prueba->numero_marco, marco_prueba->direccion_inicio);
-					puts("asd");
-					t_marco_hueco * marco_a_remover = list_remove_by_condition(listaFramesMemR, (void*)_numMarco);
-					//printf("MMMMMARCO DIRECCION -> %p y NUMERO -> %d", marco_a_remover->direccion_inicio, marco_a_remover->numero_marco);
-
-					//AGREGO EL MARCO AHORA HUECO, A LA LISTA DE MARCOS HUECOS
-					// SIGUE TENIENDO SU DIRECCION Y SU NUMERO DE MARCO, NO IMPORTA EN QUE LISTA ESTE
-					list_add(listaFramesHuecosMemR, marco_a_remover);
+					removerMarcoPorMarco(pagina_removida->marco);
 				}
 				x++;
 			}
@@ -652,6 +626,7 @@ t_tlb * buscarEntradaProcesoEnTlb (t_list * TLB, t_header * pagina, int * posici
 		}
 		x++;
 	}
+	*posicion = -1;
 	return NULL;
 }
 
@@ -757,8 +732,13 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		int * posicion = malloc(sizeof(int));
 		t_header * asd =  package_create(0, header->PID, paginaASwapear->pag, 0);
 		t_tlb * tlb_reg = buscarEntradaProcesoEnTlb(TLB, asd ,posicion);
-		log_info(logger, "Borro la entrada de la TLB de la posicion-->%d", *posicion);
-		list_remove(TLB, *posicion);
+
+		// SI LA ENCONTRO EN LA TLB
+		if (*posicion != -1)
+		{
+			log_info(logger, "Borro la entrada de la TLB de la posicion-->%d", *posicion);
+			list_remove(TLB, *posicion);
+		}
 		actualizarTlb(header->PID, header->pagina_proceso, paginaASwapear->direccion_fisica, TLB, paginaASwapear->marco);
 	}
 	pthread_mutex_unlock (&mutexTLB);
@@ -1047,6 +1027,26 @@ int procesoTienePaginaCargada(t_list* tabla_proceso)
 		x++;
 	}
 	return r;
+}
+
+void removerMarcoPorMarco(int marco)
+{
+	int cant_marcos = listaFramesMemR->elements_count;
+	int x = 0;
+
+	while ( x < cant_marcos)
+	{
+		t_marco_hueco * marco_reg = list_get(listaFramesMemR, 0);
+		if ( marco_reg->numero_marco == marco)
+		{
+			t_marco_hueco * marco_a_remover = list_remove(listaFramesMemR, x);
+
+			//AGREGO EL MARCO AHORA HUECO, A LA LISTA DE MARCOS HUECOS
+			// SIGUE TENIENDO SU DIRECCION Y SU NUMERO DE MARCO, NO IMPORTA EN QUE LISTA ESTE
+			list_add(listaFramesHuecosMemR, marco_a_remover);
+		}
+		x++;
+	}
 }
 
 //------SEÑALES QUE TIENE QUE RECIBIR LA MEMORIA-------------//
