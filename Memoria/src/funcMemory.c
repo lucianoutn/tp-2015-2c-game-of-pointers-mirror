@@ -401,7 +401,8 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 				actualizarTablaProcesoLru(tabla_proc, package->pagina_proceso, pagina_proc->direccion_fisica, pagina_proc->marco);
 
 			}
-		 	actualizarTlb(package->PID, package->pagina_proceso, pagina_proc->direccion_fisica, TLB, pagina_proc->marco);
+			if (!strcmp(miContexto.tlbHabilitada, "SI"))
+					actualizarTlb(package->PID, package->pagina_proceso, pagina_proc->direccion_fisica, TLB, pagina_proc->marco);
 		 	upPaginasAccedidas(tablaAccesos, package->PID );
 			send(socketCliente,pagina_proc->direccion_fisica,sizeof(pagina_proc->direccion_fisica),0);
 			return 1;
@@ -468,9 +469,7 @@ void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_rea
 	// SI LA TLB ESTA HABILITADA Y NO ESTA LLENA, ENTONCES LE CREO LA ENTRADA DE LA PAGINA LEIDA
 	pthread_mutex_lock (&mutexTLB);
 	if( !strcmp(miContexto.tlbHabilitada, "SI") && !tlbLlena(TLB))
-	{
 	 	actualizarTlb(proceso_entrante->PID, proceso_entrante->pagina_proceso, pagina_proceso->direccion_fisica, TLB, pagina_proceso->marco);
-	}
 	pthread_mutex_unlock (&mutexTLB);
 }
 
@@ -739,7 +738,8 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 			log_info(logger, "Borro la entrada de la TLB de la posicion-->%d", *posicion);
 			list_remove(TLB, *posicion);
 		}
-		actualizarTlb(header->PID, header->pagina_proceso, paginaASwapear->direccion_fisica, TLB, paginaASwapear->marco);
+		if(!strcmp(miContexto.tlbHabilitada, "SI"))
+			actualizarTlb(header->PID, header->pagina_proceso, paginaASwapear->direccion_fisica, TLB, paginaASwapear->marco);
 	}
 	pthread_mutex_unlock (&mutexTLB);
 
