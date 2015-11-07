@@ -220,7 +220,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 					semop (semVCPU, &semOperacion, 1); //aplico la operacion sobre el semaforo
 		     	*/
 				//libero el PCB si ejecuto todas las instrucciones
-				free(PCB);
+				//free(PCB); //LO COMENTO XQ TIRA ERROR
 				break;
 			case 4: //entrada-salida
 			{
@@ -235,12 +235,12 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				puts("default");
 				break;
 			}
+		}
 			//Disminuyo el quanto
 			PCB->quantum--;
 			//PASO A LA OTRA INSTRUCCION
 			PCB->instructionPointer	++;
 
-		}
 
 	}	//FIN WHILE
 
@@ -283,8 +283,9 @@ void iniciarCPU(t_sockets *sockets){
 		puts("Esperando Instrucciones...\n");
 		//CPU a la espera de nuevas instrucciones
 		sem_wait(semProduccionMsjs); //semaforo productor-consumidor
+		puts("ANTES DEL RECV");
 		status = recv(sockets->socketPlanificador, header, sizeof(t_headcpu),0);
-
+		puts("DESPUES DEL RECV");
 		if(status!=0)	//CONTROLA QUE NO SE PIERDA LA CONEXION
 
 		{

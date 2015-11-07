@@ -86,7 +86,7 @@ void consola (void* arg)
 				//aca quiero lograr que en el pcb->campo finalizar ponga un 1
 				//printf("estoy leyendo el pcb: %d\n valor de finalizar: %d\n", pcb->PID, pcb->finalizar); //test
 				pcb->finalizar = true;
-				printf("PID: %d FINALIZADO\n", pidAfinalizar);
+				printf("PID: %d FINALIZADO (en proximo ciclo de cpu)\n", pidAfinalizar);
 				//printf("%d", pcb->finalizar);// test
 
 				sem_post(&semConsola); //vuelvo a habilitar la consolita
@@ -99,7 +99,7 @@ void consola (void* arg)
 				puts("\nEstado de Porcesos\n");
 
 				void imprimePS(t_pcb *pcb) {		 //creo la funcion para usar ORDEN SUPERIOR
-					printf("mProc %d: %s -> (aca iria el estado)\n", pcb->PID, pcb->ruta);
+					printf("mProc %d: %s -> %s\n", pcb->PID, pcb->ruta, estadoActual(pcb->estado));
 				}
 				//mapeo la funsion imprimePS en cada nodo de la lista
 				list_iterate(lstPcbs,(void*)imprimePS);

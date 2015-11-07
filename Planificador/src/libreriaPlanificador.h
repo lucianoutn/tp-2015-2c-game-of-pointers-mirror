@@ -132,10 +132,12 @@ void *escuchar (struct Conexiones* conexion);
 
 void dispatcher();
 
-void enviaACpu(t_cpu);
+void enviaACpu(t_cpu *);
 
 t_pcb* procesarPCB(char *);
 
 void preparoHeader(t_headcpu *);
+
+char* estadoActual (int estado); //la uso para el comando PS del planificador.lucho
 
 #endif /* SRC_LIBRERIAPLANIFICADOR_H_ */
