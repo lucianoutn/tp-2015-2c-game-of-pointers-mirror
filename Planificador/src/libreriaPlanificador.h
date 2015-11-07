@@ -111,6 +111,7 @@ int semVCPU; //vector de semaforos dinamicos compartido
 
 flag CPUenUso; //Flag que permite verificar si una CPU esta en uso o no
 
+
 int numero_de_pid;
 
 int PID_actual;
@@ -131,10 +132,12 @@ void *escuchar (struct Conexiones* conexion);
 
 void dispatcher();
 
-void enviaACpu(t_cpu);
+void enviaACpu(t_cpu *);
 
 t_pcb* procesarPCB(char *);
 
 void preparoHeader(t_headcpu *);
+
+char* estadoActual (int estado); //la uso para el comando PS del planificador.lucho
 
 #endif /* SRC_LIBRERIAPLANIFICADOR_H_ */

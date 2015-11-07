@@ -128,8 +128,11 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 	//reservo espacio para el header
 	t_header *header = malloc(sizeof(t_header));
 
-	//flag para controlar la respuesta a las instrucciones
-	flag recibi=false;
+	//flag para controlar la respuesta a las instrucciones por parte de la memoria
+	flag recibi= false;
+	//flag para avisar al planificador que cambie de estado
+	flag cambio= true;
+
 
 	//reservo espacio en la memoria para guardar todas las instrucciones del archivo mCod
 	//primero leo para saber el numero de instrucciones
@@ -140,106 +143,104 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 	//Itera hasta llegar a la ultima instruccion
 	while(PCB->estado!=4)
 	{
+		if(PCB->quantum==0)
+		{
+			PCB->estado=1;
+			//señal al plani avisando que cambie de estado
+			send(socketPlanificador, &cambio, sizeof(flag), 0);
+			break;
+		}
 		//Switch que verifica el tipo de cada instruccion
 		switch(procesaInstruccion(instrucciones[PCB->instructionPointer],&pagina))
 		{
 
 			case 0: //leer
 
-					puts("LEER");
-					creoHeader(PCB,header,0,pagina); //PCB HEADER TIPOEJECUCION PAGINA
-					//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
-					send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
-					recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
-					if(recibi)	//Controlo que haya llegado bien
-						puts("Leido");
-					else
-						puts("NO Leido");
-					break;
+				puts("LEER");
+				creoHeader(PCB,header,0,pagina); //PCB HEADER TIPOEJECUCION PAGINA
+				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
+				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
+				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
+				if(recibi)	//Controlo que haya llegado bien
+					puts("Leido");
+				else
+					puts("NO Leido");
+				break;
 
 			case 1: //Escribir
 
-					//HAY QUE AGREGAR EL CAMPO PARA EL MSJ Y MANDARLO
-					puts("ESCRIBIR");
-					creoHeader(PCB,header,1,pagina); //PCB HEADER TIPOEJECUCION PAGINA
-					//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
-					send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
-					recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
-					if(recibi)	//Controlo que haya llegado bien
-						puts("Recibi ok");
-					else
-					puts("Error");
-					break;
+				//HAY QUE AGREGAR EL CAMPO PARA EL MSJ Y MANDARLO
+				puts("ESCRIBIR");
+				creoHeader(PCB,header,1,pagina); //PCB HEADER TIPOEJECUCION PAGINA
+				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
+				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
+				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
+				if(recibi)	//Controlo que haya llegado bien
+					puts("Recibi ok");
+				else
+				puts("Error");
+				break;
 
 			case 2://iniciar
 
-					puts("INICIAR");
-					creoHeader(PCB,header,2,pagina); //PCB HEADER TIPOEJECUCION PAGINA
-					//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
-					send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
-					recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
-					if(recibi)	//Controlo que haya llegado bien
-						puts("Inicializado");
-					else
-						puts("NO Inicializado");
-					break;
+				puts("INICIAR");
+				creoHeader(PCB,header,2,pagina); //PCB HEADER TIPOEJECUCION PAGINA
+				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
+				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
+				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
+				if(recibi)	//Controlo que haya llegado bien
+					puts("Inicializado");
+				else
+					puts("NO Inicializado");
+				break;
 
 			case 3: //finalizar
 
-					puts("FINALIZAR");
-					creoHeader(PCB,header,3,pagina); //PCB HEADER TIPOEJECUCION PAGINA
-					//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
-					send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
-					recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
-					if(recibi)	//Controlo que haya llegado bien
-						puts("Finalizado");
-					else
-						puts("Error");
-					printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
+				puts("FINALIZAR");
+				creoHeader(PCB,header,3,pagina); //PCB HEADER TIPOEJECUCION PAGINA
+				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
+				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
+				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
+				if(recibi)	//Controlo que haya llegado bien
+					puts("Finalizado");
+				else
+					puts("Error");
+				printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
 
-					//aviso al plani indicando que termino con este send:
-					flag termino=true;
-					send(socketPlanificador, &termino, sizeof(flag), 0);
+				//aviso al plani indicando que termino con este send:
+				PCB->estado=4;
+				send(socketPlanificador, &cambio, sizeof(flag), 0);
+				//recv espero a que el plani me diga que sigo
 
-					//aviso al plani indicando que termino con este semaforo:
+				//aviso al plani indicando que termino con este semaforo:
 				/*	struct sembuf semOperacion;		//estructura q contiene la operacion sobre el semaforo
 					semOperacion.sem_num = numeroCpu ;	//el indice del semaforo q quiero modificar
 					semOperacion.sem_op = 1;	//la cant de operaciones siempre 1
 					semOperacion.sem_flg = 0; //un flag siempre en0
 					semop (semVCPU, &semOperacion, 1); //aplico la operacion sobre el semaforo
 		     	*/
-					//libero el PCB si ejecuto todas las instrucciones
-					free(PCB);
-					break;
-
+				//libero el PCB si ejecuto todas las instrucciones
+				//free(PCB); //LO COMENTO XQ TIRA ERROR
+				break;
+			case 4: //entrada-salida
+			{
+				puts("ENTRADA-SALIDA");
+				PCB->estado=3; //bloqueo proceso
+				//señal al plani avisando que cambie de estado
+				send(socketPlanificador, &cambio, sizeof(flag), 0);
+				break;
+			}
 			default:
 			{
 				puts("default");
 				break;
 			}
+		}
+			//Disminuyo el quanto
+			PCB->quantum--;
 			//PASO A LA OTRA INSTRUCCION
 			PCB->instructionPointer	++;
-			//VERIFICO
-			if(instrucciones[PCB->instructionPointer]!="entrada-salida")
-			{
-				PCB->estado=3; //bloqueo proceso
-				//señal al plani
-				//espero a que el plani mande señal de le toca el turno al proceso denuevo
-			}
-			/*else if para RR
-			 *{
-			 	PCB->estado=1; //proceso en ready
-			 	señal al plani
-			 	espero a que el plani mande señal de le toca el turno al proceso denuevo
-			 *}
-			*/
-			else //si entra aca es porque completo todas las intrucciones
-			{
-				PCB->estado=4; //proceso en finalizar
-				//señal al plani
-			}
 
-		}
 
 	}	//FIN WHILE
 
@@ -282,8 +283,9 @@ void iniciarCPU(t_sockets *sockets){
 		puts("Esperando Instrucciones...\n");
 		//CPU a la espera de nuevas instrucciones
 		sem_wait(semProduccionMsjs); //semaforo productor-consumidor
+		puts("ANTES DEL RECV");
 		status = recv(sockets->socketPlanificador, header, sizeof(t_headcpu),0);
-
+		puts("DESPUES DEL RECV");
 		if(status!=0)	//CONTROLA QUE NO SE PIERDA LA CONEXION
 
 		{

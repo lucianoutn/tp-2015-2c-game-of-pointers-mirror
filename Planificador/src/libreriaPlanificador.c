@@ -115,30 +115,32 @@ void dispatcher()
 		while((conexiones.CPUS[I].enUso) && (I < miContexto.cantHilosCpus)){
 			I++;
 		}
-
+		printf("CPU ELEGIDA: %d\n SOCKET ELEGIDO: %d\n",I, conexiones.CPUS[I].socket);
 		//Crea un hilo por cada CPU
-		if(pthread_create(&hilo_CPU[I],NULL,(void*)enviaACpu,&conexiones.CPUS[I])<0)
+		if(pthread_create(&(hilo_CPU[I]),NULL,(void*)enviaACpu,&conexiones.CPUS[I])<0)
 		perror("Error HILO CPU!");
 	}
 
 }
 
-void enviaACpu(t_cpu CPU)
+void enviaACpu(t_cpu *CPU)
 {	puts ("ENVIA A CPU");
 	//bloqueo la cpu
-	CPU.enUso = true;
+	CPU->enUso = true;
 	//CPU DISPONIBLE  saco de la cola y envio msj
 	t_pcb *pcb = queue_pop(cola_ready);
 	//chequeo el flag FINALIZAR. si esta prendido le pogno el IP al final, para cuando vuelva a ejecutar finalice. lucho
-	if (pcb->finalizar) pcb->instructionPointer = pcb->numInstrucciones;
+	if (pcb->finalizar) pcb->instructionPointer = pcb->numInstrucciones; //esto esta mal, va a pinchar en algun momento. Agus
+
+	//cambio estado de PCB a ejecutando
+	pcb->estado=2;
 
 	t_headcpu *header = malloc(sizeof(t_headcpu));
 	preparoHeader(header);
-	//cambio estado de PCB a ejecutando
-	pcb->estado=2;
-	printf("mande un quantum de: %d\n", pcb->quantum); //teste
 	//Envio el header
-	send(CPU.socket, header, sizeof(t_headcpu),0);
+	printf("mande un quantum de: %d\n y el socket es: %d\n", pcb->quantum, CPU->socket); //teste
+
+	send(CPU->socket, header, sizeof(t_headcpu),0);
 	puts("PCB enviado a la CPU para procesamiento\n");
 
 	sem_post(semProduccionMsjs);
@@ -147,7 +149,7 @@ void enviaACpu(t_cpu CPU)
 
 	//ESPERO RESPUESTA CON RCV
 	flag termino=false;
-	recv(CPU.socket, &termino, sizeof(flag),0);		//espero recibir la respuesta
+	recv(CPU->socket, &termino, sizeof(flag),0);		//espero recibir la respuesta
 	if(termino)	//Controlo que haya llegado bien
 		puts("***test*** Volvio el pcb");
 
@@ -209,7 +211,7 @@ void enviaACpu(t_cpu CPU)
 		puts("RECIBI FAIL");*/
 
 	//libero la cpu
-	CPU.enUso = false;
+	CPU->enUso = false;
 	//sem_post(&semEnvioPcb); lo comento xq no se quiere enviar otro PCB cuando termina de ejecutar. Agus
 	sem_post(&semCpuLibre);
 }
@@ -230,7 +232,7 @@ t_pcb* procesarPCB(char *path)
 		perror("shmat ruta");
 
 	//armo PCB
-	pcb->PID= PID_actual+1;
+	pcb->PID= (PID_actual++);
 	pcb->estado=0;
 	pcb->instructionPointer = 0;
 	pcb->numInstrucciones = 0;
@@ -254,7 +256,7 @@ void preparoHeader(t_headcpu *header)
 	
 }
 
-char* estadoActual (int estado)
+char* estadoActual (int estado) //la uso para el comando PS del planificador.lucho
 {
 
 	if(estado==0)
