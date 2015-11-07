@@ -85,7 +85,6 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				pthread_mutex_unlock (&mutexMem);
 			}
 	 		break;
-
 	 	case 1:
 			log_info(logger, "Solicitud de escritura recibida del PID: %d y pagina: %d", registro_prueba->PID, registro_prueba->pagina_proceso);
 			int okTlb=0;
@@ -135,43 +134,55 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 					 * PROCESO YA ESTAN LLENOS), SWAPEO LA PRIMER PAGINA CARGADA (FIFO)
 					 * Y ESCRIBO LA QUE RECIBO DEL SWAP AL FINAL DE LA LISTA. ACTUALIZO TLB
 					 */
-					if ( marcosProcesoLlenos(tablaProceso))
+					if ( listaFramesHuecosMemR->elements_count != 0)
 					{
-						int verific = swapeando(tablaProceso,tabla_adm ,TLB, mensaje, serverSocket, registro_prueba, tablaAccesos);
-						if (verific == 1)
+						if ( marcosProcesoLlenos(tablaProceso))
 						{
+
+							int verific = swapeando(tablaProceso,tabla_adm ,TLB, mensaje, serverSocket, registro_prueba, tablaAccesos);
+							if (verific == 1)
+							{
+
+							}
+							else
+								log_error(logger, "Error al intentar swapear");
 
 						}
 						else
-							log_error(logger, "Error al intentar swapear");
-					}
-					/* SI TENGO ESPACIO PARA TRAERLA (CANT MAX DE MARCOS PARA ESE PROCESO
-					 *NO FUE ALCANZADA TODAVÍA), SI ME QUEDA MEMORIA (MARCOS) LA TRAIGO(MENTIRA) Y LA ESCRIBO
-					 */
-					else
-					{
-						if ( listaFramesHuecosMemR->elements_count != 0)
 						{
+							/* SI TENGO ESPACIO PARA TRAERLA (CANT MAX DE MARCOS PARA ESE PROCESO
+							 *NO FUE ALCANZADA TODAVÍA), SI ME QUEDA MEMORIA (MARCOS) LA TRAIGO(MENTIRA) Y LA ESCRIBO
+							 */
 							t_marco_hueco * marco_a_llenar = list_remove(listaFramesHuecosMemR, 0);
 							log_info(logger, "Traje la pagina del swap, voy a escribir el marco %d", marco_a_llenar->numero_marco);
 							sleep(miContexto.retardoMemoria);
 							// LO ESCRIBO CON EL MENSAJE QUE ME DICEN QUE LO ESCRIBA PORQUE NO TENGO QUE TRAER LO QUE YA ESTE ESCRITO DEL SWAP
 							memcpy ( marco_a_llenar->direccion_inicio, mensaje, strlen(mensaje));
-
+							printf("MMMMMARCO DIRECCION -> %p y NUMERO -> %d \n", marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
 							//AGREGO EL MARCO AHORA ESCRITO, A LA LISTA DE MARCOS ESCRITOS
 							list_add(listaFramesMemR, marco_a_llenar);
+							t_marco_hueco * asd = list_get(listaFramesMemR, 0);
+							printf("***************************** EL MARCO NUM -> %d, TIENE--> %p \n", asd->numero_marco, asd->direccion_inicio);
 
 							//AGREGO LA PAGINA A LA TLB (VERIFICO SI ESTA LLENA Y REEMPLAZO)
 							pthread_mutex_lock (&mutexTLB);
 							if (!strcmp(miContexto.tlbHabilitada, "SI"))
-								actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, TLB, marco_a_llenar->numero_marco);
+									actualizarTlb(registro_prueba->PID, registro_prueba->pagina_proceso, marco_a_llenar->direccion_inicio, TLB, marco_a_llenar->numero_marco);
 							pthread_mutex_unlock (&mutexTLB);
 							// ACTUALIZO LA TABLA DEL PROCESO CON LA DRIECCION FISICA, DEPENDIENDO EL ALGORITMO DEL CONTEXTO
 							actualizoTablaProceso(tablaProceso, marco_a_llenar, registro_prueba);
 
 							// Aumento 1 a la cantidad de paginas accedidas del proceso
 							upPaginasAccedidas(tablaAccesos, registro_prueba->PID );
-						// SI NO ME QUEDAN MARCOS EN TODA LA MEMORIA PARA GUARDAR UNA PAGINA, CHAU
+							// SI NO ME QUEDAN MARCOS EN TODA LA MEMORIA PARA GUARDAR UNA PAGINA, CHAU
+						}
+					}
+					else
+					{
+						// EL PROCESO TIENE CARGADO AL MENOS UNA PAGINA? LA SWAPEO
+						if (procesoTienePaginaCargada(tablaProceso))
+						{
+							int verificar = swapeando(tablaProceso,tabla_adm ,TLB, mensaje, serverSocket, registro_prueba, tablaAccesos);
 						}else
 						{
 							// POR ISSUE #25, SE FINALIZA EL PROCESO AUNQUE TENGA LUGAR RESPECTO A SU CANTIDAD
@@ -180,8 +191,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							mostrarVersus(tablaAccesos, registro_prueba->PID);
 							matarProceso(registro_prueba, tabla_adm, TLB, tablaAccesos);
 						}
+						upFallosPagina(tablaAccesos, registro_prueba->PID);
 					}
-					upFallosPagina(tablaAccesos, registro_prueba->PID);
 				// SI NO ESTA EN SWAP, ENTONCES okMem TIENE LA DIRECCION DEL MARCO PARA ESCRIBIR EL MENSAJE
 				}else
 				{
@@ -217,7 +228,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 											,registro_prueba->PID, registro_prueba->pagina_proceso);
 	 			// VER COMO MANDAR LA VALIDACION AL CPU QUE NO LE ESTA LLEGANDO BIEN
 	 			recibi = true;
-	 			send(socketCliente,&recibi,sizeof(bool),0);
+	 			//send(socketCliente,&recibi,sizeof(bool),0);
 	 		}
 	 		else
 	 		{
@@ -287,6 +298,7 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, int pid, int pagina, t_list* t
 	if (registro_tlb != NULL)
 	{
 		upPaginasAccedidas(tablaAccesos, registro_tlb->pid);
+		log_info(logger, " Encontre la pagina para leer en la tlb y dice -> %s", registro_tlb->direccion_fisica);
 		send(socketCliente,registro_tlb->direccion_fisica,miContexto.tamanioMarco,0);
 		return 1;
 	}
@@ -325,6 +337,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		// SI LA DIRECCION ES NULL ES PORQUE ESTA EN SWAP, SINO YA LA ENCONTRE EN MEMORIA
 		if ( pagina_proc->direccion_fisica == NULL)
 		{
+			log_info(logger, "Enontre la pagina para leer en swap");
 			if ( marcosProcesoLlenos(tabla_proc))
 			{
 				int verific = swapeando(tabla_proc,tabla_adm ,TLB, NULL, serverSocket, package, tablaAccesos);
@@ -348,7 +361,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 						sleep(miContexto.retardoMemoria);
 						// LO ESCRIBO CON EL MENSAJE QUE ME DICEN QUE LO ESCRIBA PORQUE NO TENGO QUE TRAER LO QUE YA ESTE ESCRITO DEL SWAP
 						memcpy ( marco_a_llenar->direccion_inicio, contenido, strlen(contenido));
-
+						printf("MMMMMARCO DIRECCION -> %p y NUMERO -> %d", marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
 						//AGREGO EL MARCO AHORA ESCRITO, A LA LISTA DE MARCOS ESCRITOS
 						list_add(listaFramesMemR, marco_a_llenar);
 
@@ -443,13 +456,14 @@ void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_rea
 
 	// PASO EL MARCO LIBRE A LA LISTA DE OCUPADOS
 	t_marco * marco_ocupado = marco_create(marco_vacio->direccion_inicio, marco_vacio->numero_marco);
+	printf("MMMMMARCO DIRECCION -> %p y NUMERO -> %d", marco_ocupado->direccion_inicio, marco_ocupado->numero_marco);
 	list_add(listaFramesMemR, marco_ocupado);
 
 	// ESCRIBO EN EL MARCO LA PAGINA QUE RECIBI DEL SWAP (ES PARA LECTURA)
 	strcpy(pagina_proceso->direccion_fisica, contenido);
 
 	// LIBERO EL NODO/MARCO DE LA LISTA DE MARCOS HUECOS PORQUE AHORA ESTA EN LA DE OCUPADOS.
-	list_remove_and_destroy_element(listaFramesHuecosMemR, 0,(void*)marco_hueco_destroy);
+	list_remove(listaFramesHuecosMemR, 0);
 
 	// SI LA TLB ESTA HABILITADA Y NO ESTA LLENA, ENTONCES LE CREO LA ENTRADA DE LA PAGINA LEIDA
 	pthread_mutex_lock (&mutexTLB);
@@ -504,28 +518,53 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB,
 	t_tabla_adm * registro_tabla_proc = list_find(tabla_adm, (void*)_numeroDePid);
 
 	//list_remove_by_condition(tablaAccesos, (void*)_numeroDePid); LO COMENTO HASTA QUE ME REC. LA STRUCT
+	t_marco_hueco * marco_p = list_get(listaFramesMemR,0 );
+	printf("------**PRINCIPIO**--------- MARCO NUMERO %d y DIRECCION --> %s", marco_p->numero_marco, marco_p->direccion_inicio);
 
 	if (registro_tabla_proc != NULL)
 	{
+		t_marco_hueco * marco_pru2 = list_get(listaFramesMemR,0 );
+		printf("------**TaB PROC**--------- MARCO NUMERO %d y DIRECCION --> %s", marco_pru2->numero_marco, marco_pru2->direccion_inicio);
+
 		t_list * tabla_proceso = registro_tabla_proc->direc_tabla_proc;
 
 		if (tabla_proceso != NULL)
 		{
+			t_marco_hueco * marco_pru = list_get(listaFramesMemR,0 );
+			printf("------**AFUERA WHILE**--------- MARCO NUMERO %d y DIRECCION --> %s", marco_pru->numero_marco, marco_pru->direccion_inicio);
+
 			int cantidad_paginas = tabla_proceso->elements_count;
 			int x = 0;
 			while (x < cantidad_paginas)
 			{
+				t_marco_hueco * marco_prue = list_get(listaFramesMemR,0 );
+				printf("------**WHILE**--------- MARCO NUMERO %d y DIRECCION --> %s", marco_prue->numero_marco, marco_prue->direccion_inicio);
+
 				process_pag * pagina_removida = list_remove(tabla_proceso, 0);
+
+				t_marco_hueco * marco_prue2 = list_get(listaFramesMemR,0 );
+				printf("------**ARRIBA NUM MARCO**--------- MARCO NUMERO %d y DIRECCION --> %s", marco_prue2->numero_marco, marco_prue2->direccion_inicio);
 
 				bool _numMarco (void * p)
 				{
 					return(*(char *)p == pagina_removida->marco);
 				}
 
-				if ( pagina_removida->direccion_fisica != NULL)
+				t_marco_hueco * marco_prue3 = list_get(listaFramesMemR,0 );
+				printf("------**ARRIBA IF**--------- MARCO NUMERO %d y DIRECCION --> %s", marco_prue3->numero_marco, marco_prue3->direccion_inicio);
+
+				if ( pagina_removida->direccion_fisica == NULL)
 				{
+
+				}
+				else{
+
 					//ENCONTRO PAGINA A REMOVER QUE TENIA UN MARCO ASIGNADO
-					t_marco * marco_a_remover = list_remove_by_condition(listaFramesMemR, (void*)_numMarco);
+					t_marco_hueco * marco_prueba = list_remove_by_condition(listaFramesMemR,(void*)_numMarco);
+					printf("------**ADENTRO**--------- MARCO NUMERO %d y DIRECCION --> %s", marco_prueba->numero_marco, marco_prueba->direccion_inicio);
+					puts("asd");
+					t_marco_hueco * marco_a_remover = list_remove_by_condition(listaFramesMemR, (void*)_numMarco);
+					//printf("MMMMMARCO DIRECCION -> %p y NUMERO -> %d", marco_a_remover->direccion_inicio, marco_a_remover->numero_marco);
 
 					//AGREGO EL MARCO AHORA HUECO, A LA LISTA DE MARCOS HUECOS
 					// SIGUE TENIENDO SU DIRECCION Y SU NUMERO DE MARCO, NO IMPORTA EN QUE LISTA ESTE
@@ -625,8 +664,8 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 {
 	// TRAIGO LA PRIMER PAGINA QUE SE HAYA CARGADO EN MEMORIA
 	process_pag * paginaASwapear = traerPaginaARemover(tablaProceso);
-	printf("Pagina a remover: %d \n", paginaASwapear->pag); // PRINT SOLO PARA VERIFICAR, DESPUÉS BORRAR
 	log_info(logger, "Acceso a swap: Voy a swapear para traer la pagina %d porque no tengo lugar para este proceso", header->pagina_proceso);
+	printf("Pagina a remover: %d \n", paginaASwapear->pag); // PRINT SOLO PARA VERIFICAR, DESPUÉS BORRAR
 	sleep(miContexto.retardoMemoria);
 
 	int num_pag;
@@ -715,8 +754,11 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	pthread_mutex_lock (&mutexTLB);
 	if (!strcmp(miContexto.tlbHabilitada, "SI"))
 	{
-		// TENGO QUE REMOVER EL REGISTRO QUE CONTIENE LA PAGINA QUE SWAPEE PERO NO SE COMO
-		//list_remove_by_condition(TLB, (void*)_)
+		int * posicion = malloc(sizeof(int));
+		t_header * asd =  package_create(0, header->PID, paginaASwapear->pag, 0);
+		t_tlb * tlb_reg = buscarEntradaProcesoEnTlb(TLB, asd ,posicion);
+		log_info(logger, "Borro la entrada de la TLB de la posicion-->%d", *posicion);
+		list_remove(TLB, *posicion);
 		actualizarTlb(header->PID, header->pagina_proceso, paginaASwapear->direccion_fisica, TLB, paginaASwapear->marco);
 	}
 	pthread_mutex_unlock (&mutexTLB);
@@ -988,6 +1030,23 @@ t_header * crearHeaderEscritura(int pid, int pagina, int tamanio)
 {
 	t_header * header_escritura = package_create(1, pid, pagina, tamanio);
 	return header_escritura;
+}
+
+int procesoTienePaginaCargada(t_list* tabla_proceso)
+{
+	int r = 0;
+	int cant_pag = tabla_proceso->elements_count;
+	int x = 0;
+	while (x < cant_pag)
+	{
+		process_pag * pagina = list_get(tabla_proceso, x);
+		if ( pagina->direccion_fisica != NULL)
+		{
+			r++;
+		}
+		x++;
+	}
+	return r;
 }
 
 //------SEÑALES QUE TIENE QUE RECIBIR LA MEMORIA-------------//

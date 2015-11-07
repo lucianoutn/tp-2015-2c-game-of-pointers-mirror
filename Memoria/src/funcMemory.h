@@ -155,6 +155,8 @@ void actualizarTablaProcesoClock(t_list *, int, char *, int);
 // TAMBIEN CARGO EN EL TERCER PARAMETRO (INT*) LA POSICION DE ESA ENTRADA
 t_tlb * buscarEntradaProcesoEnTlb (t_list*, t_header *, int*);
 
+// VERIFICO SI EL PROCESO YA TIENE ALGUNA PAGINA CARGDA EN MEMORIA
+int procesoTienePaginaCargada();
 
 // CUANDO TENGO QUE ESCRIBIR, Y TENGO ESPACIO PARA GUARDAR LA PAGINA (NO TENGO QUE SWAPEAR), SOLO LE MANDO UN T_HEADER DE TIPO LECTURA AL SWAP
 t_header * crearHeaderLectura(t_header*);
