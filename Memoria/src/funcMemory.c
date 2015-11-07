@@ -142,10 +142,18 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							int verific = swapeando(tablaProceso,tabla_adm ,TLB, mensaje, serverSocket, registro_prueba, tablaAccesos);
 							if (verific == 1)
 							{
-
+								puts("Verifico");
+								bool recibi = true;
+								send(socketCliente,&recibi,sizeof(bool),0);
 							}
 							else
+							{
+								puts(" NOVerifico");
+								bool recibi = false;
+								send(socketCliente,&recibi,sizeof(bool),0);
 								log_error(logger, "Error al intentar swapear");
+							}
+
 
 						}
 						else
@@ -158,7 +166,6 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							sleep(miContexto.retardoMemoria);
 							// LO ESCRIBO CON EL MENSAJE QUE ME DICEN QUE LO ESCRIBA PORQUE NO TENGO QUE TRAER LO QUE YA ESTE ESCRITO DEL SWAP
 							memcpy ( marco_a_llenar->direccion_inicio, mensaje, strlen(mensaje));
-							printf("MMMMMARCO DIRECCION -> %p y NUMERO -> %d \n", marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
 							//AGREGO EL MARCO AHORA ESCRITO, A LA LISTA DE MARCOS ESCRITOS
 							list_add(listaFramesMemR, marco_a_llenar);
 							t_marco_hueco * asd = list_get(listaFramesMemR, 0);
@@ -175,6 +182,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							// Aumento 1 a la cantidad de paginas accedidas del proceso
 							upPaginasAccedidas(tablaAccesos, registro_prueba->PID );
 							// SI NO ME QUEDAN MARCOS EN TODA LA MEMORIA PARA GUARDAR UNA PAGINA, CHAU
+							bool recibi = true;
+							send(socketCliente,&recibi,sizeof(bool),0);
 						}
 					}
 					else
@@ -183,6 +192,17 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 						if (procesoTienePaginaCargada(tablaProceso))
 						{
 							int verificar = swapeando(tablaProceso,tabla_adm ,TLB, mensaje, serverSocket, registro_prueba, tablaAccesos);
+							if(verificar)
+							{
+								puts("Verifico");
+								bool recibi = true;
+								send(socketCliente,&recibi,sizeof(bool),0);
+							}
+							else{
+								puts("No Verifico");
+								bool recibi = false;
+								send(socketCliente,&recibi,sizeof(bool),0);
+							}
 						}else
 						{
 							// POR ISSUE #25, SE FINALIZA EL PROCESO AUNQUE TENGA LUGAR RESPECTO A SU CANTIDAD
@@ -190,6 +210,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedido");
 							mostrarVersus(tablaAccesos, registro_prueba->PID);
 							matarProceso(registro_prueba, tabla_adm, TLB, tablaAccesos);
+							bool recibi = false;
+							send(socketCliente,&recibi,sizeof(bool),0);
 						}
 						upFallosPagina(tablaAccesos, registro_prueba->PID);
 					}
@@ -209,6 +231,9 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 					// ACTUALIZO EL BIT DIRTY A 1 POR HABER ESCRITO EN LA PAGINA QUE YA ESTABA EN MEMORIA
 					if (!strcmp(miContexto.algoritmoReemplazo, "CLOCK"))
 						paginaProceso->dirty = 1;
+
+					bool recibi = true;
+					send(socketCliente,&recibi,sizeof(bool),0);
 				}
 				pthread_mutex_unlock (&mutexMem);
 			}
@@ -228,7 +253,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 	 											,registro_prueba->PID, registro_prueba->pagina_proceso);
 	 			// VER COMO MANDAR LA VALIDACION AL CPU QUE NO LE ESTA LLEGANDO BIEN
 	 			recibi = true;
-	 			//send(socketCliente,&recibi,sizeof(bool),0);
+	 			send(socketCliente,&recibi,sizeof(bool),0);
 	 		}
 	 		else
 	 		{
@@ -248,8 +273,16 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 			if(flag)
 			{
 				log_info(logger, "Se hizo conexion con swap, se envio proceso a matar y este fue recibido correctamente");
+				bool recibi = true;
+				send(socketCliente,&recibi,sizeof(bool),0);
+
+				puts("Paaso");
 			}else
+			{
+				bool recibi = false;
+				send(socketCliente,&recibi,sizeof(bool),0);
 				log_error(logger, "Hubo un problema con la conexion/envio al swap");
+			}
 
 			pthread_mutex_unlock (&mutexMem);
 	 		break;
@@ -299,7 +332,9 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, int pid, int pagina, t_list* t
 	{
 		upPaginasAccedidas(tablaAccesos, registro_tlb->pid);
 		log_info(logger, " Encontre la pagina para leer en la tlb y dice -> %s", registro_tlb->direccion_fisica);
-		send(socketCliente,registro_tlb->direccion_fisica,miContexto.tamanioMarco,0);
+		bool recibi = true;
+		send(socketCliente,&recibi,sizeof(bool),0);
+		//send(socketCliente,registro_tlb->direccion_fisica,miContexto.tamanioMarco,0);
 		return 1;
 	}
 	// SI LA TLB NO ESTA HABILITADA ENTONCES TENGO QUE VERIFICAR EN LA TABLA DE TABLAS
@@ -342,7 +377,18 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 			{
 				int verific = swapeando(tabla_proc,tabla_adm ,TLB, NULL, serverSocket, package, tablaAccesos);
 				if (verific != 1)
+				{
 					log_error(logger, "Error al intentar swapear");
+					puts("No Verifico");
+					bool recibi = false;
+					send(socketCliente,&recibi,sizeof(bool),0);
+				}
+				else
+				{
+					puts("Verifico");
+					bool recibi = true;
+					send(socketCliente,&recibi,sizeof(bool),0);
+				}
 			}
 			/* SI TENGO ESPACIO PARA TRAERLA (CANT MAX DE MARCOS PARA ESE PROCESO
 			 *NO FUE ALCANZADA TODAVÍA), SI ME QUEDA MEMORIA (MARCOS) LA TRAIGO(MENTIRA)
@@ -361,7 +407,6 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 						sleep(miContexto.retardoMemoria);
 						// LO ESCRIBO CON EL MENSAJE QUE ME DICEN QUE LO ESCRIBA PORQUE NO TENGO QUE TRAER LO QUE YA ESTE ESCRITO DEL SWAP
 						memcpy ( marco_a_llenar->direccion_inicio, contenido, strlen(contenido));
-						printf("MMMMMARCO DIRECCION -> %p y NUMERO -> %d", marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
 						//AGREGO EL MARCO AHORA ESCRITO, A LA LISTA DE MARCOS ESCRITOS
 						list_add(listaFramesMemR, marco_a_llenar);
 
@@ -375,13 +420,19 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 						upPaginasAccedidas(tablaAccesos, package->PID);
 
 						log_info(logger, "Se hizo conexion con swap, se envio paquete a leer y este fue recibido correctamente");
+						puts("1");
 						lectura(package, tabla_adm, memoria_real, contenido, TLB, pagina_proc);
+						puts("2");
 						// Como la transferencia con el swap fue exitosa, le envio la pagina al CPU
-						send(socketCliente,contenido,miContexto.tamanioMarco,0);
+						bool recibi = true;
+						send(socketCliente,&recibi,sizeof(bool),0);
+						//send(socketCliente,contenido,miContexto.tamanioMarco,0);
 						return 1;
 					}
 					else
 					{
+						bool recibi= false;
+						send(socketCliente,&recibi,sizeof(bool),0);
 						log_error(logger, "Hubo un problema con la conexion/envio al swap");
 						return 0;
 					}
@@ -404,7 +455,9 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 			if (!strcmp(miContexto.tlbHabilitada, "SI"))
 					actualizarTlb(package->PID, package->pagina_proceso, pagina_proc->direccion_fisica, TLB, pagina_proc->marco);
 		 	upPaginasAccedidas(tablaAccesos, package->PID );
-			send(socketCliente,pagina_proc->direccion_fisica,sizeof(pagina_proc->direccion_fisica),0);
+		 	bool recibi = true;
+		 	send(socketCliente,&recibi,sizeof(bool),0);
+			//send(socketCliente,pagina_proc->direccion_fisica,sizeof(pagina_proc->direccion_fisica),0);
 			return 1;
 		}
 	}else
@@ -457,7 +510,6 @@ void lectura(t_header * proceso_entrante, t_list * tabla_adm, char * memoria_rea
 
 	// PASO EL MARCO LIBRE A LA LISTA DE OCUPADOS
 	t_marco * marco_ocupado = marco_create(marco_vacio->direccion_inicio, marco_vacio->numero_marco);
-	printf("MMMMMARCO DIRECCION -> %p y NUMERO -> %d", marco_ocupado->direccion_inicio, marco_ocupado->numero_marco);
 	list_add(listaFramesMemR, marco_ocupado);
 
 	// ESCRIBO EN EL MARCO LA PAGINA QUE RECIBI DEL SWAP (ES PARA LECTURA)
@@ -738,8 +790,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 			log_info(logger, "Borro la entrada de la TLB de la posicion-->%d", *posicion);
 			list_remove(TLB, *posicion);
 		}
-		if(!strcmp(miContexto.tlbHabilitada, "SI"))
-			actualizarTlb(header->PID, header->pagina_proceso, paginaASwapear->direccion_fisica, TLB, paginaASwapear->marco);
+		actualizarTlb(header->PID, header->pagina_proceso, paginaASwapear->direccion_fisica, TLB, paginaASwapear->marco);
 	}
 	pthread_mutex_unlock (&mutexTLB);
 
@@ -793,6 +844,7 @@ void actualizarTablaProcesoLru(t_list * tabla_proceso, int num_pagina, char * di
 	else
 		pagina = pag_proc_create(num_pagina, pag->direccion_fisica, pag->marco, 0, 0);
 	list_add(tabla_proceso,pagina);
+	puts("Final actualizarTablaProcesoLru");
 }
 
 void actualizarTablaProcesoFifo(t_list * tabla_proceso, int num_pagina, char * direccion_marco, int num_marco)
@@ -960,6 +1012,7 @@ void actualizarTlb (int pid, int pagina, char * direccion_memoria, t_list * TLB,
 							"Se agrega una entrada para la pagina-> %d de pid-> %d",
 								entrada_removida->pagina, entrada_removida->pid, pagina, pid);
 			list_add(TLB, reg_tlb_create(pid, pagina, direccion_memoria, marco ));
+			puts("Paso el add");
 		}
 	}
 }

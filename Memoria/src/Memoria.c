@@ -129,10 +129,10 @@ int main()
 
 	signal(SIGUSR1,flush);
 	signal(SIGUSR2,limpiar);
-	signal(SIGINT,dump);
+	signal(SIGPOLL,dump);
 
-	signal(SIGALRM,mostrarTasas);
-	alarm(15);
+	//signal(SIGALRM,mostrarTasas);
+	//alarm(15);
 
 	reciboDelCpu(memoria_real, TLB, tablaAdm, tablaAccesos);
 
@@ -255,9 +255,6 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
     fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
    // struct sockaddr_in myaddr;     // dirección del servidor
     struct sockaddr_in remoteaddr; // dirección del cliente
-    struct timeval tv;
-    tv.tv_sec=0;
-    tv.tv_usec=50000;
     int fdmax;        // número máximo de descriptores de fichero
     int listener;     // descriptor de socket a la escucha
     int newfd;        // descriptor de socket de nueva conexión aceptada
@@ -308,8 +305,9 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
     for(;;)
     {
     	read_fds = master; // cópialo
-    	if (select(fdmax+1, &read_fds, NULL, NULL, &tv) == ENOMEM) //HICE TRAMPA!!!
+    	if (select(fdmax+1, &read_fds, NULL, NULL, NULL) == ENOMEM) //HICE TRAMPA!!!
     	{
+    		puts("entro");
     		perror("select");
     		exit(1);
     	}

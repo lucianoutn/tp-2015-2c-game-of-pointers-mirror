@@ -87,7 +87,7 @@ void encolar(t_list* lstPcbs, t_queue* cola_ready)
 }
 
 //Funcion despachador, que sacar un proceso de la cola de ready y enviarlo a la CPU para su ejecucion.
-void dispatcher()
+void dispatcher(int quan)
 {
 	/*
 	 * Protocolo de mensajes Planificador -CPU
@@ -134,6 +134,10 @@ void enviaACpu(t_cpu *CPU)
 
 	//cambio estado de PCB a ejecutando
 	pcb->estado=2;
+	if(pcb->quantum==0){
+		pcb->quantum=miContexto.quantum;
+	}
+
 
 	t_headcpu *header = malloc(sizeof(t_headcpu));
 	preparoHeader(header);

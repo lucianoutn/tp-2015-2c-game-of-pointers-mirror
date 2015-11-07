@@ -75,7 +75,30 @@ int main() {
 
 	pthread_t hilo_consola, hilo_dispatcher;
 	pthread_create(&hilo_consola, NULL, (void*)consola, NULL);
+
+	if	(!strcmp(miContexto.algoritmoPlanificacion, "FIFO")){ //por FIFO
+		puts("FIFO");
+		//creo hilo despachador aca?
+		//sem_post(&semEnvioPcb);
+		miContexto.quantum = -1;
+		//dispatcher(cola_ready); //sin threads
+		/*
+		 *
+		 *si se acaba el quanto de tiempo vuelvo a encolar
+		 *si hay instruccion de entrada-salida (recibe orden del cpu) agrego el proceso a
+		  cola_bloqueados
+		 *cuando termina de ejecutar entrada-salida recibe interrupcion y saco de la
+		  cola de bloqueados y meto en la cola de ready
+		 *si termina de procesar el proceso no encolo y mato el pcb
+		 */
+
+		}
+		else{
+		//por RoundRobin
+			puts("RoundRobin");
+		}
 	pthread_create(&hilo_dispatcher, NULL, (void*)dispatcher, NULL);
+
 
 	int recivoOrden=1;
 	while (recivoOrden)
@@ -87,28 +110,7 @@ int main() {
 			{
 				encolar(lstPcbs, cola_ready);
 
-				if	(!strcmp(miContexto.algoritmoPlanificacion, "FIFO")){ //por FIFO
-					puts("FIFO");
 
-					//creo hilo despachador aca?
-					//sem_post(&semEnvioPcb);
-
-					//dispatcher(cola_ready); //sin threads
-					/*
-					 *
-					 *si se acaba el quanto de tiempo vuelvo a encolar
-					 *si hay instruccion de entrada-salida (recibe orden del cpu) agrego el proceso a
-				  	  cola_bloqueados
-				  	 *cuando termina de ejecutar entrada-salida recibe interrupcion y saco de la
-				  	  cola de bloqueados y meto en la cola de ready
-					 *si termina de procesar el proceso no encolo y mato el pcb
-					 */
-
-				}
-				else{
-				//por RoundRobin
-					puts("RoundRobin");
-				}
 				break;
 			}
 			case 1: //orden salir
