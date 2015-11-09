@@ -108,6 +108,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				if (!strcmp(miContexto.algoritmoReemplazo, "CLOCK"))
 					paginaProceso->dirty = 1;
 				printf ("SE ESCRIBIO CORRECTAMENTE PORQUE ESTABA EN LA TLB \n");
+
+				// PAGINA ACCEDIDA
 			}
 			// SI NO ESTABA EN LA TLB, AHORA ME FIJO SI ESTA EN LA TABLA DE TABLAS
 			else
@@ -142,7 +144,9 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							int verific = swapeando(tablaProceso,tabla_adm ,TLB, mensaje, serverSocket, registro_prueba, tablaAccesos);
 							if (verific == 1)
 							{
-								puts("Verifico");
+								upFallosPagina(tablaAccesos, registro_prueba->PID);
+								upPaginasAccedidas(tablaAccesos, registro_prueba->PID);
+								puts(" KKKKKKKKKKKKKKK HICE UN FALLO KKKKKKKKKKKKK");
 								bool recibi = true;
 								send(socketCliente,&recibi,sizeof(bool),0);
 							}
@@ -179,8 +183,12 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							// ACTUALIZO LA TABLA DEL PROCESO CON LA DRIECCION FISICA, DEPENDIENDO EL ALGORITMO DEL CONTEXTO
 							actualizoTablaProceso(tablaProceso, marco_a_llenar, registro_prueba);
 
-							// Aumento 1 a la cantidad de paginas accedidas del proceso
+							// Aumento 1 la cantidad de paginas accedidas del proceso
 							upPaginasAccedidas(tablaAccesos, registro_prueba->PID );
+							// Aumento 1 la cantidad de fallos de pagina porque la fui a buscar al swap
+							upFallosPagina(tablaAccesos, registro_prueba->PID);
+							puts(" KKKKKKKKKKKKKKK HICE UN FALLO KKKKKKKKKKKKK");
+
 							// SI NO ME QUEDAN MARCOS EN TODA LA MEMORIA PARA GUARDAR UNA PAGINA, CHAU
 							bool recibi = true;
 							send(socketCliente,&recibi,sizeof(bool),0);
@@ -194,7 +202,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							int verificar = swapeando(tablaProceso,tabla_adm ,TLB, mensaje, serverSocket, registro_prueba, tablaAccesos);
 							if(verificar)
 							{
-								puts("Verifico");
+								upFallosPagina(tablaAccesos, registro_prueba->PID);
+								puts(" KKKKKKKKKKKKKKK HICE UN FALLO KKKKKKKKKKKKK");
 								bool recibi = true;
 								send(socketCliente,&recibi,sizeof(bool),0);
 							}
@@ -213,7 +222,7 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 							bool recibi = false;
 							send(socketCliente,&recibi,sizeof(bool),0);
 						}
-						upFallosPagina(tablaAccesos, registro_prueba->PID);
+						//upFallosPagina(tablaAccesos, registro_prueba->PID);
 					}
 				// SI NO ESTA EN SWAP, ENTONCES okMem TIENE LA DIRECCION DEL MARCO PARA ESCRIBIR EL MENSAJE
 				}else
@@ -385,7 +394,8 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 				}
 				else
 				{
-					puts("Verifico");
+					upPaginasAccedidas(tablaAccesos, package->PID);
+					upFallosPagina(tablaAccesos, package->PID);
 					bool recibi = true;
 					send(socketCliente,&recibi,sizeof(bool),0);
 				}
@@ -420,13 +430,12 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 						upPaginasAccedidas(tablaAccesos, package->PID);
 
 						log_info(logger, "Se hizo conexion con swap, se envio paquete a leer y este fue recibido correctamente");
-						puts("1");
 						lectura(package, tabla_adm, memoria_real, contenido, TLB, pagina_proc);
-						puts("2");
 						// Como la transferencia con el swap fue exitosa, le envio la pagina al CPU
 						bool recibi = true;
 						send(socketCliente,&recibi,sizeof(bool),0);
-						//send(socketCliente,contenido,miContexto.tamanioMarco,0);
+						upFallosPagina(tablaAccesos, package->PID);
+
 						return 1;
 					}
 					else
@@ -798,8 +807,8 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
 	list_add(tablaProceso, pag_proc_create(paginaASwapear->pag, NULL, -1, 0, 0));
 
-	upPaginasAccedidas(tablaAccesos, header->PID);
-	upFallosPagina(tablaAccesos, header->PID);
+	//upPaginasAccedidas(tablaAccesos, header->PID);
+	//upFallosPagina(tablaAccesos, header->PID);
 
 	return 1;
 }
@@ -1037,6 +1046,8 @@ void upFallosPagina(t_list* tablaAccesos, int pid)
 
 	t_versus * reg = list_find(tablaAccesos, (void*)_numeroDePid);
 	reg->cantFallosPag++;
+
+	printf("KKKKKKKKKKKKKKKKKK AHORA VAN %d FALLOS", reg->cantFallosPag);
 
 }
 
