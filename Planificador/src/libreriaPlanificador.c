@@ -65,12 +65,11 @@ void *escuchar (struct Conexiones* conexion){
 
 void encolar(t_list* lstPcbs, t_queue* cola_ready)
 {
-	char *ruta=(char*)malloc(sizeof(char));
-
+	char *ruta=(char*)malloc(sizeof(char) * 30);
 	//pido la ruta del archivo
 	puts("Ingrese el nombre del archivo que desea correr:");
 	fflush(stdin);
-	fgets(ruta, 20, stdin); //20 es el tamaño maximo de la ruta a ingresar
+	fgets(ruta, 30, stdin); //20 es el tamaño maximo de la ruta a ingresar
 	int tamanio=strlen(ruta);
 	ruta[tamanio-1]='\0'; //agrego el caracter nulo al final de la ruta para que se indentifique como string.
 

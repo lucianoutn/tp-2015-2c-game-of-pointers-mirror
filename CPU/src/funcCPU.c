@@ -80,18 +80,18 @@ int palabraAValor(char *palabra)
 /* Recibe una instruccion y una variable para la pagina
  * y devuelve el numero del tipo de instruccion y la pagina
  */
-int procesaInstruccion(char* instruccion, int *pagina){
+int procesaInstruccion(char* instruccion, int *pagina, char* mensaje){
 
 	//Inicializo variables y reservo memoria
-	int I=0, J=0, valor;
+	int I=0, J=0, K=0, valor;
 	char *palabra=(char*) malloc(sizeof(char));
 	char *aux=(char*) malloc(sizeof(char));
+	char *texto=(char*) malloc(sizeof(char));
 
 	//CONTROLO QUE NO SE TERMINE LA PALABRA
 	while(instruccion[I]!= ' ')
 	{
-		if(instruccion[I]== '\0')
-			break;
+		if(instruccion[I]== '\0')	break;
 		palabra[I]=instruccion[I];
 		I++;
 		palabra= (char*)realloc(palabra, (I+1)*sizeof(char));
@@ -101,8 +101,9 @@ int procesaInstruccion(char* instruccion, int *pagina){
 
 	I++;	//incremento para ver el valor de instruccion
 	//CONTROLO QUE NO SE TERMINE LA INSTRUCCION
-	while(instruccion[I] != '\0')
+	while(instruccion[I] != ' ')
 	{
+		if(instruccion[I]=='\0') break;
 		aux[J]=instruccion[I];
 		aux= (char*)realloc(aux, (J+1)*sizeof(char));
 		I++; J++;
@@ -110,9 +111,32 @@ int procesaInstruccion(char* instruccion, int *pagina){
 	//Convierto a int la cadena y guardo el valor para liberar memoria
 	*pagina = atoi(aux);
 
+	//I++;	//incremento para ver el texto a escribir
+	//CONTROLO QUE NO SE TERMINE LA INSTRUCCION
+	int H=1;
+	I++;
+	while(instruccion[I] != '\0')
+	{
+		if (instruccion[I] == '\"'){
+			if (H==0){
+				texto[K]='\0';
+				break;
+			}else{
+				H--;
+			}
+		}else{
+			texto[K]=instruccion[I];
+			texto= (char*)realloc(texto, (K+1)*sizeof(char));
+			K++;
+		}
+		I++;
+	}
+	strcpy(mensaje, texto);
+
 	//Libero memoria
 	free(palabra);
 	free(aux);
+	free(texto);
 
 	//Retorno el valor del tipo de instruccion
 	return valor;
@@ -125,6 +149,7 @@ int procesaInstruccion(char* instruccion, int *pagina){
 void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 
 	int pagina = 0;
+	char *mensaje;
 	//reservo espacio para el header
 	t_header *header = malloc(sizeof(t_header));
 
@@ -151,7 +176,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 			break;
 		}
 		//Switch que verifica el tipo de cada instruccion
-		switch(procesaInstruccion(instrucciones[PCB->instructionPointer],&pagina))
+		switch(procesaInstruccion(instrucciones[PCB->instructionPointer],&pagina,mensaje))
 		{
 
 			case 0: //leer
@@ -172,9 +197,19 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 
 				//HAY QUE AGREGAR EL CAMPO PARA EL MSJ Y MANDARLO
 				puts("ESCRIBIR");
+				printf("Mensaje recibido: <%s>\nTamaño: %d.\n",mensaje,strlen(mensaje));
 				creoHeader(PCB,header,1,pagina); //PCB HEADER TIPOEJECUCION PAGINA
-				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
+				header->tamanio_msj = strlen(mensaje);
+				/*struct {
+					t_header head;
+					char *msj;
+				}auxiliar;
+				auxiliar.head = *header;
+				auxiliar.msj = (char*)malloc(sizeof(char) * header->tamanio_msj);
+				strcpy(auxiliar.msj,mensaje);
+				send(socketMemoria, &auxiliar, sizeof(auxiliar), 0);*/
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
+				send(socketMemoria, mensaje, header->tamanio_msj,0);	//envio el texto a excribir
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
 				sleep(configuracion.retardo); //retardo del cpu
 				if(recibi)	//Controlo que haya llegado bien
@@ -288,7 +323,7 @@ void iniciarCPU(t_cpu *CPUS){
 	{
 		puts("Esperando Instrucciones...\n");
 		//CPU a la espera de nuevas instrucciones
-		sem_wait(semProduccionMsjs); //semaforo productor-consumidor
+		//sem_wait(semProduccionMsjs); //semaforo productor-consumidor
 		puts("ANTES DEL RECV");
 		status = recv(CPUS->socket, header, sizeof(t_headcpu),0);
 		puts("DESPUES DEL RECV");

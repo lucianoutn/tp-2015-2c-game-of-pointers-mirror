@@ -108,7 +108,8 @@ void ejecutoInstruccion(t_header * registro_prueba, char * mensaje,char *  memor
 				if (!strcmp(miContexto.algoritmoReemplazo, "CLOCK"))
 					paginaProceso->dirty = 1;
 				printf ("SE ESCRIBIO CORRECTAMENTE PORQUE ESTABA EN LA TLB \n");
-
+				bool recibi = true;
+				send(socketCliente,&recibi,sizeof(bool),0);
 				// PAGINA ACCEDIDA
 			}
 			// SI NO ESTABA EN LA TLB, AHORA ME FIJO SI ESTA EN LA TABLA DE TABLAS

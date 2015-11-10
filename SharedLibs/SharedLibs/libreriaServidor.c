@@ -30,7 +30,10 @@ int crearServer(const char *PUERTO)
 
 	//se comprueba que la asociacion fue exitosa
 	int B = bind(listenningSocket, serverInfo->ai_addr, serverInfo->ai_addrlen);
-	if (B == -1) perror("BIND");
+	if (B == -1) {
+		perror("BIND Y LA P@%#\n");
+		abort();
+	}
 
 	freeaddrinfo(serverInfo);
 

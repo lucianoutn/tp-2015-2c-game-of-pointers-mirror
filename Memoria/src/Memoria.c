@@ -360,12 +360,13 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
     							if(j!=listener)
     							{
     								printf ("El tipo de ejecucion recibido es %d \n", package->type_ejecution);
-
-    								char * mensaje = malloc(package->tamanio_msj);
+    								char * mensaje = (char*)malloc(sizeof(char) * package->tamanio_msj);;
 
     								if(package->type_ejecution==1) //Escritura
     								{
     									recv(i,mensaje, package->tamanio_msj, 0);
+    									mensaje[package->tamanio_msj] = '\0';
+    									printf("Mensaje recibido: <%s>  Tamaño: %d.\n",mensaje,package->tamanio_msj);
     								}
     								else
     								{

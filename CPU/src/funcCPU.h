@@ -19,6 +19,7 @@
 #include "SharedLibs/manejoListas.h"
 #include "SharedLibs/comun.h"
 #include "commons/process.h"
+#include "commons/string.h"
 #include <commons/config.h>
 #include <semaphore.h>
 #include "mAnsisOp.h"
@@ -116,7 +117,7 @@ void creoHeader(t_pcb *, t_header*,int,int);
 
 int palabraAValor(char *palabra);
 
-int procesaInstruccion(char*,int *);
+int procesaInstruccion(char*,int *, char*);
 
 void ejecutoPCB(int,int, t_pcb *);
 
