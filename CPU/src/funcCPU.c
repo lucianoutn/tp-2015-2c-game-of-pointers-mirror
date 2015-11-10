@@ -271,12 +271,12 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 
 
 
-void iniciarCPU(t_sockets *sockets){
+void iniciarCPU(t_cpu *CPUS){
 
 	//pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
 	//unsigned int tid = process_get_thread_id(); //no borrar puede servir mas adelante
 	//printf("CPU hilo ID: %d conectado\n", tid); //se puede usar "htop" en la consola para verlos
-	printf("CPU hilo ID: %d conectado\n", sockets->numeroCPU); //se puede usar "htop" en la consola para verlos
+	printf("CPU NUMERO: %d conectada\n", CPUS->numeroCPU); //se puede usar "htop" en la consola para verlos
 	//printf("CPU hilo ID: %lu conectado\n", pthread_self());
 	int status=1;		// Estructura que manjea el status de los recieve.
 
@@ -289,7 +289,7 @@ void iniciarCPU(t_sockets *sockets){
 		//CPU a la espera de nuevas instrucciones
 		sem_wait(semProduccionMsjs); //semaforo productor-consumidor
 		puts("ANTES DEL RECV");
-		status = recv(sockets->socketPlanificador, header, sizeof(t_headcpu),0);
+		status = recv(CPUS->socket, header, sizeof(t_headcpu),0);
 		puts("DESPUES DEL RECV");
 		if(status!=0)	//CONTROLA QUE NO SE PIERDA LA CONEXION
 
@@ -319,7 +319,7 @@ void iniciarCPU(t_sockets *sockets){
 
 				printf("PCB Recibido. PID:%d\n",PCB->PID);
 				//ejecuto
-				ejecutoPCB(sockets->socketMemoria,sockets->socketPlanificador,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
+				ejecutoPCB(sockets->socketMemoria,CPUS->socket,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
 
 				break;
 			}
@@ -342,7 +342,7 @@ void iniciarCPU(t_sockets *sockets){
 
 	//CIERRO LOS SOCKETS Y EL HEADER
 	free(header);
-	close(sockets->socketPlanificador);
+	close(CPUS->socket);
 	close(sockets->socketMemoria);
 
 }
@@ -350,19 +350,25 @@ void iniciarCPU(t_sockets *sockets){
 /*Configuraciones basicas de los Sockets
  * y los Logs para el CPU
  */
-int configuroSocketsYLogs (t_sockets *sockets){
+int configuroSocketsYLogs (){
 	cargoArchivoConfiguracion(); //carga las configuraciones basicas
 	creoLogger(1);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
 	log_info(logger, "Inicio Log CPU", NULL);
 	puts("Conexion con el Planificador");
-	sockets->socketPlanificador = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
-	if (sockets->socketPlanificador==-1){	//controlo error
+	int i = 0;
+	CPU = (t_cpu*)malloc(sizeof(t_cpu) * (configuracion.cantHilos));
+	while(i < configuracion.cantHilos){
+		CPU[i].socket = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
+		if (CPU[i].socket==-1){	//controlo error
 			puts("No se pudo conectar con el Planificador");
 			perror("SOCKET PLANIFICADOR!");
 			log_error(logger,"No se pudo conectar con el Planificador");
 			abort();
+		}
+		i++;
 	}
 
+	sockets = malloc(sizeof(t_sockets));
 	puts("Conexion con la Memoria");
 	sockets->socketMemoria = crearCliente(configuracion.ipMemoria, configuracion.puertoMemoria);//conecta con la memoria
 	if (sockets->socketMemoria==-1){		//controlo error

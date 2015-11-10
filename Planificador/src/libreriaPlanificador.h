@@ -54,6 +54,11 @@ typedef struct{
 
 contexto miContexto;
 
+typedef struct{
+	int socket;
+	bool enUso;
+} t_cpu;
+
 //struct para conexiones
 struct Conexiones {
 	int socket_escucha;					// Socket de conexiones entrantes

@@ -89,16 +89,6 @@ void encolar(t_list* lstPcbs, t_queue* cola_ready)
 //Funcion despachador, que sacar un proceso de la cola de ready y enviarlo a la CPU para su ejecucion.
 void dispatcher()
 {
-	/*
-	 * Protocolo de mensajes Planificador -CPU
-	 * Para poder entender los distintos tipos de mensajes que se envia, mandamos primero
-	 * un header t_headcpu.
-	 * tipo_ejecucion: 0 - salir
-	 * 				   1 - correr programa
-	 * 				   envia PCB
-	 * tamanio_mensaje: tamanio del char * o del PCB
-	 */
-
 	pthread_t hilo_CPU[miContexto.cantHilosCpus];
 
 	puts ("DISPATCHER");
@@ -130,7 +120,7 @@ void enviaACpu(t_cpu *CPU)
 	//CPU DISPONIBLE  saco de la cola y envio msj
 	t_pcb *pcb = queue_pop(cola_ready);
 	//chequeo el flag FINALIZAR. si esta prendido le pogno el IP al final, para cuando vuelva a ejecutar finalice. lucho
-	if (pcb->finalizar) pcb->instructionPointer = pcb->numInstrucciones; //esto esta mal, va a pinchar en algun momento. Agus
+	if (pcb->finalizar) {pcb->instructionPointer = pcb->numInstrucciones; puts("QUIERO FINALIZAR");} //esto esta mal, va a pinchar en algun momento.
 
 	//cambio estado de PCB a ejecutando
 	pcb->estado=2;
@@ -138,14 +128,16 @@ void enviaACpu(t_cpu *CPU)
 		pcb->quantum=miContexto.quantum;
 	}
 
+	if(pcb->quantum >= 0) printf("mande un quantum de: %d\n y el socket es: %d\n", pcb->quantum, CPU->socket); //teste
 
 	t_headcpu *header = malloc(sizeof(t_headcpu));
 	preparoHeader(header);
-	//Envio el header
-	printf("mande un quantum de: %d\n y el socket es: %d\n", pcb->quantum, CPU->socket); //teste
 
+	//Envio el header
 	send(CPU->socket, header, sizeof(t_headcpu),0);
 	puts("PCB enviado a la CPU para procesamiento\n");
+
+	//free(header);
 
 	sem_post(semProduccionMsjs);
 
@@ -181,6 +173,7 @@ void enviaACpu(t_cpu *CPU)
 			//si vuelve a estado ready es pq termino el cuanto
 			//encolo denuevo en la cola de readys pq termino el cuanto pero no termino de usar la cpu
 			queue_push(cola_ready, pcb);
+			sem_post(&semEnvioPcb);
 			break;
 		}
 		case 3: //bloqueado
@@ -188,6 +181,7 @@ void enviaACpu(t_cpu *CPU)
 			//proceso en cola de bloqueados
 			//queue_push(cola_block, pcb);
 			//bloqueo el pcb
+			puts("PCB BLOQUEADO");
 			sleep(5); //cambiar
 			//lo vuelve a meter en la cola de readys
 			queue_push(cola_ready, pcb);
@@ -195,6 +189,7 @@ void enviaACpu(t_cpu *CPU)
 		}
 		case 4: //finalizado
 		{
+			puts("FINALIZO");
 			//libero todo el PCB!
 			//lo saco de la cola NO DE LA LISTA
 			//free(pcb); //no lo liberen aca xq dsp no los puedo ver como finalizados en el comando PS. luego podemos liberarlos desde la lista
@@ -206,19 +201,8 @@ void enviaACpu(t_cpu *CPU)
 		}
 	}
 
-	//sem_wait(semRespuestaCpu); preparo semaforos x si no bloquea al rcv. lucho
-
-	/*flag recibi = false;
-
-	recv(conexiones.CPUS[I].socket, &recibi, sizeof(flag),0);
-	if(recibi)
-		puts("RECIBI OK");
-	else
-		puts("RECIBI FAIL");*/
-
 	//libero la cpu
 	CPU->enUso = false;
-	//sem_post(&semEnvioPcb); lo comento xq no se quiere enviar otro PCB cuando termina de ejecutar. Agus
 	sem_post(&semCpuLibre);
 }
 

@@ -19,16 +19,7 @@
 #include <semaphore.h>
 #include "comun.h"
 
-//#define MAX_CPUS 4
-
-typedef struct{
-	int socket;
-	bool enUso;
-} t_cpu;
-
-
 sem_t semEsperaCPU;
-
 
 int crearServer ( const char *PUERTO);
 

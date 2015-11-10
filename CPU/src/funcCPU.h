@@ -78,9 +78,9 @@ typedef struct{
 
 //empaqueto los sockets para poder pasarle al hilo mas de un parametro (lucho)
 typedef struct {
-	int socketPlanificador;
+	//int socketPlanificador;
 	int socketMemoria;
-	int numeroCPU;
+	//int numeroCPU;
 }t_sockets;
 
 //preparo semaforos.lucho
@@ -94,9 +94,15 @@ pthread_mutex_t mutex;
 //ptrhead_mutex_unlock(&mutex);
 //fin semaforos
 
+typedef struct {
+	pthread_t hilo;
+	int socket;
+	int numeroCPU;
+}t_cpu;
 
+t_cpu *CPU;
 
-pthread_t cpu[0];
+//pthread_t cpu[0];
 
 t_sockets *sockets;
 
@@ -114,8 +120,8 @@ int procesaInstruccion(char*,int *);
 
 void ejecutoPCB(int,int, t_pcb *);
 
-void iniciarCPU(t_sockets *);
+void iniciarCPU(t_cpu *);
 
-int configuroSocketsYLogs (t_sockets *);
+int configuroSocketsYLogs ();
 
 #endif /* FUNCCPU_H_ */
