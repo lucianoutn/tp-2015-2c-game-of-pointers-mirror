@@ -43,17 +43,6 @@ typedef struct
 }process_pag;
 // ------------------------------------//
 
-
-typedef struct{
-			char * memoria;
-			t_list *tabla_adm;
-			t_list *tlb;
-		}parametros;
-
-pthread_mutex_t mutexTLB;
-pthread_mutex_t mutexMem;
-pthread_mutex_t mutexDump;
-
 //DECLARACIONES GLOBALES PARA MOSTRAR TASA DE ACIERTOS DE LA TLB.
 int cantAccesosTlb;
 int cantHitTlb;
@@ -194,7 +183,7 @@ int removerEntradasTlb(t_list *, t_header*);
 //------SEÑALES QUE TIENE QUE RECIBIR LA MEMORIA-------------//
 void tlbFlush(t_list *);
 
-void limpiarMemoria(void *);
+void limpiarMemoria(char *, t_list*, t_list*);
 
 void dumpEnLog();
 //-----------------------------------------------------------//
