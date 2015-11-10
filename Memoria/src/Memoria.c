@@ -61,78 +61,31 @@ int main()
 		cantHitTlb=0;
 	}
  	//Me quedo atenta a las señales, y si las recibe ejecuta esa funcion
-	// Se inicializa el mutex
-	pthread_t senial[3];
-	pthread_mutex_init (&mutexTLB, NULL);
-	pthread_mutex_init (&mutexMem, NULL);
 	void flush ()
 		{
 			log_info(logger, "Se recibio SIGUSR1, si corresponde se vacia la TLB \n");
-			int err= pthread_create(&(senial[0]), NULL, (void*)tlbFlush,TLB);
-			if (err != 0)
-				printf("no se pudo crear el hilo de TLBFlush :[%s]", strerror(err));
-			pthread_join(senial[0], NULL);
+			sleep(3);
+			tlbFlush(TLB);
 			log_info(logger, "Tratamiento de la señal SIGUSR1 terminado. \n");
 		}
-		void limpiar()
-		{
-			log_info(logger, "Se recibio SIGUSR2, se limpia la memoria \n");
-			parametros * param=malloc(sizeof(parametros));
-
-			param->memoria= memoria_real;
-			param->tabla_adm = tablaAdm;
-			param->tlb=TLB;
-
-			//printf("La direccion de la mem real es: %p \n",memoria_real);
-
-			int err= pthread_create(&(senial[0]), NULL, (void*)limpiarMemoria,param);
-			if (err != 0)
-				printf("No se pudo crear el hilo de limpiarMemoria :[%s]", strerror(err));
-			//pthread_join(senial[0], NULL);
-
-			log_info(logger, "Se finalizo el tratamiento de la señal SIGUSR2 \n");
-		}
-		void dump()
-		{
-			log_info(logger, "Se rcibio SIGPOLL, se muestra el contenido de la memoria actualmente \n");
-			pid_t idProceso;
-			idProceso =fork();
-			switch(idProceso)
-			{
-			case -1:
-				log_error(logger,"Error en la creacion del hijo \n");
-				break;
-			case 0:
-
-				dumpEnLog(memoria_real,tablaAdm);
-				exit(0);
-				break;
-
-			default:
-				sleep(1);
-				//puts("Entro al default");
-
-			}
-			log_info(logger, "Tratamiento de la señal SIGPOLL terminado \n");
-		}
-
-	void mostrarTasas()
+	void limpiar()
 	{
-		if (!strcmp(miContexto.tlbHabilitada,"SI"))
-			tasasDeTLB();
-
-		signal(SIGALRM,mostrarTasas);
-
-		alarm(60);
-
+		log_info(logger, "Se recibio SIGUSR2, se limpia la memoria \n");
+		sleep(3);
+		limpiarMemoria(memoria_real, TLB,tablaAdm);
+		log_info(logger, "Se finalizo el tratamiento de la señal SIGUSR2 \n");
+	}
+	void dump()
+	{
+		log_info(logger, "Se rcibio SIGPOLL, se muestra el contenido de la memoria actualmente \n");
+		sleep(3);
+		dumpEnLog(memoria_real,tablaAdm);
+		log_info(logger, "Tratamiento de la señal SIGPOLL terminado \n");
 	}
 
-	signal(SIGUSR1,flush);
+	signal(SIGINT,flush);
 	signal(SIGUSR2,limpiar);
 	signal(SIGPOLL,dump);
-
-	//signal(SIGALRM,mostrarTasas);
-	//alarm(15);
 
 	reciboDelCpu(memoria_real, TLB, tablaAdm, tablaAccesos);
 
@@ -142,8 +95,6 @@ int main()
 	list_destroy_and_destroy_elements(listaFramesHuecosMemR,(void*)marco_hueco_destroy);
 	list_destroy_and_destroy_elements(listaFramesMemR,(void*)marco_destroy);
 	log_destroy(logger);
-
-//	pthread_kill(senial[0],3);
 	return 1;
 }
 
@@ -262,12 +213,17 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
     int yes=1;        // para setsockopt() SO_REUSEADDR, más abajo
     int addrlen;
     int i, j;
+    int r_select;
+
+    int cronometro=0;
     FD_ZERO(&master);    // borra los conjuntos maestro y temporal
     FD_ZERO(&read_fds);        // obtener socket a la escucha
 
     struct addrinfo hints; //estructura que almacena los datos de conexion
     struct addrinfo *serverInfo; //estructura que almacena los datos de conexion
-
+    struct timeval tv;
+    tv.tv_sec=1;
+    tv.tv_usec=0;
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = AF_UNSPEC;		// No importa si uso IPv4 o IPv6
     hints.ai_flags = AI_PASSIVE;// Asigna el address del localhost: 127.0.0.1
@@ -305,12 +261,31 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
     for(;;)
     {
     	read_fds = master; // cópialo
-    	if (select(fdmax+1, &read_fds, NULL, NULL, NULL) == ENOMEM) //HICE TRAMPA!!!
+    	r_select=select(fdmax+1, &read_fds, NULL, NULL,	NULL); //HICE TRAMPA!!!
+    	if(r_select == EINTR)
     	{
-    		puts("entro");
+    		puts("Capture una señal \nnn");
+    	}
+    	else if (r_select== -1)
+    	{
     		perror("select");
     		exit(1);
     	}
+    	else if(r_select)
+    	{
+    		puts("Hay dato \n");
+    	}
+    	/*
+    	else
+    	{
+    		cronometro=cronometro+1;
+    		if(cronometro==60)
+    		{
+    			cronometro=0;
+    			tasasDeTLB();
+    		}
+    	}
+    	*/
     	// explorar conexiones existentes en busca de datos que leer
     	for(i = 0; i <= fdmax; i++)
     	{
