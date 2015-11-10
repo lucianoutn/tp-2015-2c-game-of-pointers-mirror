@@ -109,7 +109,13 @@ int leerDesdeTlb(int , t_list * , int, int, t_list*);
 void iniciarProceso(t_list*, t_header*, t_list*);
 
 /* BUSCA SI LA PAGINA A ESCRIBIR YA ESTA CARGADA EN TLB, SI LO ESTA LA ESCRIBE Y DEVUELVE 1, SINO DEVUELVE 0 */
-int verificarTlb (t_list *,int, char*, t_header *, t_list*);
+int escribirDesdeTlb (t_list *,int, char*, t_header *, t_list*, t_list*, int);
+
+// ABSTRACCION DE TODO LO QUE HACE EL ESCRIBIR
+void escribirEnMemReal(t_header*, t_list*, t_list*, t_list*, int, int, char*);
+
+// ASIGNA UN MARCO A UNA PAGINA RECIEN TRAIDA DEL SWAP, ACTUALIZA TABLA PROCESO, TLB
+void asignarMarcoPagSwap(t_header*,char*, t_list*, t_list*, t_list*, int);
 
 int swapeando(t_list*, t_list* , t_list *, char *, int, t_header *, t_list*);
 
