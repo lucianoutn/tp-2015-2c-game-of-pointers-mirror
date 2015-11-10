@@ -278,7 +278,10 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 			}
 		}
 			//Disminuyo el quanto
-			PCB->quantum--;
+			if(PCB->quantum>0)
+			{
+				PCB->quantum--;
+			}
 			//PASO A LA OTRA INSTRUCCION
 			PCB->instructionPointer	++;
 
@@ -404,7 +407,7 @@ int configuroSocketsYLogs (){
 		i++;
 	}
 
-	sockets = malloc(sizeof(t_sockets));
+	sockets = (t_sockets*)malloc(sizeof(t_sockets));
 	puts("Conexion con la Memoria");
 	sockets->socketMemoria = crearCliente(configuracion.ipMemoria, configuracion.puertoMemoria);//conecta con la memoria
 	if (sockets->socketMemoria==-1){		//controlo error

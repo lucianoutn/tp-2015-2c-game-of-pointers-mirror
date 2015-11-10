@@ -7,8 +7,8 @@
 
 #include "libreriaPlanificador.h"
 
-key_t key_pcb=1235; //clave de la seccion memoria pcb
-key_t key_ruta=3212; //cable de la seccion memoria ruta
+int key_pcb=1235; //clave de la seccion memoria pcb
+int key_ruta=3212; //cable de la seccion memoria ruta
 
 
 
@@ -65,11 +65,11 @@ void *escuchar (struct Conexiones* conexion){
 
 void encolar(t_list* lstPcbs, t_queue* cola_ready)
 {
-	char *ruta=(char*)malloc(sizeof(char) * 30);
+	char *ruta=(char*)malloc(sizeof(char));
 	//pido la ruta del archivo
 	puts("Ingrese el nombre del archivo que desea correr:");
 	fflush(stdin);
-	fgets(ruta, 30, stdin); //20 es el tamaño maximo de la ruta a ingresar
+	fgets(ruta, 30, stdin); //30 es el tamaño maximo de la ruta a ingresar
 	int tamanio=strlen(ruta);
 	ruta[tamanio-1]='\0'; //agrego el caracter nulo al final de la ruta para que se indentifique como string.
 
@@ -185,11 +185,9 @@ void enviaACpu(t_cpu *CPU)
 		}
 		case 3: //bloqueado
 		{
-			//proceso en cola de bloqueados
-			//queue_push(cola_block, pcb);
 			//bloqueo el pcb
 			printf("PCB BLOQUEADO %d segundos\n",tiempo);
-			sleep(tiempo); //cambiar
+			sleep(tiempo);
 			//lo vuelve a meter en la cola de readys
 			queue_push(cola_ready, pcb);
 			sem_post(&semEnvioPcb);
@@ -216,14 +214,14 @@ void enviaACpu(t_cpu *CPU)
 //Funcion que permite procesar el PCB creado a partir del comando correr PATH
 t_pcb* procesarPCB(char *path)
 {
-	long id_pcb = shmget((key_t)(PID_actual + 1500), sizeof(t_pcb),(0666 | IPC_CREAT));
+	long id_pcb = shmget((key_t)(PID_actual + key_pcb), sizeof(t_pcb),(0666 | IPC_CREAT));
 	//long id_pcb = shmget(key_pcb, sizeof(t_pcb),(0666 | IPC_CREAT));//reservo espacio dentro de la seccion de memoria compartida
 	t_pcb *pcb;
 	pcb = (t_pcb*)shmat(id_pcb, 0, 0); //creo la variable y la asocio al segmento
 	if (pcb == (t_pcb*)(-1))		//capturo error del shmat
 		perror("shmat pcb");
 
-	long id_ruta = shmget((key_t)(PID_actual + 3000), sizeof(char*),(0666 | IPC_CREAT));
+	long id_ruta = shmget((key_t)(PID_actual + key_ruta), sizeof(char*),(0666 | IPC_CREAT));
 	//long id_ruta = shmget(key_ruta, sizeof(char*),(0666 | IPC_CREAT)); //reservo espacio dentro de la seccion de memoria compartida
 	pcb->ruta = (char*)shmat(id_ruta, 0, 0); //creo la variable y la asocio al segmento
 	if (pcb->ruta == (char*)(-1))		//capturo error del shmat
@@ -247,12 +245,8 @@ t_pcb* procesarPCB(char *path)
 void preparoHeader(t_headcpu *header, int PID)
 {
 	header->tipo_ejecucion= 1;	//Orden de envio de pcb
-	header->clave_pcb=(key_t)(PID + 1500);
-	header->clave_ruta=(key_t)(PID + 3000);
-	//header->clave_pcb=key_pcb;
-	//header->clave_ruta=key_ruta;
-	//key_pcb++;
-	//key_ruta++;
+	header->clave_pcb=(key_t)(PID + key_pcb);
+	header->clave_ruta=(key_t)(PID + key_ruta);
 	
 }
 

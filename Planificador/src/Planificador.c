@@ -63,8 +63,6 @@ int main() {
 
 	//Se crea la cola de ready's
 	cola_ready = queue_create();
-	//Se crea la cola de bloqueados
-	//cola_block = queue_create();
 	//creo la lista de TODOS los pcb
 	lstPcbs= list_create();
 
