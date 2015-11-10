@@ -131,7 +131,7 @@ void enviaACpu(t_cpu *CPU)
 	if(pcb->quantum >= 0) printf("mande un quantum de: %d\n y el socket es: %d\n", pcb->quantum, CPU->socket); //teste
 
 	t_headcpu *header = malloc(sizeof(t_headcpu));
-	preparoHeader(header);
+	preparoHeader(header, pcb->PID);
 
 	//Envio el header
 	send(CPU->socket, header, sizeof(t_headcpu),0);
@@ -142,12 +142,15 @@ void enviaACpu(t_cpu *CPU)
 	sem_post(semProduccionMsjs);
 
 	log_info(logger,"Comienzo ejecucion PID: %d Nombre: %s", pcb->PID, pcb->ruta);
-
+	puts("PASO SEMAFORO");
 	//ESPERO RESPUESTA CON RCV
 	flag termino=false;
 	recv(CPU->socket, &termino, sizeof(flag),0);		//espero recibir la respuesta
 	if(termino)	//Controlo que haya llegado bien
 		puts("***test*** Volvio el pcb");
+
+	int tiempo;
+	if(pcb->estado == 3) recv(CPU->socket, &tiempo, sizeof(int),0);
 
 
 	//ESPERO RESPUESTA CON SEMAFORO
@@ -166,6 +169,11 @@ void enviaACpu(t_cpu *CPU)
 	semOperacion.sem_flg = 0; //un flag siempre en0
 	semop (semVCPU, &semOperacion, 1); //aplico la operacion sobre el semaforo
 */
+
+	//libero la cpu
+	CPU->enUso = false;
+	sem_post(&semCpuLibre);
+
 	switch(pcb->estado)
 	{
 		case 1: //ready //solo aplica en rr //puede aplicar a fifo tmb cuando termina todo. hay q encolarlo una vez mas para q finalice solito
@@ -181,10 +189,11 @@ void enviaACpu(t_cpu *CPU)
 			//proceso en cola de bloqueados
 			//queue_push(cola_block, pcb);
 			//bloqueo el pcb
-			puts("PCB BLOQUEADO");
-			sleep(5); //cambiar
+			printf("PCB BLOQUEADO %d segundos\n",tiempo);
+			sleep(tiempo); //cambiar
 			//lo vuelve a meter en la cola de readys
 			queue_push(cola_ready, pcb);
+			sem_post(&semEnvioPcb);
 			break;
 		}
 		case 4: //finalizado
@@ -201,22 +210,22 @@ void enviaACpu(t_cpu *CPU)
 		}
 	}
 
-	//libero la cpu
-	CPU->enUso = false;
-	sem_post(&semCpuLibre);
+
 }
 
 
 //Funcion que permite procesar el PCB creado a partir del comando correr PATH
 t_pcb* procesarPCB(char *path)
 {
-	long id_pcb = shmget(key_pcb, sizeof(t_pcb),(0666 | IPC_CREAT));//reservo espacio dentro de la seccion de memoria compartida
+	long id_pcb = shmget((key_t)(PID_actual + 1500), sizeof(t_pcb),(0666 | IPC_CREAT));
+	//long id_pcb = shmget(key_pcb, sizeof(t_pcb),(0666 | IPC_CREAT));//reservo espacio dentro de la seccion de memoria compartida
 	t_pcb *pcb;
 	pcb = (t_pcb*)shmat(id_pcb, 0, 0); //creo la variable y la asocio al segmento
 	if (pcb == (t_pcb*)(-1))		//capturo error del shmat
 		perror("shmat pcb");
 
-	long id_ruta = shmget(key_ruta, sizeof(char*),(0666 | IPC_CREAT)); //reservo espacio dentro de la seccion de memoria compartida
+	long id_ruta = shmget((key_t)(PID_actual + 3000), sizeof(char*),(0666 | IPC_CREAT));
+	//long id_ruta = shmget(key_ruta, sizeof(char*),(0666 | IPC_CREAT)); //reservo espacio dentro de la seccion de memoria compartida
 	pcb->ruta = (char*)shmat(id_ruta, 0, 0); //creo la variable y la asocio al segmento
 	if (pcb->ruta == (char*)(-1))		//capturo error del shmat
 		perror("shmat ruta");
@@ -236,13 +245,15 @@ t_pcb* procesarPCB(char *path)
 }
 
 //CAMBIAR PARA QUE SOLO SEA EL HEADER
-void preparoHeader(t_headcpu *header)
+void preparoHeader(t_headcpu *header, int PID)
 {
 	header->tipo_ejecucion= 1;	//Orden de envio de pcb
-	header->clave_pcb=key_pcb;
-	header->clave_ruta=key_ruta;
-	key_pcb++;
-	key_ruta++;
+	header->clave_pcb=(key_t)(PID + 1500);
+	header->clave_ruta=(key_t)(PID + 3000);
+	//header->clave_pcb=key_pcb;
+	//header->clave_ruta=key_ruta;
+	//key_pcb++;
+	//key_ruta++;
 	
 }
 

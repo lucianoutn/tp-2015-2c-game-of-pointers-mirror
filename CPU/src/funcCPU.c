@@ -141,7 +141,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 	instrucciones = (leermCod(PCB->ruta, &PCB->numInstrucciones));
 
 	//Itera hasta llegar a la ultima instruccion
-	while(PCB->estado!=4)
+	while(PCB->estado!=4 && PCB->estado !=3)
 	{
 		if(PCB->quantum==0)
 		{
@@ -233,6 +233,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				sleep(configuracion.retardo); //retardo del cpu
 				//señal al plani avisando que cambie de estado
 				send(socketPlanificador, &cambio, sizeof(flag), 0);
+				send(socketPlanificador, &pagina, sizeof(int), 0); //envio el tiempo del sleep
 				break;
 			}
 			default:
@@ -310,12 +311,12 @@ void iniciarCPU(t_cpu *CPUS){
 				t_pcb *PCB;
 				PCB = shmat(id_pcb,0, 0); //creo la variable y la asocio al segmento
 				if (PCB == (t_pcb *)(-1))		//capturo error del shmat
-					perror("shmat");
+					perror("shmat pcb");
 
 				long id_ruta = shmget(header->clave_ruta, sizeof(char*), 0666); //reservo espacio dentro de la seccion de memoria compartida
 				PCB->ruta= shmat(id_ruta, 0, 0); //creo la variable y la asocio al segmento
 				if (PCB->ruta == (char *)(-1))		//capturo error del shmat
-				    perror("shmat");
+				    perror("shmat ruta");
 
 				printf("PCB Recibido. PID:%d\n",PCB->PID);
 				//ejecuto
