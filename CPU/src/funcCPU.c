@@ -157,7 +157,6 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 	flag recibi= false;
 	//flag para avisar al planificador que cambie de estado
 	flag cambio= true;
-	//printf("PCB Recibido. PID:%d Ruta: <%s>\n",PCB->PID,PCB->ruta);
 
 	//reservo espacio en la memoria para guardar todas las instrucciones del archivo mCod
 	//primero leo para saber el numero de instrucciones
@@ -361,7 +360,7 @@ void iniciarCPU(t_cpu *CPUS){
 					perror("shmat pcb");
 
 				long id_ruta = shmget(header->clave_ruta, sizeof(char*), 0666); //reservo espacio dentro de la seccion de memoria compartida
-				PCB->ruta= shmat(id_ruta, 0, 0); //creo la variable y la asocio al segmento
+				PCB->ruta= shmat(id_ruta, 0, SHM_RDONLY); //creo la variable y la asocio al segmento
 				if (PCB->ruta == (char *)(-1))		//capturo error del shmat
 				    perror("shmat ruta");
 
