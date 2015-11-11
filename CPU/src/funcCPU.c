@@ -352,7 +352,7 @@ void iniciarCPU(t_cpu *CPUS){
 					perror("shmat pcb");
 
 				long id_ruta = shmget(header->clave_ruta, sizeof(char*), 0666); //reservo espacio dentro de la seccion de memoria compartida
-				PCB->ruta= shmat(id_ruta, 0, 0); //creo la variable y la asocio al segmento
+				PCB->ruta= shmat(id_ruta, 0, SHM_RDONLY); //creo la variable y la asocio al segmento
 				if (PCB->ruta == (char *)(-1))		//capturo error del shmat
 				    perror("shmat ruta");
 

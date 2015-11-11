@@ -99,6 +99,8 @@ void consola (void* arg)
 				puts("\nEstado de Porcesos\n");
 
 				void imprimePS(t_pcb *pcb) {		 //creo la funcion para usar ORDEN SUPERIOR
+					//char* r;
+					//strcpy(r, pcb->ruta);
 					printf("mProc %d: %s -> %s\n", pcb->PID, pcb->ruta, estadoActual(pcb->estado));
 				}
 				//mapeo la funsion imprimePS en cada nodo de la lista

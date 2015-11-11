@@ -119,7 +119,7 @@ void enviaACpu(t_cpu *CPU)
 	//CPU DISPONIBLE  saco de la cola y envio msj
 	t_pcb *pcb = queue_pop(cola_ready);
 	//chequeo el flag FINALIZAR. si esta prendido le pogno el IP al final, para cuando vuelva a ejecutar finalice. lucho
-	if (pcb->finalizar) {pcb->instructionPointer = pcb->numInstrucciones; puts("QUIERO FINALIZAR");} //esto esta mal, va a pinchar en algun momento.
+	if (pcb->finalizar) {pcb->instructionPointer = pcb->numInstrucciones; puts("QUIERO FINALIZAR");}
 
 	//cambio estado de PCB a ejecutando
 	pcb->estado=2;
@@ -148,26 +148,9 @@ void enviaACpu(t_cpu *CPU)
 	if(termino)	//Controlo que haya llegado bien
 		puts("***test*** Volvio el pcb");
 
+	//si el proceso esta bloqueado, recivo el tiempo de bloqueo
 	int tiempo;
 	if(pcb->estado == 3) recv(CPU->socket, &tiempo, sizeof(int),0);
-
-
-	//ESPERO RESPUESTA CON SEMAFORO
-	/*
-	 *La respuesta va a ser un signal que mande la CPU una vez que haya termiando de modificar el PCB
-	 *compruebo el estado en el que esta el pcb
-	 *hago switch y encolo o desencolo segun el estado!!
-	 *
-	 *(lucho) pero un semaforo no puede ser, xq no sabe CUAL es el pcb q se modifico. tendria q ser algo q le indique
-	 *
-	*/
-	/*//estructura que hace el "wait" del semaforo:
-	struct sembuf semOperacion;		//estructura q contiene la operacion sobre el semaforo
-	semOperacion.sem_num = numeroCpu ;	//el indice del semaforo q quiero modificar
-	semOperacion.sem_op = -1;  //este -1 seria el wait
-	semOperacion.sem_flg = 0; //un flag siempre en0
-	semop (semVCPU, &semOperacion, 1); //aplico la operacion sobre el semaforo
-*/
 
 	//libero la cpu
 	CPU->enUso = false;

@@ -94,7 +94,6 @@ typedef struct PCB {
 //Protocolo de envio Planificador->CPU
 typedef struct{
 	int tipo_ejecucion;
-	//int tamanio_msj;
 	key_t clave_pcb;
 	key_t clave_ruta;
 }t_headcpu;
@@ -111,7 +110,7 @@ sem_t ordenIngresada;
 sem_t semConsola;
 sem_t semCpuLibre;
 sem_t semEnvioPcb;
-int semVCPU; //vector de semaforos dinamicos compartido
+
 
 
 flag CPUenUso; //Flag que permite verificar si una CPU esta en uso o no
