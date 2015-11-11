@@ -326,9 +326,16 @@ void iniciarCPU(t_cpu *CPUS){
 	{
 		puts("Esperando Instrucciones...\n");
 		//CPU a la espera de nuevas instrucciones
-		//sem_wait(semProduccionMsjs); //semaforo productor-consumidor
+
+
+		//creo un pool para saber si este socket tiene mensajes antes de recibir
+		//pollfd->fd=CPUS->socketPlani;
+		//pollfd->events=POLLIN;
+		//poll(pollfd, 1,3500);
+		sem_wait(semProduccionMsjs); //semaforo productor-consumidor
 		puts("ANTES DEL RECV");
-		status = recv(CPUS->socket, header, sizeof(t_headcpu),0);
+		status = recv(CPUS->socketPlani, header, sizeof(t_headcpu),0);
+
 		puts("DESPUES DEL RECV");
 		if(status!=0)	//CONTROLA QUE NO SE PIERDA LA CONEXION
 
@@ -356,9 +363,9 @@ void iniciarCPU(t_cpu *CPUS){
 				if (PCB->ruta == (char *)(-1))		//capturo error del shmat
 				    perror("shmat ruta");
 
-				printf("PCB Recibido. PID:%d\n",PCB->PID);
+				printf("PCB Recibido. PID:%d\nRuta: <%s>\n",PCB->PID,PCB->ruta);
 				//ejecuto
-				ejecutoPCB(sockets->socketMemoria,CPUS->socket,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
+				ejecutoPCB(sockets->socketMemoria,CPUS->socketPlani,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
 
 				break;
 			}
@@ -381,7 +388,7 @@ void iniciarCPU(t_cpu *CPUS){
 
 	//CIERRO LOS SOCKETS Y EL HEADER
 	free(header);
-	close(CPUS->socket);
+	close(CPUS->socketPlani);
 	close(sockets->socketMemoria);
 
 }
@@ -397,8 +404,8 @@ int configuroSocketsYLogs (){
 	int i = 0;
 	CPU = (t_cpu*)malloc(sizeof(t_cpu) * (configuracion.cantHilos));
 	while(i < configuracion.cantHilos){
-		CPU[i].socket = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
-		if (CPU[i].socket==-1){	//controlo error
+		CPU[i].socketPlani = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
+		if (CPU[i].socketPlani==-1){	//controlo error
 			puts("No se pudo conectar con el Planificador");
 			perror("SOCKET PLANIFICADOR!");
 			log_error(logger,"No se pudo conectar con el Planificador");
