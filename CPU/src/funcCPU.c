@@ -328,10 +328,12 @@ void iniciarCPU(t_cpu *CPUS){
 		//CPU a la espera de nuevas instrucciones
 
 
+
 		//creo un pool para saber si este socket tiene mensajes antes de recibir
 		//pollfd->fd=CPUS->socketPlani;
 		//pollfd->events=POLLIN;
 		//poll(pollfd, 1,3500);
+
 		sem_wait(semProduccionMsjs); //semaforo productor-consumidor
 		puts("ANTES DEL RECV");
 		status = recv(CPUS->socketPlani, header, sizeof(t_headcpu),0);
