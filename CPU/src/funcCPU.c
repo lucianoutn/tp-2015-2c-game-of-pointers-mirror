@@ -326,7 +326,7 @@ void iniciarCPU(t_cpu *CPUS){
 	{
 		puts("Esperando Instrucciones...\n");
 		//CPU a la espera de nuevas instrucciones
-		//sem_wait(semProduccionMsjs); //semaforo productor-consumidor
+		sem_wait(semProduccionMsjs); //semaforo productor-consumidor
 		puts("ANTES DEL RECV");
 		status = recv(CPUS->socket, header, sizeof(t_headcpu),0);
 		puts("DESPUES DEL RECV");
@@ -356,7 +356,7 @@ void iniciarCPU(t_cpu *CPUS){
 				if (PCB->ruta == (char *)(-1))		//capturo error del shmat
 				    perror("shmat ruta");
 
-				printf("PCB Recibido. PID:%d\n",PCB->PID);
+				printf("PCB Recibido. PID:%d\nRuta: <%s>\n",PCB->PID,PCB->ruta);
 				//ejecuto
 				ejecutoPCB(sockets->socketMemoria,CPUS->socket,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
 

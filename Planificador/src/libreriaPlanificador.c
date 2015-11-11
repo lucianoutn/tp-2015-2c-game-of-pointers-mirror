@@ -65,7 +65,7 @@ void *escuchar (struct Conexiones* conexion){
 
 void encolar(t_list* lstPcbs, t_queue* cola_ready)
 {
-	char *ruta=(char*)malloc(sizeof(char));
+	char *ruta=(char*)malloc(sizeof(char) * 30);
 	//pido la ruta del archivo
 	puts("Ingrese el nombre del archivo que desea correr:");
 	fflush(stdin);
@@ -82,7 +82,7 @@ void encolar(t_list* lstPcbs, t_queue* cola_ready)
 	puts("PCB creado y encolado\n");
 	sem_post(&semEnvioPcb); //habilito el dispacher.(lo pongo aca para q sirva tanto para fifo como RR) lucho
 	//sem_wait(&semSalir); //es para pruebas
-	//free(path);
+	free(ruta);
 }
 
 //Funcion despachador, que sacar un proceso de la cola de ready y enviarlo a la CPU para su ejecucion.
@@ -221,6 +221,7 @@ t_pcb* procesarPCB(char *path)
 	pcb->finalizar=false;
 	pcb->quantum= miContexto.quantum;
 
+	//free(path);
 	return pcb;
 }
 
