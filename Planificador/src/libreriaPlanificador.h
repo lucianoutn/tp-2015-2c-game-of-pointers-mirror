@@ -140,6 +140,8 @@ void enviaACpu(t_cpu *);
 
 t_pcb* procesarPCB(char *);
 
+char* ruta(int);
+
 void preparoHeader(t_headcpu *, int);
 
 char* estadoActual (int estado); //la uso para el comando PS del planificador.lucho

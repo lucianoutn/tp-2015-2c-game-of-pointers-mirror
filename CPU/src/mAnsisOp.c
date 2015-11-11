@@ -33,7 +33,7 @@ char** leermCod(const char* ruta,unsigned int *num)
 	FILE *fd;
 	fd = fopen(ruta,"r"); //abro el archivo mCod
 	if(fd == NULL)
-		printf("Error al abrir el mCod. Path: %s.\n",ruta);
+		printf("Error al abrir el mCod. Path: <%s>.\n",ruta);
 	char **instruccion= (char**)malloc(sizeof(char*)); //solicito espacio en la memoria para el buffer
 
 	int I=0;

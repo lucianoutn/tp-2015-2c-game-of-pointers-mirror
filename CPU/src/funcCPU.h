@@ -30,7 +30,7 @@
 #include <fcntl.h>           // para las constantes O_* de los semaforos ipc
 #include <sys/stat.h>      //  para las constantes de modo de los semaforos ipc
 #include <linux/unistd.h>   //para alguna syscall
-
+#include <sys/poll.h> 		//para el poll del reciv del socket
 
 typedef int pid;
 
@@ -97,7 +97,7 @@ pthread_mutex_t mutex;
 
 typedef struct {
 	pthread_t hilo;
-	int socket;
+	int socketPlani;
 	int numeroCPU;
 }t_cpu;
 
@@ -106,6 +106,14 @@ t_cpu *CPU;
 //pthread_t cpu[0];
 
 t_sockets *sockets;
+
+typedef struct {
+		    int fd;         // the socket descriptor
+		    short events;   // bitmap of events we're interested in
+		    short revents;  // when poll() returns, bitmap of events that occurred
+		} t_pollfd;
+
+t_pollfd *pollfd;
 
 int numero_de_pid;
 
@@ -124,5 +132,6 @@ void ejecutoPCB(int,int, t_pcb *);
 void iniciarCPU(t_cpu *);
 
 int configuroSocketsYLogs ();
+
 
 #endif /* FUNCCPU_H_ */

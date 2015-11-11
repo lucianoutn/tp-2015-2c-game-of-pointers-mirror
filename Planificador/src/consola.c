@@ -37,10 +37,14 @@ void consola (void* arg)
 	printf("                     Consola VERSION 2.0 | Grupo: Game of Pointers\n");
 	printf("_____________________________________UTN_|_Sistemas Operativos_______________________________\n");
 
-	fflush(stdin);
-	printf("\nIngrese el comando deseado o ayuda para conocer los comandos posibles\n");
 
-	command = leeComando(); // read lee la palabra y me devuelve un comando del enum
+	do{				//valido comando ingresado
+		fflush(stdin);		//limpia el buffer del teclado
+		printf("\nIngrese el comando deseado o ayuda para conocer los comandos posibles\n");
+		command = leeComando();
+		}// leeComando lee la palabra y me devuelve un comando del enum
+	while (command ==-1);
+
 	while(command != -2) // Itero por siempre
 	{
 		switch (command)
@@ -96,12 +100,10 @@ void consola (void* arg)
 			{
 				//printf("Este comando falta desarrollar\n");
 				//system("ps");
-				puts("\nEstado de Porcesos\n");
+				puts("\nEstado de Procesos\n");
 
 				void imprimePS(t_pcb *pcb) {		 //creo la funcion para usar ORDEN SUPERIOR
-					//char* r;
-					//strcpy(r, pcb->ruta);
-					printf("mProc %d: %s -> %s\n", pcb->PID, pcb->ruta, estadoActual(pcb->estado));
+					printf("mProc %d: <%s> -> %s\n", pcb->PID, ruta(pcb->PID), estadoActual(pcb->estado));
 				}
 				//mapeo la funsion imprimePS en cada nodo de la lista
 				list_iterate(lstPcbs,(void*)imprimePS);
@@ -154,9 +156,14 @@ void consola (void* arg)
 		}
 			sem_wait(&semConsola);	//espera la correcta ejecucion de un comando anterior para ejecutar uno nuevo
 			sleep(1);		//esta puesto a modo estetico, xq a veces se imprime otro mensaje de otro hilo antes.
-			fflush(stdin);		//limpia el buffer del teclado
-			printf("\nIngrese el comando deseado o ayuda para conocer los comandos posibles\n");
-			command = leeComando(); // read lee la palabra y me devuelve un comando del enum
+
+			do{				//valido comando ingresado
+					fflush(stdin);	//limpia el buffer del teclado
+					printf("\nIngrese el comando deseado o ayuda para conocer los comandos posibles\n");
+					command = leeComando();
+					}// leeComando lee la palabra y me devuelve un comando del enum
+			while (command ==-1);
+
 	}
 
 }

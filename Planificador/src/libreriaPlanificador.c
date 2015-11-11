@@ -121,6 +121,8 @@ void enviaACpu(t_cpu *CPU)
 	//chequeo el flag FINALIZAR. si esta prendido le pogno el IP al final, para cuando vuelva a ejecutar finalice. lucho
 	if (pcb->finalizar) {pcb->instructionPointer = pcb->numInstrucciones; puts("QUIERO FINALIZAR");}
 
+	printf("RUTA: <%s>\n",ruta(pcb->PID));
+
 	//cambio estado de PCB a ejecutando
 	pcb->estado=2;
 	if(pcb->quantum==0){
@@ -140,7 +142,7 @@ void enviaACpu(t_cpu *CPU)
 
 	sem_post(semProduccionMsjs);
 
-	log_info(logger,"Comienzo ejecucion PID: %d Nombre: %s", pcb->PID, pcb->ruta);
+	log_info(logger,"Comienzo ejecucion PID: %d Nombre: <%s>", pcb->PID, ruta(pcb->PID));
 	puts("PASO SEMAFORO");
 	//ESPERO RESPUESTA CON RCV
 	flag termino=false;
@@ -197,19 +199,18 @@ void enviaACpu(t_cpu *CPU)
 //Funcion que permite procesar el PCB creado a partir del comando correr PATH
 t_pcb* procesarPCB(char *path)
 {
-	long id_pcb = shmget((key_t)(PID_actual + key_pcb), sizeof(t_pcb),(0666 | IPC_CREAT));
-	//long id_pcb = shmget(key_pcb, sizeof(t_pcb),(0666 | IPC_CREAT));//reservo espacio dentro de la seccion de memoria compartida
+	long id_pcb = shmget((key_t)(PID_actual + key_pcb), sizeof(t_pcb),(0666 | IPC_CREAT)); //reservo espacio dentro de la seccion de memoria compartida
 	t_pcb *pcb;
 	pcb = (t_pcb*)shmat(id_pcb, 0, 0); //creo la variable y la asocio al segmento
 	if (pcb == (t_pcb*)(-1))		//capturo error del shmat
 		perror("shmat pcb");
 
-	long id_ruta = shmget((key_t)(PID_actual + key_ruta), sizeof(char*),(0666 | IPC_CREAT));
-	//long id_ruta = shmget(key_ruta, sizeof(char*),(0666 | IPC_CREAT)); //reservo espacio dentro de la seccion de memoria compartida
+	/*
+	long id_ruta = shmget((key_t)(PID_actual + key_ruta), sizeof(char*),(0666 | IPC_CREAT)); //reservo espacio dentro de la seccion de memoria compartida
 	pcb->ruta = (char*)shmat(id_ruta, 0, 0); //creo la variable y la asocio al segmento
 	if (pcb->ruta == (char*)(-1))		//capturo error del shmat
 		perror("shmat ruta");
-
+*/
 	//armo PCB
 	pcb->PID= (PID_actual++);
 	pcb->estado=0;
@@ -217,12 +218,21 @@ t_pcb* procesarPCB(char *path)
 	pcb->numInstrucciones = 0;
 	pcb->prioridad=0;
 	pcb->permisos=0;
+	pcb->ruta = ruta(pcb->PID);
 	strcpy(pcb->ruta, path);
 	pcb->finalizar=false;
 	pcb->quantum= miContexto.quantum;
 
-	//free(path);
 	return pcb;
+}
+
+char* ruta(int PID){
+	char *ruta;
+	long id_ruta = shmget((key_t)(PID + key_ruta), sizeof(char*),(0666 | IPC_CREAT)); //reservo espacio dentro de la seccion de memoria compartida
+	ruta = (char*)shmat(id_ruta, 0, 0); //creo la variable y la asocio al segmento
+	if (ruta == (char*)(-1))		//capturo error del shmat
+		perror("shmat ruta");
+	return ruta;
 }
 
 //CAMBIAR PARA QUE SOLO SEA EL HEADER
