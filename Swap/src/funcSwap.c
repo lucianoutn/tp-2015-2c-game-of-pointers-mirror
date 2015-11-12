@@ -81,13 +81,13 @@ void analizoPaquete(t_header * package, int socketCliente) {
 		leerSwap(package,contenido);
 		if(contenido!=NULL){
 			status = 1;
-			sleep(contexto->retardo_swap);
+			usleep(contexto->retardo_swap);
 			send(socketCliente,&status,sizeof(int),0);
 			send(socketCliente,contenido,contexto->tam_pagina,0);
 		}
 		else{
 			puts("Todo mal");
-			sleep(contexto->retardo_swap);
+			usleep(contexto->retardo_swap);
 			send(socketCliente,&status,sizeof(int),0);
 		}
 		free(contenido);
@@ -95,19 +95,19 @@ void analizoPaquete(t_header * package, int socketCliente) {
 	case 1:
 		printf("Se recibio orden de escritura\n");
 		status = escribirSwap(package, socketCliente);
-		sleep(contexto->retardo_swap);
+		usleep(contexto->retardo_swap);
 		send(socketCliente,&status,sizeof(int),0);
 		break;
 	case 2:
 		printf("Se recibio orden de inicializacion\n");
 		status = inicializarProc(package);
-		sleep(contexto->retardo_swap);
+		usleep(contexto->retardo_swap);
 		send(socketCliente,&status,sizeof(int),0);
 		break;
 	case 3:
 		printf("Se recibio orden de finalizacion de proceso\n");
 		status = finalizarProc(package);
-		sleep(contexto->retardo_swap);
+		usleep(contexto->retardo_swap);
 		send(socketCliente,&status,sizeof(int),0);
 		break;
 	default:
@@ -288,7 +288,7 @@ void compactarSwap()
 	}
 
 	free(hueco);
-	sleep(contexto->retardo_compac);
+	usleep(contexto->retardo_compac);
 	log_info(logger, "Se finalizo la compactacion");
 }
 
