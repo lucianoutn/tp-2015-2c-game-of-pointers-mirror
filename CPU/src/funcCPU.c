@@ -397,9 +397,9 @@ int configuroSocketsYLogs (){
 	creoLogger(1);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
 	log_info(logger, "Inicio Log CPU", NULL);
 	log_info(logger, "Conectado a el Planificador", NULL);
-	int i = 0;
-	CPU = (t_cpu*)malloc(sizeof(t_cpu) * (configuracion.cantHilos));
-	while(i < configuracion.cantHilos){
+	int i = 1;
+	CPU = (t_cpu*)malloc(sizeof(t_cpu) * ((configuracion.cantHilos) + 1));
+	while(i <= configuracion.cantHilos){
 		CPU[i].socketPlani = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
 		if (CPU[i].socketPlani==-1){	//controlo error
 			puts("No se pudo conectar con el Planificador");
