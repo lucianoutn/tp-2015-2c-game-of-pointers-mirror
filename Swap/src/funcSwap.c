@@ -129,14 +129,14 @@ void leerSwap(t_header * package,char * contenido)
 	{
 		fseek(archivo,pag->inicio + (package->pagina_proceso * contexto->tam_pagina),SEEK_SET);
 		fread(contenido, contexto->tam_pagina, 1, archivo);
-		log_info(logger, "Se recibio orden de lectura: PID: %d Byte Inicial: %d Contenido: %s"
-								,package->PID, pag->inicio+(package->pagina_proceso * contexto->tam_pagina),contenido);
+		log_info(logger, "Se recibio orden de lectura: PID: %d Pag: %d, Byte Inicial: %d Contenido: %s"
+								,package->PID, package->pagina_proceso, pag->inicio+(package->pagina_proceso * contexto->tam_pagina),contenido);
 		pag->leidas=pag->leidas+1;
 	}
 	else
 	{
 		contenido=NULL;
-		log_error(logger, "No se encontro la pagina solicitada");
+		log_error(logger, "No se encontro la pagina solicitada \n");
 	}
 }
 
@@ -156,8 +156,8 @@ int escribirSwap(t_header * package, int socketCliente)
 	{
 		fseek(archivo,pag->inicio + ((package->pagina_proceso) * contexto->tam_pagina),SEEK_SET);
 		fwrite(mensaje, contexto->tam_pagina, 1, archivo);
-		log_info(logger, "Se recibio orden de escritura: PID: %d Byte Inicial: %d Contenido: %s"
-										,package->PID, pag->inicio+(package->pagina_proceso * contexto->tam_pagina),mensaje);
+		log_info(logger, "Se recibio orden de escritura: PID: %d Pag: %d Byte Inicial: %d Contenido: %s"
+										,package->PID, package->pagina_proceso, pag->inicio+(package->pagina_proceso * contexto->tam_pagina),mensaje);
 		//Actualizo cant escritas
 		pag->escritas= pag->escritas+1;
 		//Relleno paginas
@@ -172,7 +172,7 @@ int escribirSwap(t_header * package, int socketCliente)
 	}
 	else
 	{
-		log_error(logger, "No se encontro la pagina solicitada");
+		log_error(logger, "No se encontro la pagina solicitada \n");
 		return 0;
 	}
 
@@ -200,7 +200,7 @@ int inicializarProc(t_header * package) {
 	else
 	{
 		//Si no encontro hueco, es por falta de espacion, tengo que rechazar proceso
-		log_error(logger, "Rechazo proceso por falta de espacio");
+		log_error(logger, "Rechazo proceso por falta de espacio \n");
 		return 0;
 	}
 
