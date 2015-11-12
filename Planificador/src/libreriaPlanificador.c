@@ -52,9 +52,10 @@ void *escuchar (struct Conexiones* conexion){
 		{
 			perror("ACCEPT");	//control error
 		}
+		conexiones.CPUS[i].numCpu = i;
 		conexion->CPUS[i].enUso = false;
 		sem_post(&semEsperaCPU); //avisa que hay 1 CPU disponible
-		puts("NUEVO HILO ESCUCHA!\n");
+		//puts("NUEVO HILO ESCUCHA!\n");
 		log_info(logger, "CPU %d conectado", i);
 		i++;
 	}
@@ -79,7 +80,7 @@ void encolar(t_list* lstPcbs, t_queue* cola_ready)
 	list_add(lstPcbs, pcb);
 	queue_push(cola_ready, pcb);
 
-	puts("PCB creado y encolado\n");
+	//puts("PCB creado y encolado\n");
 	sem_post(&semEnvioPcb); //habilito el dispacher.(lo pongo aca para q sirva tanto para fifo como RR) lucho
 	//sem_wait(&semSalir); //es para pruebas
 	free(ruta);
@@ -90,21 +91,21 @@ void dispatcher()
 {
 	pthread_t hilo_CPU[miContexto.cantHilosCpus];
 
-	puts ("DISPATCHER");
+	puts ("DISPATCHER ACTIVADO");
 	sem_init(&semCpuLibre,0,miContexto.cantHilosCpus);
 	while(1){
-		puts ("WHILE DISPATCHER");
+		//puts ("WHILE DISPATCHER");
 		//espera que alguien libere alguna CPU y alguien quiera enviar un PCB
 		sem_wait(&semEnvioPcb); //revisar si estos dos semaforos no estan siempre juntos y se comprotan igual. lucho
 		sem_wait(&semCpuLibre);//revisar si estos dos semaforos no estan siempre juntos y se comprotan igual. lucho
-		puts ("PASO LOS SEMAFOROS");
-		printf("cant hilos cpu: %d\n", miContexto.cantHilosCpus);
+		//puts ("PASO LOS SEMAFOROS");
+		//printf("cant hilos cpu: %d\n", miContexto.cantHilosCpus);
 		//busca la primer CPU que no este en uso
 		int I = 0;
 		while((conexiones.CPUS[I].enUso) && (I < miContexto.cantHilosCpus)){
 			I++;
 		}
-		printf("CPU ELEGIDA: %d\n SOCKET ELEGIDO: %d\n",I, conexiones.CPUS[I].socket);
+		//printf("CPU ELEGIDA: %d\n SOCKET ELEGIDO: %d\n",I, conexiones.CPUS[I].socket);
 		//Crea un hilo por cada CPU
 		if(pthread_create(&(hilo_CPU[I]),NULL,(void*)enviaACpu,&conexiones.CPUS[I])<0)
 		perror("Error HILO CPU!");
@@ -113,7 +114,8 @@ void dispatcher()
 }
 
 void enviaACpu(t_cpu *CPU)
-{	puts ("ENVIA A CPU");
+{
+	//puts ("ENVIA A CPU");
 	//bloqueo la cpu
 	CPU->enUso = true;
 	//CPU DISPONIBLE  saco de la cola y envio msj
@@ -121,34 +123,31 @@ void enviaACpu(t_cpu *CPU)
 	//chequeo el flag FINALIZAR. si esta prendido le pogno el IP al final, para cuando vuelva a ejecutar finalice. lucho
 	if (pcb->finalizar) {pcb->instructionPointer = pcb->numInstrucciones; puts("QUIERO FINALIZAR");}
 
-	printf("RUTA: <%s>\n",ruta(pcb->PID));
-
 	//cambio estado de PCB a ejecutando
 	pcb->estado=2;
 	if(pcb->quantum==0){
 		pcb->quantum=miContexto.quantum;
 	}
 
-	if(pcb->quantum >= 0) printf("mande un quantum de: %d\n y el socket es: %d\n", pcb->quantum, CPU->socket); //teste
+	//if(pcb->quantum >= 0) printf("mande un quantum de: %d\n y el socket es: %d\n", pcb->quantum, CPU->socket); //teste
 
 	t_headcpu *header = malloc(sizeof(t_headcpu));
 	preparoHeader(header, pcb->PID);
 
 	//Envio el header
 	send(CPU->socket, header, sizeof(t_headcpu),0);
-	puts("PCB enviado a la CPU para procesamiento\n");
+	log_info(logger, "mProc %d <%s> Ejecutando en cpu: %d",pcb->PID,ruta(pcb->PID),CPU->numCpu);
 
-	//free(header);
+	free(header);
 
 	sem_post(semProduccionMsjs);
 
-	log_info(logger,"Comienzo ejecucion PID: %d Nombre: <%s>", pcb->PID, ruta(pcb->PID));
-	puts("PASO SEMAFORO");
+	//puts("PASO SEMAFORO");
 	//ESPERO RESPUESTA CON RCV
 	flag termino=false;
 	recv(CPU->socket, &termino, sizeof(flag),0);		//espero recibir la respuesta
-	if(termino)	//Controlo que haya llegado bien
-		puts("***test*** Volvio el pcb");
+	if(!termino)	//Controlo que haya llegado bien
+		log_info(logger, "mProc %d <%s> Fallo al volver de la cpu: %d",pcb->PID,ruta(pcb->PID),CPU->numCpu);
 
 	//si el proceso esta bloqueado, recivo el tiempo de bloqueo
 	int tiempo;
@@ -164,6 +163,7 @@ void enviaACpu(t_cpu *CPU)
 		{
 			//si vuelve a estado ready es pq termino el cuanto
 			//encolo denuevo en la cola de readys pq termino el cuanto pero no termino de usar la cpu
+			log_info(logger, "mProc %d <%s> Volvio a la cola",pcb->PID,ruta(pcb->PID));
 			queue_push(cola_ready, pcb);
 			sem_post(&semEnvioPcb);
 			break;
@@ -171,8 +171,8 @@ void enviaACpu(t_cpu *CPU)
 		case 3: //bloqueado
 		{
 			//bloqueo el pcb
-			printf("PCB BLOQUEADO %d segundos\n",tiempo);
-			usleep(tiempo);
+			log_info(logger, "mProc %d En entrada-salida de tiempo: %d",pcb->PID,tiempo);
+			usleep(tiempo * 10000);
 			//lo vuelve a meter en la cola de readys
 			queue_push(cola_ready, pcb);
 			sem_post(&semEnvioPcb);
@@ -180,7 +180,7 @@ void enviaACpu(t_cpu *CPU)
 		}
 		case 4: //finalizado
 		{
-			puts("FINALIZO");
+			log_info(logger, "mProc %d <%s> Finalizo",pcb->PID,ruta(pcb->PID));
 			//libero todo el PCB!
 			//lo saco de la cola NO DE LA LISTA
 			//free(pcb); //no lo liberen aca xq dsp no los puedo ver como finalizados en el comando PS. luego podemos liberarlos desde la lista
@@ -249,22 +249,22 @@ char* estadoActual (int estado) //la uso para el comando PS del planificador.luc
 
 	if(estado==0)
 	{
-		return "new";
+		return "Nuevo";
 	}
 	else if(estado==1)
 	{
-		return "ready";
+		return "Listo";
 	}
 	else if(estado==2)
 	{
-		return "executing";
+		return "Ejecutando";
 	}
 	else if(estado==3)
 	{
-		return "block";
+		return "Bloqueado";
 	}
 	else
 	{
-		return "finish";
+		return "Finalizado";
 	}
 }

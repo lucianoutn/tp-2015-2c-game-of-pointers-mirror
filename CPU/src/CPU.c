@@ -43,15 +43,16 @@ int main()
 	}
 
 	puts("Cree las CPUS correctamente");
-	
+
 	sem_wait(&semSalir);
 	//pthread_join(CPU[0].hilo,NULL);
 	puts("CHAU");
 	close(sockets->socketMemoria);
 	free(sockets);
+
 	for (i=1; i<=configuracion.cantHilos; i++){
-			//close(CPU[i].socketPlani);
-			pthread_exit(&CPU[i].hilo);
+		//close(CPU[i].socketPlani);
+		pthread_exit(&CPU[i].hilo);
 	}
 	free(CPU);
 

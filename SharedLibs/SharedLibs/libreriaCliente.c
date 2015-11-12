@@ -33,8 +33,9 @@ int crearCliente(const char *IP, const char *PUERTO){
 		return -1;
 		perror ("CONNECT");
 	}
-	else
+	/*else
 		printf ("Conexion con el Servidor en la ip: %s lograda\n", IP);
+	*/
 
 
 	freeaddrinfo(serverInfo_server);
