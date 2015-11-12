@@ -15,6 +15,7 @@ const char* allCommands[] =
 	// TODOS LOS COMANDOS deben estar en minúscula para que lo reconozca bien sin importar como lo ingrese el usuario
 	"ayuda",
 	"correr", // tendria q ser correr PATH directamente acá
+	"formatearmcod",
 	"finalizar",
 	"ps",
 	"cpu",
@@ -29,7 +30,7 @@ void consola (void* arg)
 	int command;
 	int i,m;
 
-	CPUenUso=false;
+	//CPUenUso=false;  //creo q se reemplazo por CPU->enUso
 	//pthread_t hCPU1;
 
 	system("clear");
@@ -65,6 +66,66 @@ void consola (void* arg)
 				//sem_post(semProduccionMsjs); //este sem hay q colocarlo adentro de inciarPlanificador();
 				orden=0;
 				sem_post(&ordenIngresada); //habilita el swich case en planificador.c
+				break;
+			}
+			case formatearmcod:
+			{
+				//comandos útiles para darle formato al archivo
+				char *ruta=(char*)malloc(sizeof(char) * 30);
+				char *ruta2=(char*)malloc(sizeof(char) * 30);
+				printf("\n*** FORMATEAR mCod: ***\n");
+				printf("Elegir opción:\n\n");
+				printf("1. Agregar <;> al final de cada linea\n");
+				printf("2. Eliminar <;> del final de cada linea\n");
+				//printf("3. Agregar <comillas> de las strings\n\n");
+				printf("\nIngrese nº de opcion:\n");
+				int opc;
+				fflush(stdin);
+				scanf("%d", &opc);
+				//pido la ruta del archivo
+				printf("la opc es: %d", opc);
+				printf("Ingrese el nombre del archivo que desea formatear:\n");
+				fflush(stdin);
+				fgets(ruta, 30, stdin); //30 es el tamaño maximo de la ruta a ingresar
+				ruta2 = ruta;
+				int tamanio=strlen(ruta);
+				ruta[tamanio-1]='\0'; //agrego el caracter nulo al final de la ruta para que se indentifique como string.
+				ruta2[tamanio-1]='M';
+				ruta2[tamanio]='\0';
+				char* comando;
+				switch (opc)
+				{
+					case 1: //Agregar <;> al final de cada linea
+					{
+						comando = string_from_format("sed 's/.$/;/' ..\CPU\%s > ..\CPU\%s",ruta,ruta2);
+						system(comando);
+						printf("El nuevo archivo se llama %s\n",ruta2);
+						break;
+
+					}
+					case 2:	//Eliminar <;> del final de cada linea
+					{
+						comando = string_from_format("sed 's/[;]$//' ..\CPU\%s > ..\CPU\%s",ruta,ruta2);
+						system(comando);
+						printf("El nuevo archivo se llama %s\n",ruta2);
+						break;
+
+					}
+					/*case 3: //Agregar <comillas> de las strings
+					{
+					//	comando = string_from_format("sed 's/["]//g' ..\CPU\%s > ..\CPU\%s",ruta,ruta2);
+					//	system(comando);
+					}*/
+					default:
+					{
+						puts("\nOpcion incorrecta\n");
+						break;
+					}
+				}
+
+				//free(ruta);
+				//free(ruta2);
+				sem_post(&semConsola); //vuelvo a habilitar la consolita
 				break;
 			}
 			case finalizar:

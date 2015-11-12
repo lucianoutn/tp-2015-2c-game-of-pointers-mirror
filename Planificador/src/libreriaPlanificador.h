@@ -114,8 +114,8 @@ sem_t semEnvioPcb;
 
 
 
-flag CPUenUso; //Flag que permite verificar si una CPU esta en uso o no
-
+//flag CPUenUso; //Flag que permite verificar si una CPU esta en uso o no
+				 //creo q se reemplazo por CPU->enUso
 
 int numero_de_pid;
 

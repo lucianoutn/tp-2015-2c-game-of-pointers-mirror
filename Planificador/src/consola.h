@@ -17,6 +17,7 @@
  ********************************************************/
 
 #include <ctype.h>
+#include "commons/string.h"
 
 enum Commands
 {
@@ -27,6 +28,7 @@ enum Commands
 	// del lado del usuario, en la lista de arriba.
 	ayuda = 0,
 	correr,	// tendria q ser correr PATH directamente acá
+	formatearmcod,
 	finalizar,
 	ps,
 	cpu,
