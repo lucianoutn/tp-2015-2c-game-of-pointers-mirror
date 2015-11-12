@@ -53,7 +53,6 @@ void traigoContexto() {
 		puts("Final feliz");
 		free(config_swap->path);
 		free(config_swap->properties);
-		free(config_swap);
 		abort();
 	}
 	contexto->puerto = config_get_string_value(config_swap, "PUERTO_ESCUCHA");
@@ -200,7 +199,7 @@ int inicializarProc(t_header * package) {
 	else
 	{
 		//Si no encontro hueco, es por falta de espacion, tengo que rechazar proceso
-		log_error(logger, "Rechazo proceso por falta de espacio \n");
+		log_error(logger, "Rechazo proceso por falta de espacio al proceso de PID: \n", package->PID);
 		return 0;
 	}
 
@@ -272,7 +271,6 @@ void compactarSwap()
 		//actualizo el inicio en el nodo.
 		pagina->inicio=inicio;
 		free(contenido);
-		free(pagina);
 	}
 
 	//actualizo lista huecos
@@ -287,7 +285,6 @@ void compactarSwap()
 		list_remove_and_destroy_element(lista_huecos, j, (void *)hueco_destroy);
 	}
 
-	free(hueco);
 	usleep(contexto->retardo_compac);
 	log_info(logger, "Se finalizo la compactacion");
 }
@@ -315,6 +312,7 @@ t_hueco* buscarHueco(int tamanio) {
 		t_pag * pag = list_get(lista_paginas, j);
 		pag_ocupadas = pag_ocupadas + pag->paginas;
 	}
+
 	pag_libres = contexto->cant_paginas - pag_ocupadas;
 
 	if (tamanio>pag_libres) //NO TENGO ESPACIO
