@@ -172,7 +172,7 @@ void enviaACpu(t_cpu *CPU)
 		{
 			//bloqueo el pcb
 			printf("PCB BLOQUEADO %d segundos\n",tiempo);
-			sleep(tiempo);
+			usleep(tiempo);
 			//lo vuelve a meter en la cola de readys
 			queue_push(cola_ready, pcb);
 			sem_post(&semEnvioPcb);

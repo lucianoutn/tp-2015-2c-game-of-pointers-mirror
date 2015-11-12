@@ -204,7 +204,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 	int  * flag = malloc(sizeof(int));
 
 	// SLEEP PORQUE LA MEMORIA BUSCA EN SUS ESTRUCTURAS
-	sleep(miContexto.retardoMemoria);
+	usleep(miContexto.retardoMemoria);
 	t_tabla_adm * reg_tabla_tablas = list_find(tabla_adm, (void*)_numeroDePid);
 
 	bool _numeroDePagina (void * p)
@@ -259,7 +259,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 
 						log_info(logger, "Traje la pagina del swap, voy a escribir el marco %d para leer", marco_a_llenar->numero_marco);
 
-						sleep(miContexto.retardoMemoria);
+						usleep(miContexto.retardoMemoria);
 
 						// LO ESCRIBO CON EL MENSAJE QUE ME DICEN QUE LO ESCRIBA PORQUE NO TENGO QUE TRAER LO QUE YA ESTE ESCRITO DEL SWAP
 						memcpy ( marco_a_llenar->direccion_inicio, contenido, strlen(contenido));
@@ -336,7 +336,7 @@ void escribirEnMemReal(t_header * header, t_list* tabla_adm, t_list * TLB, t_lis
 	// TRAIGO LA TABLA DEL PROCESO
 	t_list * tablaProceso = obtenerTablaProceso(tabla_adm, header->PID);
 	// HAGO UN SLEEP PORQUE LA MEMORIA VA A VERIFICAR SUS ESTRUCTURAS, SEGUN ISSUE #71
-	sleep(miContexto.retardoMemoria);
+	usleep(miContexto.retardoMemoria);
 
 	if(tablaProceso == NULL) // no tendria que entrar nunca aca porque supuestamente el archivo de instrucciones no tiene errores
 	{
@@ -414,7 +414,7 @@ void escribirEnMemReal(t_header * header, t_list* tabla_adm, t_list * TLB, t_lis
 		log_info(logger, "Encontre la pagina en memoria => tengo la direccion y la escribo");
 		// escriboMarcoYActualizoTablas();
 
-		sleep(miContexto.retardoMemoria);
+		usleep(miContexto.retardoMemoria);
 		memcpy ( paginaProceso->direccion_fisica, mensaje, header->tamanio_msj);
 		if (!strcmp(miContexto.tlbHabilitada, "SI"))
 			actualizarTlb(header->PID, header->pagina_proceso, paginaProceso->direccion_fisica, TLB, paginaProceso->marco);
@@ -437,7 +437,7 @@ void asignarMarcoPagSwap(t_header * header, char * mensaje, t_list* tablaAccesos
 	 */
 	t_marco_hueco * marco_a_llenar = list_remove(listaFramesHuecosMemR, 0);
 	log_info(logger, "Traje la pagina del swap, voy a escribir el marco %d", marco_a_llenar->numero_marco);
-	sleep(miContexto.retardoMemoria);
+	usleep(miContexto.retardoMemoria);
 
 	// LO ESCRIBO CON EL MENSAJE QUE ME DICEN QUE LO ESCRIBA PORQUE NO TENGO QUE TRAER LO QUE YA ESTE ESCRITO DEL SWAP
 	memcpy ( marco_a_llenar->direccion_inicio, mensaje, strlen(mensaje));
@@ -699,7 +699,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	process_pag * paginaASwapear = traerPaginaARemover(tablaProceso);
 	log_info(logger, "Acceso a swap: Se swapea para traer la pagina %d porque no quedan marcos disponibles para el proceso %d", header->pagina_proceso, header->PID);
 	printf("Pagina a remover: %d \n", paginaASwapear->pag); // PRINT SOLO PARA VERIFICAR, DESPUÉS BORRAR
-	sleep(miContexto.retardoMemoria);
+	usleep(miContexto.retardoMemoria);
 
 	int num_pag;
 
@@ -739,7 +739,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 
 		// Escribo en mi pagina swapeada el contenido a escribir
 		log_info(logger, "Se escribe en el marco liberado la pagina que se quiere escribir");
-		sleep(miContexto.retardoMemoria);
+		usleep(miContexto.retardoMemoria);
 		strcpy(paginaASwapear->direccion_fisica, mensaje );
 
 		num_pag = paginaASwapear->pag;
@@ -763,7 +763,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		}
 
 		log_info(logger, "Se escribe el marco liberado con la pagina recien traida del swap");
-		sleep(miContexto.retardoMemoria);
+		usleep(miContexto.retardoMemoria);
 		strcpy(paginaASwapear->direccion_fisica, contenido );
 
 		num_pag = paginaASwapear->pag;

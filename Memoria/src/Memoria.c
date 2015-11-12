@@ -64,21 +64,21 @@ int main()
 	void flush ()
 		{
 			log_info(logger, "Se recibio SIGUSR1, si corresponde se vacia la TLB \n");
-			sleep(3);
+			//sleep(3);
 			tlbFlush(TLB);
 			log_info(logger, "Tratamiento de la señal SIGUSR1 terminado. \n");
 		}
 	void limpiar()
 	{
 		log_info(logger, "Se recibio SIGUSR2, se limpia la memoria \n");
-		sleep(3);
+		//sleep(3);
 		limpiarMemoria(memoria_real, TLB,tablaAdm);
 		log_info(logger, "Se finalizo el tratamiento de la señal SIGUSR2 \n");
 	}
 	void dump()
 	{
 		log_info(logger, "Se rcibio SIGPOLL, se muestra el contenido de la memoria actualmente \n");
-		sleep(3);
+		//sleep(3);
 		dumpEnLog(memoria_real,tablaAdm);
 		log_info(logger, "Tratamiento de la señal SIGPOLL terminado \n");
 	}

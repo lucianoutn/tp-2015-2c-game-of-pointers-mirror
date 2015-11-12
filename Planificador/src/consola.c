@@ -155,7 +155,7 @@ void consola (void* arg)
 			// vaciamos el contenido en el flujo stdin
 		}
 			sem_wait(&semConsola);	//espera la correcta ejecucion de un comando anterior para ejecutar uno nuevo
-			sleep(1);		//esta puesto a modo estetico, xq a veces se imprime otro mensaje de otro hilo antes.
+			usleep(500);		//esta puesto a modo estetico, xq a veces se imprime otro mensaje de otro hilo antes.
 
 			do{				//valido comando ingresado
 					fflush(stdin);	//limpia el buffer del teclado
