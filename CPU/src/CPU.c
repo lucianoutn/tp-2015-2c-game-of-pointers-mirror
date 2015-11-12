@@ -34,7 +34,7 @@ int main()
 	//puts("CREO HILOS DE CPU");
 
 	int i, err;
-	for (i=0; i<configuracion.cantHilos; i++){
+	for (i=1; i<=configuracion.cantHilos; i++){
 		CPU[i].numeroCPU = i;
 		err= pthread_create(&CPU[i].hilo, NULL, (void*)iniciarCPU, &CPU[i]);
 		//sleep(1);
@@ -48,10 +48,9 @@ int main()
 	//pthread_join(CPU[0].hilo,NULL);
 	puts("CHAU");
 	close(sockets->socketMemoria);
-	for (i=0; i<configuracion.cantHilos; i++){
+	for (i=1; i<=configuracion.cantHilos; i++){
 			//close(CPU[i].socketPlani);
 			pthread_cancel(CPU[i].hilo);
-	}
 	free(CPU);
 	//free(sockets);
 
