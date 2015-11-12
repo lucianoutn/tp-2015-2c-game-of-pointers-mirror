@@ -55,6 +55,7 @@ typedef struct{
 contexto miContexto;
 
 typedef struct{
+	int numCpu;
 	int socket;
 	bool enUso;
 } t_cpu;

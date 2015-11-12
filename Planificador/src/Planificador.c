@@ -20,7 +20,6 @@ int main() {
 	semProduccionMsjs = sem_open("semPlani", O_CREAT, 0666, 0);//inicializo sem prod-consum, el 0_creat es para evitar q se inicialize en el otro proceso
 
 	PID_actual=1;      //inicializo numero de pid (yo le cambiaria el nombre a PID_actual)
-	puts("!!!!Planificador!!!!"); /* prints !!!Planificador!!! */
 
 	// El planificador debe recibir los resultados de la CPU.
 
@@ -54,7 +53,7 @@ int main() {
 	if(pthread_create(&hilo_conexiones, NULL, (void*)escuchar,&conexiones)<0)
 		perror("Error HILO ESCUCHAS!");
 
-	puts("ESPERANDO CONEXIONES....\n");
+	puts("PLANIFICADOR!\nESPERANDO CONEXIONES....\n\n\n");
 	sem_wait(&semEsperaCPU); //semaforo espera conexiones
 
 
@@ -64,27 +63,22 @@ int main() {
 	lstPcbs= list_create();
 
 
-	//crear hilo de consola para que quede a la escucha de comandos por consola para el planificador
-
-	pthread_t hilo_consola, hilo_dispatcher;
-	pthread_create(&hilo_consola, NULL, (void*)consola, NULL);
-
+	log_info(logger, "Conexion con la CPU establecida.", NULL);
+	log_info(logger, "Cantidad de CPUS conectadas: %d.", miContexto.cantHilosCpus);
 	//El siguiente if pisa el contexto del quantum, para q luego con -1 sea ignorado en caso FIFO
 	if	(!strcmp(miContexto.algoritmoPlanificacion, "FIFO")){ 		//por FIFO
-		puts("FIFO");
-
+		log_info(logger, "Algoritmo seleccionado: FIFO");
 		miContexto.quantum = -1;
+	}else{				//por RoundRobin
+		log_info(logger, "Algoritmo seleccionado: RoundRobin con un Quantum de: %d",miContexto.quantum);
+	}
+	sleep(3);
 
-
-		}
-		else{														//por RoundRobin
-
-			puts("RoundRobin");
-		}
-
+	//crear hilo de consola para que quede a la escucha de comandos por consola para el planificador
+	pthread_t hilo_consola, hilo_dispatcher;
+	pthread_create(&hilo_consola, NULL, (void*)consola, NULL);
 	//creo hilo despachador
 	pthread_create(&hilo_dispatcher, NULL, (void*)dispatcher, NULL);
-
 
 	int recivoOrden=1;
 	while (recivoOrden)		//controla que no se salga desde la Consola()
@@ -115,7 +109,7 @@ int main() {
 	//cierra los sockets y libero memoria
 
 	sem_wait(&semSalir);	//no esta de mas este semaforo?
-	puts("FINALIZANDO PROGRAMA\n");
+	log_info(logger, "FINALIZANDO PROGRAMA");
 	//pthread_join(hilo_dispatcher, NULL);
 	//list_iterate(lstPcbs,(void*)free); //mapeo la funsion imprimePS en cada nodo de la lista
 	close(conexiones.socket_escucha);

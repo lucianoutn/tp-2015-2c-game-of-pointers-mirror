@@ -183,69 +183,72 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 
 			case 0: //leer
 
-				puts("LEER");
+				//puts("LEER");
 				creoHeader(PCB,header,0,pagina); //PCB HEADER TIPOEJECUCION PAGINA
 				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &recibi, sizeof(bool),0);		//espero recibir la respuesta
 				usleep(configuracion.retardo); //retardo del cpu
 				if(recibi)	//Controlo que haya llegado bien
-					puts("Leido");
+					log_info(logger, "mProc %d - Pagina %d Leida", PCB->PID, pagina);
+					//printf("mProc %d - Pagina %d Leida\n",PCB->PID, pagina);
+					//puts("Leido");
 				else
-					puts("NO Leido");
+					log_info(logger, "mProc %d - Pagina %d Fallo al leer",PCB->PID, pagina);
+					//puts("NO Leido");
 				break;
 
 			case 1: //Escribir
 
-				//HAY QUE AGREGAR EL CAMPO PARA EL MSJ Y MANDARLO
-				puts("ESCRIBIR");
-				printf("Mensaje recibido: <%s>\nTamaño: %d.\n",mensaje,strlen(mensaje));
+				//puts("ESCRIBIR");
+				//printf("Mensaje recibido: <%s>\nTamaño: %d.\n",mensaje,strlen(mensaje));
 				creoHeader(PCB,header,1,pagina); //PCB HEADER TIPOEJECUCION PAGINA
 				header->tamanio_msj = strlen(mensaje);
-				/*struct {
-					t_header head;
-					char *msj;
-				}auxiliar;
-				auxiliar.head = *header;
-				auxiliar.msj = (char*)malloc(sizeof(char) * header->tamanio_msj);
-				strcpy(auxiliar.msj,mensaje);
-				send(socketMemoria, &auxiliar, sizeof(auxiliar), 0);*/
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				send(socketMemoria, mensaje, header->tamanio_msj,0);	//envio el texto a excribir
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
 				usleep(configuracion.retardo); //retardo del cpu
 				if(recibi)	//Controlo que haya llegado bien
-					puts("Recibi ok");
+					log_info(logger, "mProc %d - Pagina %d Escrita: %s",PCB->PID, pagina, mensaje);
+					//puts("Recibi ok");
 				else
-				puts("Error");
+					log_info(logger, "mProc %d - Pagina %d Fallo al escribir: %s",PCB->PID,pagina, mensaje);
+					//puts("Error");
 				break;
 
 			case 2://iniciar
 
-				puts("INICIAR");
+				//puts("INICIAR");
 				creoHeader(PCB,header,2,pagina); //PCB HEADER TIPOEJECUCION PAGINA
 				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
 				usleep(configuracion.retardo); //retardo del cpu
 				if(recibi)	//Controlo que haya llegado bien
-					puts("Inicializado");
-				else
-					puts("NO Inicializado");
+					log_info(logger, "mProc %d - Iniciado",PCB->PID);
+					//puts("Inicializado");
+				else{
+					log_info(logger, "mProc %d - Fallo",PCB->PID);
+					//puts("NO Inicializado");
+					PCB->estado =4;
+				}
+
 				break;
 
 			case 3: //finalizar
 
-				puts("FINALIZAR");
+				//puts("FINALIZAR");
 				creoHeader(PCB,header,3,pagina); //PCB HEADER TIPOEJECUCION PAGINA
-				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
 				usleep(configuracion.retardo); //retardo del cpu
 				if(recibi)	//Controlo que haya llegado bien
-					puts("Finalizado");
+					log_info(logger, "mProc %d - Finalizado",PCB->PID);
+					//puts("Finalizado");
 				else
-					puts("Error");
+					log_info(logger, "mProc %d - Fallo al finalizar",PCB->PID);
+					//puts("Error");
+
 				printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
 
 				//aviso al plani indicando que termino con este send:
@@ -265,17 +268,19 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				break;
 			case 4: //entrada-salida
 			{
-				puts("ENTRADA-SALIDA");
+				//puts("ENTRADA-SALIDA");
 				PCB->estado=3; //bloqueo proceso
 				usleep(configuracion.retardo); //retardo del cpu
 				//señal al plani avisando que cambie de estado
 				send(socketPlanificador, &cambio, sizeof(flag), 0);
 				send(socketPlanificador, &pagina, sizeof(int), 0); //envio el tiempo del sleep
+				log_info(logger, "mProc %d - En entrada-salida de tiempo: %d",PCB->PID,pagina);
+				//printf("mProc %d - En entrada-salida de tiempo: %d\n",PCB->PID,pagina);
 				break;
 			}
 			default:
 			{
-				puts("default");
+				puts("default\n");
 				break;
 			}
 		}
@@ -290,20 +295,6 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 
 	}	//FIN WHILE
 
-	/*if(strcmp(instrucciones[PCB->instructionPointer - 1], "finalizar"))
-	{
-		puts("FINALIZAR");
-		creoHeader(PCB,header,3,pagina); //PCB HEADER TIPOEJECUCION PAGINA
-		//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
-		send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
-		recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
-		if(recibi)	//Controlo que haya llegado bien
-			puts("Finalizado");
-		else
-			puts("Error");
-		printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
-	}*/
-
 	free(instrucciones);
 	free(header);
 
@@ -317,7 +308,7 @@ void iniciarCPU(t_cpu *CPUS){
 	//pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
 	//unsigned int tid = process_get_thread_id(); //no borrar puede servir mas adelante
 	//printf("CPU hilo ID: %d conectado\n", tid); //se puede usar "htop" en la consola para verlos
-	printf("CPU NUMERO: %d conectada\n", CPUS->numeroCPU); //se puede usar "htop" en la consola para verlos
+	//printf("CPU: %d CONECTADA!\n", CPUS->numeroCPU); //se puede usar "htop" en la consola para verlos
 	//printf("CPU hilo ID: %lu conectado\n", pthread_self());
 	int status=1;		// Estructura que manjea el status de los recieve.
 
@@ -326,7 +317,7 @@ void iniciarCPU(t_cpu *CPUS){
 
 	while(status!=0)	//MIENTRAS NO QUIERA SALIR RECIBO INSTRUCCIONES
 	{
-		puts("Esperando Instrucciones...\n");
+		printf("CPU: %d Esperando Instrucciones...\n", CPUS->numeroCPU);
 		//CPU a la espera de nuevas instrucciones
 
 
@@ -337,10 +328,10 @@ void iniciarCPU(t_cpu *CPUS){
 		//poll(pollfd, 1,3500);
 
 		sem_wait(semProduccionMsjs); //semaforo productor-consumidor
-		puts("ANTES DEL RECV");
+		//puts("ANTES DEL RECV");
 		status = recv(CPUS->socketPlani, header, sizeof(t_headcpu),0);
 
-		puts("DESPUES DEL RECV");
+		//puts("DESPUES DEL RECV");
 		if(status!=0)	//CONTROLA QUE NO SE PIERDA LA CONEXION
 
 		{
@@ -367,7 +358,7 @@ void iniciarCPU(t_cpu *CPUS){
 				if (PCB->ruta == (char *)(-1))		//capturo error del shmat
 				    perror("shmat ruta");
 
-				printf("PCB Recibido. PID:%d Ruta: <%s>\n",PCB->PID,PCB->ruta);
+				//printf("PCB Recibido. PID:%d Ruta: <%s>\n",PCB->PID,PCB->ruta);
 				//ejecuto
 				ejecutoPCB(sockets->socketMemoria,CPUS->socketPlani,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
 
@@ -383,7 +374,7 @@ void iniciarCPU(t_cpu *CPUS){
 		}
 		else	//SI SE PIERDE LA CONEXION SALGO
 		{
-			puts("Conexion perdida!");
+			log_info(logger, "Conexion perdida", NULL);
 			sem_post(&semSalir);	//Semaforo para controlar la finalizacion de la CPU
 			break;
 		}
@@ -393,7 +384,7 @@ void iniciarCPU(t_cpu *CPUS){
 	//CIERRO LOS SOCKETS Y EL HEADER
 	free(header);
 	close(CPUS->socketPlani);
-	close(sockets->socketMemoria);
+	//close(sockets->socketMemoria);
 
 }
 
@@ -404,7 +395,7 @@ int configuroSocketsYLogs (){
 	cargoArchivoConfiguracion(); //carga las configuraciones basicas
 	creoLogger(1);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
 	log_info(logger, "Inicio Log CPU", NULL);
-	puts("Conexion con el Planificador");
+	log_info(logger, "Conectado a el Planificador", NULL);
 	int i = 0;
 	CPU = (t_cpu*)malloc(sizeof(t_cpu) * (configuracion.cantHilos));
 	while(i < configuracion.cantHilos){
@@ -419,7 +410,7 @@ int configuroSocketsYLogs (){
 	}
 
 	sockets = (t_sockets*)malloc(sizeof(t_sockets));
-	puts("Conexion con la Memoria");
+	log_info(logger, "Conectado a la Memoria", NULL);
 	sockets->socketMemoria = crearCliente(configuracion.ipMemoria, configuracion.puertoMemoria);//conecta con la memoria
 	if (sockets->socketMemoria==-1){		//controlo error
 			puts("No se pudo concetar con el Adm. de Memoria");

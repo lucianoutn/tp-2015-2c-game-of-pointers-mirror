@@ -31,7 +31,7 @@ int main()
 
 
 	//creando los hilos
-	puts("CREO HILOS DE CPU");
+	//puts("CREO HILOS DE CPU");
 
 	int i, err;
 	for (i=0; i<configuracion.cantHilos; i++){
@@ -43,15 +43,14 @@ int main()
 	}
 
 	puts("Cree las CPUS correctamente");
-	//pthread_join(cpu[0], NULL);
-
-
 
 	sem_wait(&semSalir);
+	//pthread_join(CPU[0].hilo,NULL);
+	puts("CHAU");
 	close(sockets->socketMemoria);
 	free(sockets);
 	for (i=0; i<configuracion.cantHilos; i++){
-			close(CPU[i].socketPlani);
+			//close(CPU[i].socketPlani);
 			pthread_exit(&CPU[i].hilo);
 	}
 	free(CPU);
