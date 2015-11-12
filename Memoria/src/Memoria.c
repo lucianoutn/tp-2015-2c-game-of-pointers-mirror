@@ -264,7 +264,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
     	r_select=select(fdmax+1, &read_fds, NULL, NULL,	NULL); //HICE TRAMPA!!!
     	if(r_select == EINTR)
     	{
-    		puts("Capture una señal \nnn");
+    		puts("Capture una señal \n");
     	}
     	else if (r_select== -1)
     	{
@@ -335,7 +335,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
     							if(j!=listener)
     							{
     								printf ("El tipo de ejecucion recibido es %d \n", package->type_ejecution);
-    								char * mensaje = (char*)malloc(sizeof(char) * package->tamanio_msj);;
+    								char * mensaje = malloc(package->tamanio_msj);
 
     								if(package->type_ejecution==1) //Escritura
     								{
@@ -345,10 +345,11 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
     								}
     								else
     								{
-    									strcpy(mensaje,"");
+    									mensaje=NULL;
     								}
     								// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
     								ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, j, serverSocket, tablaAccesos);
+    								free(mensaje);
     							}
  							}
     					}
