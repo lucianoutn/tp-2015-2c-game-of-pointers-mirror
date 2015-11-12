@@ -51,6 +51,7 @@ int main()
 	for (i=1; i<=configuracion.cantHilos; i++){
 			//close(CPU[i].socketPlani);
 			pthread_cancel(CPU[i].hilo);
+	}
 	free(CPU);
 	//free(sockets);
 
