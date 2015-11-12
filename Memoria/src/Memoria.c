@@ -64,21 +64,21 @@ int main()
 	void flush ()
 		{
 			log_info(logger, "Se recibio SIGUSR1, si corresponde se vacia la TLB \n");
-			sleep(3);
+			//sleep(3);
 			tlbFlush(TLB);
 			log_info(logger, "Tratamiento de la señal SIGUSR1 terminado. \n");
 		}
 	void limpiar()
 	{
 		log_info(logger, "Se recibio SIGUSR2, se limpia la memoria \n");
-		sleep(3);
+		//sleep(3);
 		limpiarMemoria(memoria_real, TLB,tablaAdm);
 		log_info(logger, "Se finalizo el tratamiento de la señal SIGUSR2 \n");
 	}
 	void dump()
 	{
 		log_info(logger, "Se rcibio SIGPOLL, se muestra el contenido de la memoria actualmente \n");
-		sleep(3);
+		//sleep(3);
 		dumpEnLog(memoria_real,tablaAdm);
 		log_info(logger, "Tratamiento de la señal SIGPOLL terminado \n");
 	}
@@ -264,7 +264,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
     	r_select=select(fdmax+1, &read_fds, NULL, NULL,	NULL); //HICE TRAMPA!!!
     	if(r_select == EINTR)
     	{
-    		puts("Capture una señal \nnn");
+    		puts("Capture una señal \n");
     	}
     	else if (r_select== -1)
     	{
@@ -335,7 +335,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
     							if(j!=listener)
     							{
     								printf ("El tipo de ejecucion recibido es %d \n", package->type_ejecution);
-    								char * mensaje = (char*)malloc(sizeof(char) * package->tamanio_msj);;
+    								char * mensaje = malloc(package->tamanio_msj);
 
     								if(package->type_ejecution==1) //Escritura
     								{
@@ -345,10 +345,11 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm, t_list* 
     								}
     								else
     								{
-    									strcpy(mensaje,"");
+    									mensaje=NULL;
     								}
     								// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
     								ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, j, serverSocket, tablaAccesos);
+    								free(mensaje);
     							}
  							}
     					}

@@ -42,12 +42,19 @@ int main()
 		printf("no se pudo crear el hilo de cpu :[%s]", strerror(err));
 	}
 
-	puts("salio del for");
-		//pthread_join(cpu[0], NULL);
+	puts("Cree las CPUS correctamente");
+	//pthread_join(cpu[0], NULL);
 
 
 
 	sem_wait(&semSalir);
+	close(sockets->socketMemoria);
+	free(sockets);
+	for (i=0; i<configuracion.cantHilos; i++){
+			close(CPU[i].socketPlani);
+			pthread_exit(&CPU[i].hilo);
+	}
+	free(CPU);
 
 	return EXIT_SUCCESS;
 }
