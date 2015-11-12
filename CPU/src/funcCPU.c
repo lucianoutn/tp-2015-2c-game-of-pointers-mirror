@@ -168,7 +168,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 	char **instrucciones = (leermCod(PCB->ruta, &PCB->numInstrucciones));
 
 	//Itera hasta llegar a la ultima instruccion
-	while(PCB->estado!=4 && PCB->estado !=3)
+	while(PCB->estado!=4 && PCB->estado !=3 && PCB->estado !=5)
 	{
 		if(PCB->quantum==0)
 		{
@@ -191,11 +191,11 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				usleep(configuracion.retardo); //retardo del cpu
 				if(recibi)	//Controlo que haya llegado bien
 					log_info(logger, "mProc %d - Pagina %d Leida", PCB->PID, pagina);
-					//printf("mProc %d - Pagina %d Leida\n",PCB->PID, pagina);
-					//puts("Leido");
-				else
+				else{
 					log_info(logger, "mProc %d - Pagina %d Fallo al leer",PCB->PID, pagina);
-					//puts("NO Leido");
+					PCB->estado =5;
+					send(socketPlanificador,&recibi, sizeof(flag),0);
+				}
 				break;
 
 			case 1: //Escribir
@@ -210,10 +210,11 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				usleep(configuracion.retardo); //retardo del cpu
 				if(recibi)	//Controlo que haya llegado bien
 					log_info(logger, "mProc %d - Pagina %d Escrita: %s",PCB->PID, pagina, mensaje);
-					//puts("Recibi ok");
-				else
+				else{
 					log_info(logger, "mProc %d - Pagina %d Fallo al escribir: %s",PCB->PID,pagina, mensaje);
-					//puts("Error");
+					PCB->estado =5;
+					send(socketPlanificador,&recibi, sizeof(flag),0);
+				}
 				break;
 
 			case 2://iniciar
@@ -230,7 +231,8 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				else{
 					log_info(logger, "mProc %d - Fallo",PCB->PID);
 					//puts("NO Inicializado");
-					PCB->estado =4;
+					PCB->estado =5;
+					send(socketPlanificador,&recibi, sizeof(flag),0);
 				}
 
 				break;
@@ -244,10 +246,12 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				usleep(configuracion.retardo); //retardo del cpu
 				if(recibi)	//Controlo que haya llegado bien
 					log_info(logger, "mProc %d - Finalizado",PCB->PID);
-					//puts("Finalizado");
-				else
+				else{
 					log_info(logger, "mProc %d - Fallo al finalizar",PCB->PID);
-					//puts("Error");
+					PCB->estado =5;
+					send(socketPlanificador,&recibi, sizeof(flag),0);
+					break;
+				}
 
 				printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
 
@@ -263,8 +267,6 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 					semOperacion.sem_flg = 0; //un flag siempre en0
 					semop (semVCPU, &semOperacion, 1); //aplico la operacion sobre el semaforo
 		     	*/
-				//libero el PCB si ejecuto todas las instrucciones
-				//free(PCB); //LO COMENTO XQ TIRA ERROR
 				break;
 			case 4: //entrada-salida
 			{
@@ -275,7 +277,6 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				send(socketPlanificador, &cambio, sizeof(flag), 0);
 				send(socketPlanificador, &pagina, sizeof(int), 0); //envio el tiempo del sleep
 				log_info(logger, "mProc %d - En entrada-salida de tiempo: %d",PCB->PID,pagina);
-				//printf("mProc %d - En entrada-salida de tiempo: %d\n",PCB->PID,pagina);
 				break;
 			}
 			default:
@@ -327,7 +328,7 @@ void iniciarCPU(t_cpu *CPUS){
 		//pollfd->events=POLLIN;
 		//poll(pollfd, 1,3500);
 
-		sem_wait(semProduccionMsjs); //semaforo productor-consumidor
+		//sem_wait(semProduccionMsjs); //semaforo productor-consumidor
 		//puts("ANTES DEL RECV");
 		status = recv(CPUS->socketPlani, header, sizeof(t_headcpu),0);
 

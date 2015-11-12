@@ -147,7 +147,7 @@ void enviaACpu(t_cpu *CPU)
 	flag termino=false;
 	recv(CPU->socket, &termino, sizeof(flag),0);		//espero recibir la respuesta
 	if(!termino)	//Controlo que haya llegado bien
-		log_info(logger, "mProc %d <%s> Fallo al volver de la cpu: %d",pcb->PID,ruta(pcb->PID),CPU->numCpu);
+		log_info(logger, "mProc %d <%s> Fallo",pcb->PID,ruta(pcb->PID));
 
 	//si el proceso esta bloqueado, recivo el tiempo de bloqueo
 	int tiempo;
@@ -250,21 +250,20 @@ char* estadoActual (int estado) //la uso para el comando PS del planificador.luc
 	if(estado==0)
 	{
 		return "Nuevo";
-	}
-	else if(estado==1)
+	}else if(estado==1)
 	{
 		return "Listo";
-	}
-	else if(estado==2)
+	}else if(estado==2)
 	{
 		return "Ejecutando";
-	}
-	else if(estado==3)
+	}else if(estado==3)
 	{
 		return "Bloqueado";
-	}
-	else
+	}else if(estado==4)
 	{
 		return "Finalizado";
+	}else
+	{
+		return "Fallo";
 	}
 }
