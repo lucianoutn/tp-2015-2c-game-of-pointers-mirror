@@ -48,7 +48,7 @@ int main() {
 	 */
 
 	// alojo memoria dinamicamente en tiempo de ejecucion
-	conexiones.CPUS= (t_cpu*)malloc(sizeof(t_cpu) * (miContexto.cantHilosCpus));
+	conexiones.CPUS= (t_cpu*)malloc(sizeof(t_cpu) * ((miContexto.cantHilosCpus) +1));
 	pthread_t hilo_conexiones;
 	if(pthread_create(&hilo_conexiones, NULL, (void*)escuchar,&conexiones)<0)
 		perror("Error HILO ESCUCHAS!");
@@ -72,7 +72,7 @@ int main() {
 	}else{				//por RoundRobin
 		log_info(logger, "Algoritmo seleccionado: RoundRobin con un Quantum de: %d",miContexto.quantum);
 	}
-	sleep(3);
+	sleep(2);
 
 	//crear hilo de consola para que quede a la escucha de comandos por consola para el planificador
 	pthread_t hilo_consola, hilo_dispatcher;
@@ -97,6 +97,19 @@ int main() {
 			{
 				recivoOrden=0;
 				pthread_cancel (hilo_dispatcher);
+				break;
+			}
+			case 2: //comando cpu
+			{
+				//FALTA TERMINAR DE IMPLEMENTAR
+				printf("USO DE LA CPU\n");
+				int usoCPU =0, nro;
+				send(conexiones.CPUS[0].socket, &usoCPU, sizeof(int),0);
+				for(nro=1; nro<=miContexto.cantHilosCpus;nro++)
+				{
+					recv(conexiones.CPUS[0].socket, &usoCPU, sizeof(int),0);
+					printf("CPU %d: %d%\n",nro,usoCPU);
+				}
 				break;
 			}
 		}

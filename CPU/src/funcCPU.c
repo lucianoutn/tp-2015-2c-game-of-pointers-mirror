@@ -397,9 +397,12 @@ int configuroSocketsYLogs (){
 	creoLogger(1);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
 	log_info(logger, "Inicio Log CPU", NULL);
 	log_info(logger, "Conectado a el Planificador", NULL);
-	int i = 1;
+	int i = 0;
 	CPU = (t_cpu*)malloc(sizeof(t_cpu) * ((configuracion.cantHilos) + 1));
+	//conexion para el comandoCpu
+	//CPU[0].socketPlani = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador);
 	while(i <= configuracion.cantHilos){
+		CPU[i].porcentajeUso=0;
 		CPU[i].socketPlani = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
 		if (CPU[i].socketPlani==-1){	//controlo error
 			puts("No se pudo conectar con el Planificador");
@@ -424,5 +427,13 @@ int configuroSocketsYLogs (){
 
 }
 
-
-
+void comandoCpu (int socket){	//Comando que devuelve el porcentaje de uso de la CPU
+	int status = 1, nro;
+	while (status){
+		status = recv(socket, &nro, sizeof(int),0);
+		for(nro=1; nro<=configuracion.cantHilos; nro++)
+		{
+			send(socket, &CPU[nro].porcentajeUso, sizeof(int),0);
+		}
+	}//FIN WHILE
+}

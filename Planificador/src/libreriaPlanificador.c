@@ -44,6 +44,9 @@ void *escuchar (struct Conexiones* conexion){
 	int i =1;
 	semEsperaCPU.__align =0; // inicializa semaforo
 
+	//conexion para el comando cpu
+	conexion->CPUS[0].socket = accept(conexion->socket_escucha, (struct sockaddr *) &conexion->direccion, &conexion->tamanio_direccion);
+
 	while( i<= miContexto.cantHilosCpus ) //hasta q recorra todos los hilos de cpus habilitados
 	{
 		//guarda las nuevas conexiones para acceder a ellas desde cualquier parte del codigo

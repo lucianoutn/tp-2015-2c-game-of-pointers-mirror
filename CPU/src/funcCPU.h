@@ -99,6 +99,7 @@ typedef struct {
 	pthread_t hilo;
 	int socketPlani;
 	int numeroCPU;
+	int porcentajeUso;
 }t_cpu;
 
 t_cpu *CPU;
@@ -133,5 +134,6 @@ void iniciarCPU(t_cpu *);
 
 int configuroSocketsYLogs ();
 
+void comandoCpu (int);
 
 #endif /* FUNCCPU_H_ */

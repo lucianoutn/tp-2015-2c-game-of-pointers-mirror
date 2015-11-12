@@ -113,11 +113,14 @@ void consola (void* arg)
 			}
 			case cpu:
 			{
-				int i;
+				orden=2;
+				/*int i;
 				printf("\nUSO DE LA CPU\n");
 				for(i=1; i<=miContexto.cantHilosCpus; i++){
 					printf("CPU %d: %d%\n",i,100);
-				}
+				}*/
+				sem_post(&ordenIngresada);
+				usleep(1000);
 				sem_post(&semConsola);  //vuelvo a habilitar la consolita
 				break;
 			}
