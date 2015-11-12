@@ -32,6 +32,9 @@ void cargoArchivoConfiguracion()
  configuracion.puertoMemoria = config_get_string_value(config_cpu, "PUERTO_MEMORIA");
  configuracion.cantHilos = config_get_int_value(config_cpu, "CANTIDAD_HILOS");
  configuracion.retardo = config_get_int_value(config_cpu, "RETARDO");
+
+ //free(config_cpu);
+
 }
 
 /* Crea el Header para enviar a la memoria
@@ -160,9 +163,9 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 
 	//reservo espacio en la memoria para guardar todas las instrucciones del archivo mCod
 	//primero leo para saber el numero de instrucciones
-	char **instrucciones= (char**)malloc(sizeof(char*));
+	//char **instrucciones= (char**)malloc(sizeof(char*));
 	//guardo las intrucciones
-	instrucciones = (leermCod(PCB->ruta, &PCB->numInstrucciones));
+	char **instrucciones = (leermCod(PCB->ruta, &PCB->numInstrucciones));
 
 	//Itera hasta llegar a la ultima instruccion
 	while(PCB->estado!=4 && PCB->estado !=3)
@@ -301,7 +304,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 		printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
 	}*/
 
-
+	free(instrucciones);
 	free(header);
 
 }

@@ -113,7 +113,11 @@ void consola (void* arg)
 			}
 			case cpu:
 			{
-				printf("Este comando todavia no ha sido implemenado\n");
+				int i;
+				printf("\nUSO DE LA CPU\n");
+				for(i=0; i<miContexto.cantHilosCpus; i++){
+					printf("CPU %d: %d%\n",i,100);
+				}
 				sem_post(&semConsola);  //vuelvo a habilitar la consolita
 				break;
 			}

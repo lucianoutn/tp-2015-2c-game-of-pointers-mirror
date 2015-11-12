@@ -114,9 +114,9 @@ int main() {
 
 	//cierra los sockets y libero memoria
 
-	sem_wait(&semSalir);
+	sem_wait(&semSalir);	//no esta de mas este semaforo?
 	puts("FINALIZANDO PROGRAMA\n");
-	pthread_join(hilo_dispatcher, NULL);
+	//pthread_join(hilo_dispatcher, NULL);
 	//list_iterate(lstPcbs,(void*)free); //mapeo la funsion imprimePS en cada nodo de la lista
 	close(conexiones.socket_escucha);
 	int i=0;
@@ -124,6 +124,8 @@ int main() {
 	{
 		close(conexiones.CPUS[i++].socket);
 	}
+	free(conexiones.CPUS);
+
 	
 
 	return EXIT_SUCCESS;
