@@ -113,8 +113,8 @@ int main() {
 	//pthread_join(hilo_dispatcher, NULL);
 	//list_iterate(lstPcbs,(void*)free); //mapeo la funsion imprimePS en cada nodo de la lista
 	close(conexiones.socket_escucha);
-	int i=0;
-	while(i<miContexto.cantHilosCpus)
+	int i=1;
+	while(i<=miContexto.cantHilosCpus)
 	{
 		close(conexiones.CPUS[i++].socket);
 	}
