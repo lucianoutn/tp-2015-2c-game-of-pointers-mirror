@@ -115,7 +115,7 @@ void consola (void* arg)
 			{
 				int i;
 				printf("\nUSO DE LA CPU\n");
-				for(i=0; i<miContexto.cantHilosCpus; i++){
+				for(i=1; i<=miContexto.cantHilosCpus; i++){
 					printf("CPU %d: %d%\n",i,100);
 				}
 				sem_post(&semConsola);  //vuelvo a habilitar la consolita
