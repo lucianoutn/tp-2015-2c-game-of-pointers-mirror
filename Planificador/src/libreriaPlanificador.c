@@ -41,10 +41,10 @@ void traigoContexto()
 
 //Funcion encargada de acceptar nuevas peticiones de conexion
 void *escuchar (struct Conexiones* conexion){
-	int i =0;
+	int i =1;
 	semEsperaCPU.__align =0; // inicializa semaforo
 
-	while( i< miContexto.cantHilosCpus ) //hasta q recorra todos los hilos de cpus habilitados
+	while( i<= miContexto.cantHilosCpus ) //hasta q recorra todos los hilos de cpus habilitados
 	{
 		//guarda las nuevas conexiones para acceder a ellas desde cualquier parte del codigo
 		conexion->CPUS[i].socket = accept(conexion->socket_escucha, (struct sockaddr *) &conexion->direccion, &conexion->tamanio_direccion);
