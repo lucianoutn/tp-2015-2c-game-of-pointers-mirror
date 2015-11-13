@@ -37,18 +37,12 @@ int main() {
 	creoLogger(1); //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
 	log_info(logger, "Inicio Log MEMORIA", NULL);
 
-	//RESERVO ESPACIO PARA LA MEMORIA REAL /
-	char * memoria_real = reservarMemoria(miContexto.cantidadMarcos,
-			miContexto.tamanioMarco);
+	char * memoria_real = reservarMemoria(miContexto.cantidadMarcos,miContexto.tamanioMarco); // Reservo espacio para memoriareal
 	t_list * TLB = NULL;
-	// CREO UNA LISTA PARA REFERENCIAR A LAS LISTAS DE PROCESOS //
-	t_list * tablaAdm = crearListaAdm();
-	// CREO LISTAS PARA LOS FRAMES LLENOS Y VACIOS DE MEMORIA REAL
-	listaFramesMemR = crearListaFrames();
-	listaFramesHuecosMemR = crearListaHuecosFrames(miContexto.cantidadMarcos,
-			miContexto.tamanioMarco, memoria_real);
-	// CREO LISTA PARA GUARDAR LAS PAGINAS ACCEDIDAS Y LOS FALLOS DE CADA PROCESO
-	t_list * tablaAccesos = crearListaVersus();
+	t_list * tablaAdm = crearListaAdm(); // CREO UNA LISTA PARA REFERENCIAR A LAS LISTAS DE PROCESOS
+	listaFramesMemR = crearListaFrames(); // CREO LISTAS PARA LOS FRAMES LLENOS Y VACIOS DE MEMORIA REAL
+	listaFramesHuecosMemR = crearListaHuecosFrames(miContexto.cantidadMarcos,miContexto.tamanioMarco, memoria_real);
+	t_list * tablaAccesos = crearListaVersus(); // CREO LISTA PARA GUARDAR LAS PAGINAS ACCEDIDAS Y LOS FALLOS DE CADA PROCESO
 
 	/* SI LA TLB NO ESTA HABILTIADA, VA A APUNTAR A NULL */
 	if (!strcmp(miContexto.tlbHabilitada, "SI")) {
@@ -60,31 +54,7 @@ int main() {
 		cantHitTlb = 0;
 	}
 	//Me quedo atenta a las señales, y si las recibe ejecuta esa funcion
-	void flush()
-	{
-		log_info(logger,"Se recibio SIGUSR1, si corresponde se vacia la TLB \n");
-		//sleep(3);
-		tlbFlush(TLB);
-		log_info(logger, "Tratamiento de la señal SIGUSR1 terminado. \n");
-	}
-	void limpiar()
-	{
-		log_info(logger, "Se recibio SIGUSR2, se limpia la memoria \n");
-		//sleep(3);
-		limpiarMemoria(memoria_real, TLB, tablaAdm);
-		log_info(logger, "Se finalizo el tratamiento de la señal SIGUSR2 \n");
-	}
-	void dump()
-	{
-		log_info(logger,"Se recibio SIGPOLL, se muestra el contenido de la memoria actualmente \n");
-		//sleep(3);
-		dumpEnLog(memoria_real, tablaAdm);
-		log_info(logger, "Tratamiento de la señal SIGPOLL terminado \n");
-	}
-
-	signal(SIGUSR1, flush);
-	signal(SIGUSR2, limpiar);
-	signal(SIGPOLL, dump);
+	seniales(TLB, memoria_real, tablaAdm);
 
 	reciboDelCpu(memoria_real, TLB, tablaAdm, tablaAccesos);
 
@@ -95,6 +65,42 @@ int main() {
 	list_destroy_and_destroy_elements(listaFramesMemR, (void*) marco_destroy);
 	log_destroy(logger);
 	return 1;
+}
+
+void seniales(t_list* TLB, char* memoria_real, t_list * tablaAdm)
+{
+	void flush()
+	{
+		log_info(logger,"Se recibio SIGUSR1, si corresponde se vacia la TLB.");
+		//sleep(3);
+		tlbFlush(TLB);
+		log_info(logger, "Tratamiento de la señal SIGUSR1 terminado.");
+	}
+	void limpiar()
+	{
+		log_info(logger, "Se recibio SIGUSR2, se limpia la memoria.");
+		//sleep(3);
+		limpiarMemoria(memoria_real, TLB, tablaAdm);
+		log_info(logger, "Se finalizo el tratamiento de la señal SIGUSR2.");
+	}
+	void dump()
+	{
+		log_info(logger,"Se recibio SIGPOLL, se muestra el contenido de la memoria actualmente");
+		dumpEnLog(memoria_real, tablaAdm);
+		log_info(logger, "Tratamiento de la señal SIGPOLL terminado");
+	}
+	void mostrar()
+	{
+		log_info(logger,"Luego de un minuto, muestro tasa de aciertos de la TLB");
+		tasasDeTLB();
+		alarm(60);
+	}
+
+	signal(SIGUSR1, flush);
+	signal(SIGUSR2, limpiar);
+	signal(SIGPOLL, dump);
+	signal(SIGALRM,mostrar);
+	alarm(60);
 }
 
 void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* tablaAccesos)
@@ -141,18 +147,14 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 	int yes = 1;        // para setsockopt() SO_REUSEADDR, más abajo
 	int addrlen;
 	int i, j;
-	int r_select;
 
-	int cronometro = 0;
 	FD_ZERO(&master);    // borra los conjuntos maestro y temporal
 	FD_ZERO(&read_fds);        // obtener socket a la escucha
 
 	struct addrinfo hints; //estructura que almacena los datos de conexion
 	struct addrinfo *serverInfo; //estructura que almacena los datos de conexion
-	struct timeval tv;
 	int err=0;
-	tv.tv_sec = 1;
-	tv.tv_usec = 0;
+
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC;		// No importa si uso IPv4 o IPv6
 	hints.ai_flags = AI_PASSIVE;// Asigna el address del localhost: 127.0.0.1
