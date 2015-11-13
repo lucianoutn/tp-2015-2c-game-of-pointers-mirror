@@ -324,6 +324,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		 	upPaginasAccedidas(tablaAccesos, package->PID );
 		 	int tamanioMsj = strlen(pagina_proc->direccion_fisica);
 		 	send(socketCliente,&tamanioMsj,sizeof(int),0);
+		 	send(socketCliente, pagina_proc->direccion_fisica, tamanioMsj, 0);
 			free(flag);
 			return 1;
 		}
