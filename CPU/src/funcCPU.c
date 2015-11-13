@@ -403,6 +403,8 @@ int configuroSocketsYLogs (){
 	//CPU[0].socketPlani = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador);
 	while(i <= configuracion.cantHilos){
 		CPU[i].porcentajeUso=0;
+		CPU[i].cantInstrucEjec=0;
+		CPU[i].tiempoEjec=0;
 		CPU[i].socketPlani = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
 		if (CPU[i].socketPlani==-1){	//controlo error
 			puts("No se pudo conectar con el Planificador");

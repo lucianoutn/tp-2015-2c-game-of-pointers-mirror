@@ -185,8 +185,8 @@ void consola (void* arg)
 					printf("CPU %d: %d%\n",i,100);
 				}*/
 				sem_post(&ordenIngresada);
-				usleep(1000);
-				sem_post(&semConsola);  //vuelvo a habilitar la consolita
+				//usleep(1000);
+				//sem_post(&semConsola);  //vuelvo a habilitar la consolita
 				break;
 			}
 			case salir:

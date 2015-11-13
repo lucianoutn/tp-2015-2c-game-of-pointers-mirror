@@ -110,6 +110,7 @@ int main() {
 					recv(conexiones.CPUS[0].socket, &usoCPU, sizeof(int),0);
 					printf("CPU %d: %d%\n",nro,usoCPU);
 				}
+				sem_post(&semConsola); //vuelvo a habilitar la consola
 				break;
 			}
 		}
