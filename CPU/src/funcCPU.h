@@ -138,6 +138,8 @@ void iniciarCPU(t_cpu *);
 
 int configuroSocketsYLogs ();
 
+void timer ();
+
 void comandoCpu (int);
 
 #endif /* FUNCCPU_H_ */

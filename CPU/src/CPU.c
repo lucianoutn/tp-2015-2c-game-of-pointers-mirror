@@ -32,11 +32,13 @@ int main()
 
 	//creando los hilos
 	//puts("CREO HILOS DE CPU");
+	int i, err;
 
 	//hilo para el comando cpu
-	pthread_create(&CPU[0].hilo, NULL, (void*)comandoCpu, CPU[0].socketPlani);
+	err = pthread_create(&CPU[0].hilo, NULL, (void*)comandoCpu, CPU[0].socketPlani);
+	if (err != 0)
+		printf("no se pudo crear el hilo del COMANDO CPU :[%s]", strerror(err));
 
-	int i, err;
 	for (i=1; i<=configuracion.cantHilos; i++){
 		CPU[i].numeroCPU = i;
 		err= pthread_create(&CPU[i].hilo, NULL, (void*)iniciarCPU, &CPU[i]);
@@ -51,9 +53,9 @@ int main()
 	//pthread_join(CPU[0].hilo,NULL);
 	puts("CHAU");
 	close(sockets->socketMemoria);
-	close(CPU[0].socketPlani);
-	for (i=1; i<=configuracion.cantHilos; i++){
-			//close(CPU[i].socketPlani);
+	//close(CPU[0].socketPlani);
+	for (i=0; i<=configuracion.cantHilos; i++){
+			close(CPU[i].socketPlani);
 			pthread_cancel(CPU[i].hilo);
 	}
 	free(CPU);

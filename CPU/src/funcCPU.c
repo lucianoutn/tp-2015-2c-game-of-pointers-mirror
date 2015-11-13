@@ -301,11 +301,26 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 
 }
 
+void timer(){ //funcion que resetea y calcula los valores de porcentaje de uso de los cpus cada 60s.
 
+	while(1){  // aca hay q preguntar lo de esta espera activa. VER setitimer()
+		sleep(60);
+		CPU->porcentajeUso=(CPU->tiempoEjec * 100) / 60;
+
+		//reseteo los valores
+		CPU->tiempoEjec = 0;
+		CPU->cantInstrucEjec = 0;
+		//setitimer(,,NULL);
+
+	}
+}
 
 
 void iniciarCPU(t_cpu *CPUS){
 
+	pthread_t *hiloTimer;
+	pthread_create(&hiloTimer, NULL, (void*)timer, NULL);
+	//puts("cree el hiloTimer"); //test
 	//pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
 	//unsigned int tid = process_get_thread_id(); //no borrar puede servir mas adelante
 	//printf("CPU hilo ID: %d conectado\n", tid); //se puede usar "htop" en la consola para verlos
@@ -376,17 +391,18 @@ void iniciarCPU(t_cpu *CPUS){
 		else	//SI SE PIERDE LA CONEXION SALGO
 		{
 			log_info(logger, "Conexion perdida", NULL);
-			sem_post(&semSalir);	//Semaforo para controlar la finalizacion de la CPU
+
 			break;
 		}
 
 	}	//FIN DEL WHILE
 
+	pthread_cancel(hiloTimer);
 	//CIERRO LOS SOCKETS Y EL HEADER
 	free(header);
 	close(CPUS->socketPlani);
 	//close(sockets->socketMemoria);
-
+	sem_post(&semSalir);	//Semaforo para controlar la finalizacion de la CPU
 }
 
 /*Configuraciones basicas de los Sockets
@@ -432,10 +448,12 @@ int configuroSocketsYLogs (){
 void comandoCpu (int socket){	//Comando que devuelve el porcentaje de uso de la CPU
 	int status = 1, nro;
 	while (status){
+		//puts("bloqueado antes del reciv"); //test
 		status = recv(socket, &nro, sizeof(int),0);
 		for(nro=1; nro<=configuracion.cantHilos; nro++)
 		{
 			send(socket, &CPU[nro].porcentajeUso, sizeof(int),0);
+			//puts("hcie el envio"); //test
 		}
 	}//FIN WHILE
 }
