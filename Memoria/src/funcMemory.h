@@ -114,10 +114,14 @@ int escribirDesdeTlb (t_list *,int, char*, t_header *, t_list*, t_list*, int);
 // ABSTRACCION DE TODO LO QUE HACE EL ESCRIBIR
 void escribirEnMemReal(t_header*, t_list*, t_list*, t_list*, int, int, char*);
 
+// ESCRIBO EL MARCO TENIENDO EN CUENTA QUE EL MENSAJE QUE ME LLEGA PUEDE SER MÁS LARGO Y QUE YA
+//PODIA LLEGAR A ESTAR ESCRITO DE ANTES CON ALGO MÁS LARGO
+void escribirMarco(char*, char*);
+
 // ASIGNA UN MARCO A UNA PAGINA RECIEN TRAIDA DEL SWAP, ACTUALIZA TABLA PROCESO, TLB
 void asignarMarcoPagSwap(t_header*,char*, t_list*, t_list*, t_list*, int);
 
-int swapeando(t_list*, t_list* , t_list *, char *, int, t_header *, t_list*);
+int swapeando(t_list*, t_list* , t_list *, char *, int, t_header *, t_list*, int);
 
 // LE MANDO LA TABLA DEL PROCESO Y ME DEVUELVE 1 SI YA TIENE TODOS SUS MARCOS DISPONIBLES OCUPADOS
 int marcosProcesoLlenos(t_list *);
