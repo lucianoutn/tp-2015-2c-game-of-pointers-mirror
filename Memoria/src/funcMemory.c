@@ -293,7 +293,8 @@ void asignarMarcosYTablas(char * contenido, t_header * package, t_list* tabla_pr
 	usleep(miContexto.retardoMemoria);
 
 	// LO ESCRIBO CON EL MENSAJE QUE ME DICEN QUE LO ESCRIBA PORQUE NO TENGO QUE TRAER LO QUE YA ESTE ESCRITO DEL SWAP
-	memcpy ( marco_a_llenar->direccion_inicio, contenido, strlen(contenido));
+	escribirMarco(contenido, marco_a_llenar->direccion_inicio);
+	//memcpy ( marco_a_llenar->direccion_inicio, contenido, strlen(contenido));
 
 	//AGREGO EL MARCO AHORA ESCRITO, A LA LISTA DE MARCOS ESCRITOS
 	list_add(listaFramesMemR, marco_a_llenar);
@@ -504,11 +505,11 @@ int escribirDesdeTlb (t_list * TLB, int tamanio_msg, char * message, t_header * 
 	if (registro_tlb != NULL)
 	{
 		upPaginasAccedidas(tablaAccesos, pagina->PID);
-		// No me reconoce el argumento "marco" de la estructura tlb y los demas si, es una joda esto
-		log_info(logger, "TLB HIT pagina: %d en el marco numero: %d", registro_tlb->pagina/*registro_tlb->marco*/);
+		log_info(logger, "TLB HIT pagina: %d en el marco numero: %d", registro_tlb->pagina,registro_tlb->marco);
 		//Actualizo cantidad de aciertos
 		cantHitTlb= cantHitTlb +1;
-		strcpy (registro_tlb->direccion_fisica, message);
+		escribirMarco(message, registro_tlb->direccion_fisica);
+		//strcpy (registro_tlb->direccion_fisica, message);
 
 
 		/**************************************/
@@ -634,6 +635,8 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		// SLEEP PORQUE OPERO CON LA PAGINA SEGUN ISSUE 71
 		usleep(miContexto.retardoMemoria);
 		strcpy(paginaASwapear->direccion_fisica, contenido );
+		// SI ACA LLAMO A escriboMarco, explota todo cual hiroshima
+
 
 		int tamanioMsj = strlen(contenido);
 		send(socketCliente,&tamanioMsj,sizeof(int),0);
