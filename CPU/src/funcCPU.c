@@ -425,10 +425,21 @@ int configuroSocketsYLogs (){
 	log_info(logger, "Inicio Log CPU", NULL);
 	log_info(logger, "Conectado a el Planificador", NULL);
 	log_info(logger, "Conectado a la Memoria", NULL);
-	int i = 0;
+	int i = 1;
 	CPU = (t_cpu*)malloc(sizeof(t_cpu) * ((configuracion.cantHilos) + 1));
 	//conexion para el comandoCpu
 	//CPU[0].socketPlani = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador);
+	CPU[0].porcentajeUso=0;
+	CPU[0].cantInstrucEjec=0;
+	CPU[0].tiempoEjec=0;
+	CPU[0].socketPlani = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
+	if (CPU[0].socketPlani==-1){	//controlo error
+		puts("No se pudo conectar con el Planificador");
+		perror("SOCKET PLANIFICADOR!");
+		log_error(logger,"No se pudo conectar con el Planificador");
+		abort();
+	}
+
 	while(i <= configuracion.cantHilos){
 		CPU[i].porcentajeUso=0;
 		CPU[i].cantInstrucEjec=0;
@@ -440,7 +451,7 @@ int configuroSocketsYLogs (){
 			log_error(logger,"No se pudo conectar con el Planificador");
 			abort();
 		}
-		i++;
+		//i++;
 		CPU[i].socketMem = crearCliente(configuracion.ipMemoria, configuracion.puertoMemoria);//conecta con la memoria
 		if (CPU[i].socketMem==-1){		//controlo error
 				puts("No se pudo concetar con el Adm. de Memoria");
@@ -448,7 +459,7 @@ int configuroSocketsYLogs (){
 				log_error(logger,"No se pudo conectar con el Adm. de Memoria");
 				abort();
 		}
-		//i++;
+		i++;
 	}
 
 	//sockets = (t_sockets*)malloc(sizeof(t_sockets));
