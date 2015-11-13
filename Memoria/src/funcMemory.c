@@ -287,7 +287,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 
 						// Como la transferencia con el swap fue exitosa, le envio la pagina al CPU
 						int tamanioMsj = strlen(contenido);
-						send(socketCliente,&tamanioMsj,sizeof(bool),0);
+						send(socketCliente,&tamanioMsj,sizeof(int),0);
 						send(socketCliente, contenido, tamanioMsj, 0);
 
 						upFallosPagina(tablaAccesos, package->PID);
