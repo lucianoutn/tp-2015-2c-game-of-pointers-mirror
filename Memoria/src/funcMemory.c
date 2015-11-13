@@ -184,6 +184,9 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, int pid, int pagina, t_list* t
 	if (registro_tlb != NULL)
 	{
 		log_info(logger, " Encontre la pagina para leer en la tlb y dice -> %s", registro_tlb->direccion_fisica);
+		// SEGUN ISSUE 71, SI LA ENCUENTRA EN TLB HACE UN RETARDO SOLO, CUANDO OPERA CON LA PÁGINA (LA LEE)
+		usleep(miContexto.retardoMemoria);
+
 		upPaginasAccedidas(tablaAccesos, registro_tlb->pid);
 
 		int tamanioMsj = strlen(registro_tlb->direccion_fisica);
@@ -262,7 +265,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 						t_marco_hueco * marco_a_llenar = list_remove(listaFramesHuecosMemR, 0);
 
 						log_info(logger, "Traje la pagina del swap, voy a escribir el marco %d para leer", marco_a_llenar->numero_marco);
-
+						// SLEEP PORQUE OPERO CON LA PAGINA SEGUN ISSUE 71
 						usleep(miContexto.retardoMemoria);
 
 						// LO ESCRIBO CON EL MENSAJE QUE ME DICEN QUE LO ESCRIBA PORQUE NO TENGO QUE TRAER LO QUE YA ESTE ESCRITO DEL SWAP
@@ -314,6 +317,9 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		}else // SI NO ESTA EN SWAP, YA CONOZCO LA DIRECCION DE SU MARCO //
 		{
 			printf("LEI PORQUE ESTABA EN MEMORIA -> %s Y MANDO A ACTUALIZAR TABLAS \n", pagina_proc->direccion_fisica);
+			// SLEEP PORQUE OPERO CON LA PAGINA SEGUN ISSUE 71
+			usleep(miContexto.retardoMemoria);
+
 			if(!strcmp(miContexto.algoritmoReemplazo, "LRU"))
 			{
 				actualizarTablaProcesoLru(tabla_proc, package->pagina_proceso, pagina_proc->direccion_fisica, pagina_proc->marco);
@@ -420,6 +426,7 @@ void escribirEnMemReal(t_header * header, t_list* tabla_adm, t_list * TLB, t_lis
 		log_info(logger, "Encontre PID: %d Pagina %d en memoria => tengo la direccion y escribo: %s", header->PID, header->pagina_proceso, mensaje);
 		// escriboMarcoYActualizoTablas();
 
+		// SLEEP PORQUE OPERA CON LA PAGINA SEGUN ISSUE 71
 		usleep(miContexto.retardoMemoria);
 		memcpy ( paginaProceso->direccion_fisica, mensaje, header->tamanio_msj);
 
@@ -444,9 +451,9 @@ void asignarMarcoPagSwap(t_header * header, char * mensaje, t_list* tablaAccesos
 	 */
 	t_marco_hueco * marco_a_llenar = list_remove(listaFramesHuecosMemR, 0);
 	log_info(logger, "Traje la pagina del swap, voy a escribir el marco %d", marco_a_llenar->numero_marco);
-	usleep(miContexto.retardoMemoria);
 
 	// LO ESCRIBO CON EL MENSAJE QUE ME DICEN QUE LO ESCRIBA PORQUE NO TENGO QUE TRAER LO QUE YA ESTE ESCRITO DEL SWAP
+	usleep(miContexto.retardoMemoria);
 	memcpy ( marco_a_llenar->direccion_inicio, mensaje, strlen(mensaje));
 
 	//AGREGO EL MARCO AHORA ESCRITO, A LA LISTA DE MARCOS ESCRITOS
@@ -464,7 +471,6 @@ void asignarMarcoPagSwap(t_header * header, char * mensaje, t_list* tablaAccesos
 	upPaginasAccedidas(tablaAccesos, header->PID );
 	// Aumento 1 la cantidad de fallos de pagina porque la fui a buscar al swap
 	upFallosPagina(tablaAccesos, header->PID);
-	puts("HICE UN FALLO \n");
 
 	// SI NO ME QUEDAN MARCOS EN TODA LA MEMORIA PARA GUARDAR UNA PAGINA, CHAU
 	bool recibi = true;
@@ -761,7 +767,6 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		log_info(logger, "Se escribe en el marco liberado la pagina que se quiere escribir");
 		escribirMarco(mensaje, paginaASwapear->direccion_fisica);
 
-
 		num_pag = paginaASwapear->pag;
 
 		free(contenido);
@@ -784,6 +789,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		}
 
 		log_info(logger, "Se escribe el marco liberado con la pagina recien traida del swap");
+		// SLEEP PORQUE OPERO CON LA PAGINA SEGUN ISSUE 71
 		usleep(miContexto.retardoMemoria);
 		strcpy(paginaASwapear->direccion_fisica, contenido );
 
@@ -996,7 +1002,7 @@ process_pag * bitDirtyEnUno (t_list * tablaProceso)
 
 void escribirMarco(char * mensaje, char* direccion)
 {
-	log_info(logger, "Se escribe en el marco liberado la pagina que se quiere escribir");
+
 	usleep(miContexto.retardoMemoria);
 	char * pagAux = calloc(1, miContexto.tamanioMarco); // sobreescribo pagina con \0
 	strcpy(direccion, pagAux);
