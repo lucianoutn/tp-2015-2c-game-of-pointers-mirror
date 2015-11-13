@@ -72,60 +72,64 @@ void consola (void* arg)
 			{
 				//comandos útiles para darle formato al archivo
 				char *ruta=(char*)malloc(sizeof(char) * 30);
-				char *ruta2=(char*)malloc(sizeof(char) * 30);
 				printf("\n*** FORMATEAR mCod: ***\n");
-				printf("Elegir opción:\n\n");
-				printf("1. Agregar <;> al final de cada linea\n");
-				printf("2. Eliminar <;> del final de cada linea\n");
-				//printf("3. Agregar <comillas> de las strings\n\n");
-				printf("\nIngrese nº de opcion:\n");
-				int opc;
-				fflush(stdin);
-				scanf("%d", &opc);
-				//pido la ruta del archivo
-				printf("la opc es: %d", opc);
 				printf("Ingrese el nombre del archivo que desea formatear:\n");
 				fflush(stdin);
 				fgets(ruta, 30, stdin); //30 es el tamaño maximo de la ruta a ingresar
-				ruta2 = ruta;
+				printf("\nElegir opción:\n\n");
+				printf("1. Agregar <;> al final de cada linea\n");
+				printf("2. Eliminar <;> del final de cada linea\n");
+				printf("3. Remover <comillas> de las strings\n");
+				printf("\nIngrese nº de opcion:\n");
+				int opc;
+				fflush(stdin);
+				scanf("%d", &opc); //tomo la opcion que eligió
+
+				//pido la ruta del archivo
+				//printf("la opc es: %d", opc);
 				int tamanio=strlen(ruta);
 				ruta[tamanio-1]='\0'; //agrego el caracter nulo al final de la ruta para que se indentifique como string.
-				ruta2[tamanio-1]='M';
-				ruta2[tamanio]='\0';
 				char* comando;
 				switch (opc)
 				{
 					case 1: //Agregar <;> al final de cada linea
 					{
-						comando = string_from_format("sed 's/.$/;/' ..\CPU\%s > ..\CPU\%s",ruta,ruta2);
+						comando = string_from_format("sed 's/$/;/' ../CPU/%s > ../CPU/%sMod",ruta,ruta);
 						system(comando);
-						printf("El nuevo archivo se llama %s\n",ruta2);
+						printf("El nuevo archivo se llama %sMod\n",ruta);
+						sem_post(&semConsola); //vuelvo a habilitar la consolita
 						break;
 
 					}
 					case 2:	//Eliminar <;> del final de cada linea
 					{
-						comando = string_from_format("sed 's/[;]$//' ..\CPU\%s > ..\CPU\%s",ruta,ruta2);
+						comando = string_from_format("sed 's/[;]$//' ../CPU/%s > ../CPU/%sMod",ruta,ruta);
 						system(comando);
-						printf("El nuevo archivo se llama %s\n",ruta2);
+						printf("El nuevo archivo se llama %sMod\n",ruta);
+						sem_post(&semConsola); //vuelvo a habilitar la consolita
 						break;
 
 					}
-					/*case 3: //Agregar <comillas> de las strings
+					case 3: //Remover <comillas> de las strings
 					{
-					//	comando = string_from_format("sed 's/["]//g' ..\CPU\%s > ..\CPU\%s",ruta,ruta2);
-					//	system(comando);
-					}*/
+						//comando = string_from_format("sed 's/["");//]//g' ../CPU/%s > ../CPU/%sMod",ruta,ruta);
+						comando = string_from_format("sed 's/[^a-z|0-9| |-]//g' ../CPU/%s > ../CPU/%sMod",ruta,ruta);
+						system(comando);
+					    printf("El nuevo archivo se llama %sMod\n",ruta);
+					    sem_post(&semConsola); //vuelvo a habilitar la consolita
+						break;
+					}
 					default:
 					{
 						puts("\nOpcion incorrecta\n");
+						sem_post(&semConsola); //vuelvo a habilitar la consolita
 						break;
 					}
 				}
-
-				//free(ruta);
-				//free(ruta2);
-				sem_post(&semConsola); //vuelvo a habilitar la consolita
+				fflush(stdin);
+				free(ruta);
+				usleep(1000);
+				sem_post(&semConsola); //habilito la consola  dos veces, adentro de los cases xq aca nose xq no anda
 				break;
 			}
 			case finalizar:
