@@ -60,28 +60,29 @@ int main() {
 		cantHitTlb = 0;
 	}
 	//Me quedo atenta a las señales, y si las recibe ejecuta esa funcion
-	void flush() {
-		log_info(logger,
-				"Se recibio SIGUSR1, si corresponde se vacia la TLB \n");
+	void flush()
+	{
+		log_info(logger,"Se recibio SIGUSR1, si corresponde se vacia la TLB \n");
 		//sleep(3);
 		tlbFlush(TLB);
 		log_info(logger, "Tratamiento de la señal SIGUSR1 terminado. \n");
 	}
-	void limpiar() {
+	void limpiar()
+	{
 		log_info(logger, "Se recibio SIGUSR2, se limpia la memoria \n");
 		//sleep(3);
 		limpiarMemoria(memoria_real, TLB, tablaAdm);
 		log_info(logger, "Se finalizo el tratamiento de la señal SIGUSR2 \n");
 	}
-	void dump() {
-		log_info(logger,
-				"Se rcibio SIGPOLL, se muestra el contenido de la memoria actualmente \n");
+	void dump()
+	{
+		log_info(logger,"Se recibio SIGPOLL, se muestra el contenido de la memoria actualmente \n");
 		//sleep(3);
 		dumpEnLog(memoria_real, tablaAdm);
 		log_info(logger, "Tratamiento de la señal SIGPOLL terminado \n");
 	}
 
-	signal(SIGINT, flush);
+	signal(SIGUSR1, flush);
 	signal(SIGUSR2, limpiar);
 	signal(SIGPOLL, dump);
 
@@ -90,15 +91,14 @@ int main() {
 	free(memoria_real);
 	list_destroy_and_destroy_elements(tablaAdm, (void*) tabla_adm_destroy);
 	//list_destroy_and_destroy_elements(TLB,(void*)reg_tlb_destroy);
-	list_destroy_and_destroy_elements(listaFramesHuecosMemR,
-			(void*) marco_hueco_destroy);
+	list_destroy_and_destroy_elements(listaFramesHuecosMemR,(void*) marco_hueco_destroy);
 	list_destroy_and_destroy_elements(listaFramesMemR, (void*) marco_destroy);
 	log_destroy(logger);
 	return 1;
 }
 
-void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,
-		t_list* tablaAccesos) {
+void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* tablaAccesos)
+{
 	t_header * package = malloc(sizeof(t_header));
 	/*
 	 //CONEXION AL CPU
@@ -130,77 +130,6 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,
 	 ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
 	 }
 	 */
-	/*
-	 char * mensaje = malloc(1);
-
-	 t_header * package = package_create(2,15,5,0);
-	 char * mensaje_inicializacion = malloc(1);
-	 ejecutoInstruccion(package, mensaje_inicializacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
-
-	 t_header * package_escritura = package_create(1,15,1,strlen("Hola"));
-	 char * mensaje_escritura = malloc(5);
-	 strcpy(mensaje_escritura,"Hola");
-	 ejecutoInstruccion(package_escritura, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
-
-	 t_header * package_lectura = package_create(0,15,2,0);
-	 ejecutoInstruccion(package_lectura, NULL, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
-
-
-	 t_header * package_escritura1 = package_create(1,15,2,strlen("Aldu"));
-	 strcpy(mensaje_escritura,"Aldu");
-	 ejecutoInstruccion(package_escritura1, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
-
-	 t_header * package_escritura2 = package_create(1,15,3,strlen("Aldu"));
-	 strcpy(mensaje_escritura,"Chau");
-	 ejecutoInstruccion(package_escritura2, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
-
-	 t_header * package_lectura2 = package_create(0,15,3,0);
-	 ejecutoInstruccion(package_lectura2, NULL, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
-
-	 t_header * package_escritura3 = package_create(1,15,1,strlen("Aldu"));
-	 strcpy(mensaje_escritura,"Tutu");
-	 ejecutoInstruccion(package_escritura3, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
-
-	 t_header * package_escritura4 = package_create(1,15,4,strlen("Aldu"));
-	 strcpy(mensaje_escritura,"Gege");
-	 ejecutoInstruccion(package_escritura4, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
-
-	 t_header * package_lectura3 = package_create(0,15,1,0);
-	 ejecutoInstruccion(package_lectura3, NULL, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
-
-	 t_header * package_lectura4 = package_create(0,15,4,0);
-	 ejecutoInstruccion(package_lectura4, NULL, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
-
-	 t_header * package_escritura5 = package_create(1,15,2,strlen("Aldu"));
-	 strcpy(mensaje_escritura,"Palo");
-	 ejecutoInstruccion(package_escritura5, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
-
-	 t_header * package_escritura6 = package_create(1,15,3,strlen("Aldu"));
-	 strcpy(mensaje_escritura,"Pali");
-	 ejecutoInstruccion(package_escritura6, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
-
-	 t_header * package_escritura7 = package_create(1,15,1,strlen("Aldu"));
-	 strcpy(mensaje_escritura,"Puli");
-	 ejecutoInstruccion(package_escritura7, mensaje_escritura, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
-
-	 t_header * package_finalizacion = package_create(3,15,0,0);
-	 char * mensaje_finalizacion = malloc(1);
-	 ejecutoInstruccion(package_finalizacion, mensaje_finalizacion, memoria_real, TLB, tablaAdm, socketCPU, serverSocket, tablaAccesos);
-
-	 free(mensaje_inicializacion);
-	 free(mensaje_escritura);
-	 free(mensaje_finalizacion);
-	 free(package);
-	 free(package_escritura);
-	 free(package_escritura1);
-	 free(package_escritura2);
-	 free(package_escritura3);
-	 free(package_escritura4);
-	 free(package_escritura5);
-	 free(package_escritura6);
-	 free(package_finalizacion);
-
-	 */
 	fd_set master;   // conjunto maestro de descriptores de fichero
 	fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
 	// struct sockaddr_in myaddr;     // dirección del servidor
@@ -221,6 +150,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,
 	struct addrinfo hints; //estructura que almacena los datos de conexion
 	struct addrinfo *serverInfo; //estructura que almacena los datos de conexion
 	struct timeval tv;
+	int err=0;
 	tv.tv_sec = 1;
 	tv.tv_usec = 0;
 	memset(&hints, 0, sizeof(hints));
@@ -257,29 +187,18 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,
 	for (;;)
 	{
 		read_fds = master; // cópialo
-		r_select = select(fdmax + 1, &read_fds, NULL, NULL, NULL); //HICE TRAMPA!!!
-		if (r_select == EINTR)
-		{
-			puts("Capture una señal \n");
-		} else if (r_select == -1)
-		{
-			perror("select");
-			exit(1);
-		} else if (r_select)
-		{
 
+		select_restart:
+		if ((err = select(fdmax+1, &read_fds, NULL, NULL, NULL)) == -1)
+		{
+			if (errno == EINTR)
+			{  	// Alguna señal nos ha interrumpido, así que regresemos a select()
+				puts("Me interrumpio una señal, pero no me cabe una y vuelvo al select \n");
+				goto select_restart;
+			}
+			// Los errores reales de select() se manejan aquí:
+			perror("select");
 		}
-		/*
-		 else
-		 {
-		 cronometro=cronometro+1;
-		 if(cronometro==60)
-		 {
-		 cronometro=0;
-		 tasasDeTLB();
-		 }
-		 }
-		 */
 		// explorar conexiones existentes en busca de datos que leer
 		for (i = 0; i <= fdmax; i++)
 		{
