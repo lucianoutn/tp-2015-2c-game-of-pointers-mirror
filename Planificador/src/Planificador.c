@@ -52,6 +52,7 @@ int main() {
 	pthread_t hilo_conexiones;
 	if(pthread_create(&hilo_conexiones, NULL, (void*)escuchar,&conexiones)<0)
 		perror("Error HILO ESCUCHAS!");
+	conexiones.CPUS[0].enUso = true;
 
 	puts("PLANIFICADOR!\nESPERANDO CONEXIONES....\n\n\n");
 	sem_wait(&semEsperaCPU); //semaforo espera conexiones

@@ -104,8 +104,8 @@ void dispatcher()
 		//puts ("PASO LOS SEMAFOROS");
 		//printf("cant hilos cpu: %d\n", miContexto.cantHilosCpus);
 		//busca la primer CPU que no este en uso
-		int I = 0;
-		while((conexiones.CPUS[I].enUso) && (I < miContexto.cantHilosCpus)){
+		int I = 1;
+		while((conexiones.CPUS[I].enUso) && (I <= miContexto.cantHilosCpus)){
 			I++;
 		}
 		//printf("CPU ELEGIDA: %d\n SOCKET ELEGIDO: %d\n",I, conexiones.CPUS[I].socket);

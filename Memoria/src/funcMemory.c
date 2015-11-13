@@ -118,7 +118,7 @@ void ejecutoInstruccion(t_header * header, char * mensaje,char *  memoria_real, 
 	 		}
 	 		break;
 	 	case 3:
-			printf ("*********************Se recibio orden de finalizacion de proceso :)********************* \n");
+			printf ("*********************Se recibio orden de finalizacion de proceso :)********************\n");
 			log_info(logger, "Se recibio orden de finalizacion del PID: %d",header->PID);
 			// Lo muestro aca porque si lo muestro despues de que lo mate, la tabla no tiene el registro
 			mostrarVersus(tablaAccesos, header->PID);
@@ -191,7 +191,8 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, int pid, int pagina, t_list* t
 
 		int tamanioMsj = strlen(registro_tlb->direccion_fisica);
 		send(socketCliente,&tamanioMsj,sizeof(int),0);
-		send(socketCliente, registro_tlb->direccion_fisica, tamanioMsj , 0);
+		if(tamanioMsj > 0)
+			send(socketCliente, registro_tlb->direccion_fisica, tamanioMsj , 0);
 
 		return 1;
 	}
@@ -291,7 +292,8 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 						// Como la transferencia con el swap fue exitosa, le envio la pagina al CPU
 						int tamanioMsj = strlen(contenido);
 						send(socketCliente,&tamanioMsj,sizeof(int),0);
-						send(socketCliente, contenido, tamanioMsj, 0);
+						if (tamanioMsj >0)
+							send(socketCliente, contenido, tamanioMsj, 0);
 
 						upFallosPagina(tablaAccesos, package->PID);
 						free(flag);
@@ -330,7 +332,8 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		 	upPaginasAccedidas(tablaAccesos, package->PID );
 		 	int tamanioMsj = strlen(pagina_proc->direccion_fisica);
 		 	send(socketCliente,&tamanioMsj,sizeof(int),0);
-		 	send(socketCliente, pagina_proc->direccion_fisica, tamanioMsj, 0);
+		 	if (tamanioMsj >0)
+		 		send(socketCliente, pagina_proc->direccion_fisica, tamanioMsj, 0);
 			free(flag);
 			return 1;
 		}
@@ -760,7 +763,8 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 			upFallosPagina(tablaAccesos, header->PID);
 			int tamanioMsj = strlen(contenido);
 			send(socketCliente,&tamanioMsj,sizeof(int),0);
-			send(socketCliente, contenido, tamanioMsj , 0);
+			if(tamanioMsj > 0)
+				send(socketCliente, contenido, tamanioMsj , 0);
 		}
 
 

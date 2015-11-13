@@ -98,6 +98,7 @@ pthread_mutex_t mutex;
 typedef struct {
 	pthread_t hilo;
 	int socketPlani;
+	int socketMem;
 	int numeroCPU;
 	int porcentajeUso;
 	int cantInstrucEjec;
@@ -108,7 +109,7 @@ t_cpu *CPU;
 
 //pthread_t cpu[0];
 
-t_sockets *sockets;
+//t_sockets *sockets;
 
 /*		// estructura para el poll:
 typedef struct {
