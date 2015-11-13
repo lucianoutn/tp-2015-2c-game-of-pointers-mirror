@@ -98,16 +98,20 @@ pthread_mutex_t mutex;
 typedef struct {
 	pthread_t hilo;
 	int socketPlani;
+	int socketMem;
 	int numeroCPU;
 	int porcentajeUso;
+	int cantInstrucEjec;
+	double tiempoEjec;
 }t_cpu;
 
 t_cpu *CPU;
 
 //pthread_t cpu[0];
 
-t_sockets *sockets;
+//t_sockets *sockets;
 
+/*		// estructura para el poll:
 typedef struct {
 		    int fd;         // the socket descriptor
 		    short events;   // bitmap of events we're interested in
@@ -115,6 +119,7 @@ typedef struct {
 		} t_pollfd;
 
 t_pollfd *pollfd;
+*/
 
 int numero_de_pid;
 

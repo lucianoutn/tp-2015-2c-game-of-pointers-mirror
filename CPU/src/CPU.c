@@ -50,7 +50,7 @@ int main()
 	sem_wait(&semSalir);
 	//pthread_join(CPU[0].hilo,NULL);
 	puts("CHAU");
-	close(sockets->socketMemoria);
+	//close(sockets->socketMemoria); lo cierro en otro lado
 	close(CPU[0].socketPlani);
 	for (i=1; i<=configuracion.cantHilos; i++){
 			//close(CPU[i].socketPlani);

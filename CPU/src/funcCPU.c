@@ -151,7 +151,7 @@ int procesaInstruccion(char* instruccion, int *pagina, char* mensaje){
  */
 void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 
-	int pagina = 0;
+	int pagina;
 	char *mensaje;
 	//reservo espacio para el header
 	t_header *header = malloc(sizeof(t_header));
@@ -167,9 +167,9 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 	//guardo las intrucciones
 	char **instrucciones = (leermCod(PCB->ruta, &PCB->numInstrucciones));
 
-	//Itera hasta llegar a la ultima instruccion
-	while(PCB->estado!=4 && PCB->estado !=3 && PCB->estado !=5)
-	{
+	//Itera hasta tener que replanificar o finalizar
+	while(PCB->estado!=3 && PCB->estado !=4 && PCB->estado !=5)
+	{		//3:Bloqueado      4:Finalizado       5:Fallo
 		if(PCB->quantum==0)
 		{
 			PCB->estado=1;
@@ -186,15 +186,25 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				//puts("LEER");
 				creoHeader(PCB,header,0,pagina); //PCB HEADER TIPOEJECUCION PAGINA
 				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
+				int tmno =0;
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
-				recv(socketMemoria, &recibi, sizeof(bool),0);		//espero recibir la respuesta
+				recv(socketMemoria, &tmno, sizeof(int),0);		//espero recibir la respuesta
 				usleep(configuracion.retardo); //retardo del cpu
-				if(recibi)	//Controlo que haya llegado bien
-					log_info(logger, "mProc %d - Pagina %d Leida", PCB->PID, pagina);
-				else{
+				if(tmno > 0)	//Controlo que haya llegado bien
+				{
+					puts("Recibi pagina");
+					char *contenido = (char*)malloc(sizeof(char) * tmno);
+					recv(socketMemoria, contenido,tmno,0);
+					contenido[tmno]='\0';
+					log_info(logger, "mProc %d - Pagina %d Leida :\"%s\"", PCB->PID, pagina, contenido);
+					free(contenido);
+				}else if(tmno == 0){
+					log_info(logger, "mProc %d - Pagina %d Leida : vacia", PCB->PID, pagina);
+				}else{
 					log_info(logger, "mProc %d - Pagina %d Fallo al leer",PCB->PID, pagina);
 					PCB->estado =5;
-					send(socketPlanificador,&recibi, sizeof(flag),0);
+					recibi=false;
+					send(socketPlanificador,&recibi, sizeof(bool),0);
 				}
 				break;
 
@@ -209,7 +219,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
 				usleep(configuracion.retardo); //retardo del cpu
 				if(recibi)	//Controlo que haya llegado bien
-					log_info(logger, "mProc %d - Pagina %d Escrita: %s",PCB->PID, pagina, mensaje);
+					log_info(logger, "mProc %d - Pagina %d Escrita: \"%s\"",PCB->PID, pagina, mensaje);
 				else{
 					log_info(logger, "mProc %d - Pagina %d Fallo al escribir: %s",PCB->PID,pagina, mensaje);
 					PCB->estado =5;
@@ -361,7 +371,7 @@ void iniciarCPU(t_cpu *CPUS){
 
 				//printf("PCB Recibido. PID:%d Ruta: <%s>\n",PCB->PID,PCB->ruta);
 				//ejecuto
-				ejecutoPCB(sockets->socketMemoria,CPUS->socketPlani,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
+				ejecutoPCB(CPUS->socketMem,CPUS->socketPlani,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
 
 				break;
 			}
@@ -385,7 +395,7 @@ void iniciarCPU(t_cpu *CPUS){
 	//CIERRO LOS SOCKETS Y EL HEADER
 	free(header);
 	close(CPUS->socketPlani);
-	//close(sockets->socketMemoria);
+	close(CPU->socketMem);
 
 }
 
@@ -397,12 +407,15 @@ int configuroSocketsYLogs (){
 	creoLogger(1);  //recive 0 para log solo x archivo| recive 1 para log x archivo y x pantalla
 	log_info(logger, "Inicio Log CPU", NULL);
 	log_info(logger, "Conectado a el Planificador", NULL);
+	log_info(logger, "Conectado a la Memoria", NULL);
 	int i = 0;
 	CPU = (t_cpu*)malloc(sizeof(t_cpu) * ((configuracion.cantHilos) + 1));
 	//conexion para el comandoCpu
 	//CPU[0].socketPlani = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador);
 	while(i <= configuracion.cantHilos){
 		CPU[i].porcentajeUso=0;
+		CPU[i].cantInstrucEjec=0;
+		CPU[i].tiempoEjec=0;
 		CPU[i].socketPlani = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
 		if (CPU[i].socketPlani==-1){	//controlo error
 			puts("No se pudo conectar con el Planificador");
@@ -411,17 +424,25 @@ int configuroSocketsYLogs (){
 			abort();
 		}
 		i++;
+		CPU[i].socketMem = crearCliente(configuracion.ipMemoria, configuracion.puertoMemoria);//conecta con la memoria
+		if (CPU[i].socketMem==-1){		//controlo error
+				puts("No se pudo concetar con el Adm. de Memoria");
+				perror("SOCKET MEMORIA!");
+				log_error(logger,"No se pudo conectar con el Adm. de Memoria");
+				abort();
+		}
+		//i++;
 	}
 
-	sockets = (t_sockets*)malloc(sizeof(t_sockets));
-	log_info(logger, "Conectado a la Memoria", NULL);
-	sockets->socketMemoria = crearCliente(configuracion.ipMemoria, configuracion.puertoMemoria);//conecta con la memoria
+	//sockets = (t_sockets*)malloc(sizeof(t_sockets));
+	//log_info(logger, "Conectado a la Memoria", NULL);
+	/*sockets->socketMemoria = crearCliente(configuracion.ipMemoria, configuracion.puertoMemoria);//conecta con la memoria
 	if (sockets->socketMemoria==-1){		//controlo error
 			puts("No se pudo concetar con el Adm. de Memoria");
 			perror("SOCKET MEMORIA!");
 			log_error(logger,"No se pudo conectar con el Adm. de Memoria");
 			abort();
-	}
+	}*/
 
 	return 1;
 
