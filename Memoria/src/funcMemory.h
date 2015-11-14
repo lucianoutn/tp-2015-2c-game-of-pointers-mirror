@@ -194,9 +194,22 @@ void mostrarVersus(t_list*, int);
 int removerEntradasTlb(t_list *, t_header*);
 
 //------SEÑALES QUE TIENE QUE RECIBIR LA MEMORIA-------------//
+/*
+ * Cuando la memoria recibe esta señal, debe limpiar la TLB.
+ */
+
 void tlbFlush(t_list *);
 
+/*
+ * Cuando se recibe esta señal, se debe limpiar completamente la memoria principal,
+ * actualizando los bits que sean necesarios en las tablas de páginas de los diferentes procesos
+ */
 void limpiarMemoria(char *, t_list*, t_list*);
+/*
+ * Cuando recibe esta señal se deberá realizar un volcado (dump) del contenido de la memoria principal,
+ * en el archivo log de Administrador de Memoria, creando para tal fin un proceso nuevo.
+ * Se recomienda usar fork().
+ */
 
 void dumpEnLog();
 //-----------------------------------------------------------//
