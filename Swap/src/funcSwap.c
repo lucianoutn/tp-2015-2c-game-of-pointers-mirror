@@ -282,7 +282,7 @@ void compactarSwap()
 	int j= 1;
 	for(; j<tamanio_huecos; j++)
 	{
-		list_remove_and_destroy_element(lista_huecos, j, (void *)hueco_destroy);
+		list_remove(lista_huecos, j);
 	}
 
 	usleep(contexto->retardo_compac);
