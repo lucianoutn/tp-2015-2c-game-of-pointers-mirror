@@ -10,6 +10,7 @@
 //Funcion que permite configurar la conexion y crear el socket. Devuelve el descriptor del socket nuevo.
 int crearServer(const char *PUERTO)
 {
+	int yes=1;
 	struct addrinfo hints; //estructura que almacena los datos de conexion
 	struct addrinfo *serverInfo; //estructura que almacena los datos de conexion
 
@@ -28,6 +29,11 @@ int crearServer(const char *PUERTO)
 	if (listenningSocket == -1)
 		perror("SOCKET");
 
+	if (setsockopt(listenningSocket, SOL_SOCKET, SO_REUSEADDR, &yes,sizeof(int)) == -1)
+	{
+		perror("setsockopt");
+		exit(1);
+	}
 	//se comprueba que la asociacion fue exitosa
 	int B = bind(listenningSocket, serverInfo->ai_addr, serverInfo->ai_addrlen);
 	if (B == -1) {

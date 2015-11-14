@@ -93,14 +93,14 @@ void seniales(t_list* TLB, char* memoria_real, t_list * tablaAdm)
 	{
 		log_info(logger,"Luego de un minuto, muestro tasa de aciertos de la TLB");
 		tasasDeTLB();
-		alarm(60);
+		alarm(600);
 	}
 
 	signal(SIGUSR1, flush);
 	signal(SIGUSR2, limpiar);
 	signal(SIGPOLL, dump);
 	signal(SIGALRM,mostrar);
-	alarm(60);
+	alarm(600);
 }
 
 void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* tablaAccesos)
@@ -187,91 +187,90 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 	fdmax = listener; // por ahora es éste
 	// bucle principal
 	for (;;)
-	{
-		read_fds = master; // cópialo
+		{
+			read_fds = master; // cópialo
 
-		select_restart:
-		if ((err = select(fdmax+1, &read_fds, NULL, NULL, NULL)) == -1)
-		{
-			if (errno == EINTR)
-			{  	// Alguna señal nos ha interrumpido, así que regresemos a select()
-				puts("Me interrumpio una señal, pero no me cabe una y vuelvo al select \n");
-				goto select_restart;
+			select_restart:
+			if ((err = select(fdmax+1, &read_fds, NULL, NULL, NULL)) == -1)
+			{
+				if (errno == EINTR)
+				{  	// Alguna señal nos ha interrumpido, así que regresemos a select()
+					puts("Me interrumpio una señal, pero no me cabe una y vuelvo al select \n");
+					goto select_restart;
+				}
+				// Los errores reales de select() se manejan aquí:
+				perror("select");
 			}
-			// Los errores reales de select() se manejan aquí:
-			perror("select");
-		}
-		// explorar conexiones existentes en busca de datos que leer
-		for (i = 0; i <= fdmax; i++)
-		{
-			if (FD_ISSET(i, &read_fds))
-			{ // ¡¡tenemos datos!!
-				if (i == listener)
-				{
-					// gestionar nuevas conexiones
-					addrlen = sizeof(remoteaddr);
-					if ((newfd = accept(listener,(struct sockaddr *) &remoteaddr, &addrlen)) == -1)
+			// explorar conexiones existentes en busca de datos que leer
+			for (i = 0; i <= fdmax; i++)
+			{
+				if (FD_ISSET(i, &read_fds))
+				{ // ¡¡tenemos datos!!
+					if (i == listener)
 					{
-						perror("accept");
-					}
-					else
-					{
-						FD_SET(newfd, &master); // añadir al conjunto maestro
-						if (newfd > fdmax)
-						{    // actualizar el máximo
-							fdmax = newfd;
-						}
-						printf("Nueva conexion\n ");
-					}
-				} else
-				{
-					// gestionar datos de un cliente
-					if ((nbytes = recv(i, package, sizeof(t_header), 0)) <= 0)
-					{
-						// error o conexión cerrada por el cliente
-						if (nbytes == 0)
+						// gestionar nuevas conexiones
+						addrlen = sizeof(remoteaddr);
+						if ((newfd = accept(listener,(struct sockaddr *) &remoteaddr, &addrlen)) == -1)
 						{
-							// conexión cerrada
-							printf("Conexion del socket %d cerrada \n", i);
-						} else
-						{
-							perror("recv");
+							perror("accept");
 						}
-						close(i);
-						// ¡Hasta luego!
-						FD_CLR(i, &master);
-						// eliminar del conjunto maestro
+						else
+						{
+							FD_SET(newfd, &master); // añadir al conjunto maestro
+							if (newfd > fdmax)
+							{    // actualizar el máximo
+								fdmax = newfd;
+							}
+							printf("Nueva conexion\n ");
+						}
 					} else
 					{
-						// tenemos datos de algún cliente
-						for (j = 0; j <= fdmax; j++)
+						// gestionar datos de un cliente
+						if ((nbytes = recv(i, package, sizeof(t_header), 0)) <= 0)
 						{
-							if (FD_ISSET(j, &master))
+							// error o conexión cerrada por el cliente
+							if (nbytes == 0)
 							{
-								if (j != listener)
+								// conexión cerrada
+								printf("Conexion del socket %d cerrada \n", i);
+							} else
+							{
+								perror("recv");
+							}
+							close(i);
+							// ¡Hasta luego!
+							FD_CLR(i, &master);
+							// eliminar del conjunto maestro
+						} else
+						{
+							// tenemos datos de algún cliente
+							for (j = 0; j <= fdmax; j++)
+							{
+								if (FD_ISSET(j, &master))
 								{
-									printf("El tipo de ejecucion recibido es %d \n",package->type_ejecution);
-									char *mensaje = (char*)malloc(package->tamanio_msj);
-									if (package->type_ejecution == 1) //Escritura
+									if (j != listener)
 									{
-										recv(j, mensaje, package->tamanio_msj,0);
-										mensaje[package->tamanio_msj] = '\0';
-										printf("Mensaje recibido: <%s>  Tamaño: %d.\n",	mensaje, package->tamanio_msj);
+										printf("El tipo de ejecucion recibido es %d \n",package->type_ejecution);
+										char * mensaje = malloc(package->tamanio_msj);
+										if (package->type_ejecution == 1) //Escritura
+										{
+											recv(j, mensaje, package->tamanio_msj,0);
+											mensaje[package->tamanio_msj] = '\0';
+											printf("Mensaje recibido: <%s>  Tamaño: %d.\n",	mensaje, package->tamanio_msj);
+										}
+										else
+										{
+											mensaje = NULL;
+										}
+										// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
+										ejecutoInstruccion(package, mensaje,memoria_real, TLB, tablaAdm, j,serverSocket, tablaAccesos);
+										free(mensaje);
 									}
-									else
-									{
-										mensaje = NULL;
-									}
-									// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
-									ejecutoInstruccion(package, mensaje,memoria_real, TLB, tablaAdm, j,serverSocket, tablaAccesos);
-									free(mensaje);
 								}
 							}
 						}
-					}
-				} // Esto es ¡TAN FEO!
+					} // Esto es ¡TAN FEO!
+				}
 			}
 		}
-	}
-
 }

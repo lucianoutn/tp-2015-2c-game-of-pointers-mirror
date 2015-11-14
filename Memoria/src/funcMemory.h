@@ -91,7 +91,7 @@ void matarProceso(t_header *, t_list*, t_list *, t_list*);
 /* ME DEVUELVE NULL SI LA PAGINA ESTA EN SWAP Y SINO ME DEVUELVE LA DIRECCION DEL MARCO */
 //direccionDePag();
 
-int leerEnMemReal(t_list*,t_list *, t_header *, int,int, char *, t_list*);
+int leerEnMemReal(t_list*,t_list *, t_header *, int,int, t_list*);
 
 /* VERIFICA SI LA TABLA ESTA CARGADA EN LA TABLA DE TABLAS DE PROCESOS Y LA DEVUELVE */
 t_list * obtenerTablaProceso(t_list*, int);
@@ -100,7 +100,7 @@ t_list * obtenerTablaProceso(t_list*, int);
 process_pag * obtenerPaginaProceso(t_list *, int);
 
 // Se fija si la encuentra cargada en tlb, en ese caso se la envia al cpu
-int leerDesdeTlb(int , t_list * , int, int, t_list*);
+int leerDesdeTlb(int , t_list * , t_header *, t_list*);
 
 /*
  * Unicamente crea las tablas para manejarlo
@@ -112,7 +112,8 @@ void iniciarProceso(t_list*, t_header*, t_list*);
 int escribirDesdeTlb (t_list *,int, char*, t_header *, t_list*, t_list*, int);
 
 // ABSTRACCION DE TODO LO QUE HACE EL ESCRIBIR
-void escribirEnMemReal(t_header*, t_list*, t_list*, t_list*, int, int, char*);
+//void escribirEnMemReal(t_header*, t_list*, t_list*, t_list*, int, int, char*);
+void escribirEnMemReal(t_list * , t_list * , t_header * , int , int , char * , t_list* );
 
 // ESCRIBO EL MARCO TENIENDO EN CUENTA QUE EL MENSAJE QUE ME LLEGA PUEDE SER MÁS LARGO Y QUE YA
 //PODIA LLEGAR A ESTAR ESCRITO DE ANTES CON ALGO MÁS LARGO
@@ -120,6 +121,8 @@ void escribirMarco(char*, char*);
 
 // ASIGNA UN MARCO A UNA PAGINA RECIEN TRAIDA DEL SWAP, ACTUALIZA TABLA PROCESO, TLB
 void asignarMarcoPagSwap(t_header*,char*, t_list*, t_list*, t_list*, int);
+
+void asignarMarcosYTablas(char *, t_header *, t_list* , t_list *);
 
 int swapeando(t_list*, t_list* , t_list *, char *, int, t_header *, t_list*, int);
 
@@ -191,9 +194,22 @@ void mostrarVersus(t_list*, int);
 int removerEntradasTlb(t_list *, t_header*);
 
 //------SEÑALES QUE TIENE QUE RECIBIR LA MEMORIA-------------//
+/*
+ * Cuando la memoria recibe esta señal, debe limpiar la TLB.
+ */
+
 void tlbFlush(t_list *);
 
+/*
+ * Cuando se recibe esta señal, se debe limpiar completamente la memoria principal,
+ * actualizando los bits que sean necesarios en las tablas de páginas de los diferentes procesos
+ */
 void limpiarMemoria(char *, t_list*, t_list*);
+/*
+ * Cuando recibe esta señal se deberá realizar un volcado (dump) del contenido de la memoria principal,
+ * en el archivo log de Administrador de Memoria, creando para tal fin un proceso nuevo.
+ * Se recomienda usar fork().
+ */
 
 void dumpEnLog();
 //-----------------------------------------------------------//
