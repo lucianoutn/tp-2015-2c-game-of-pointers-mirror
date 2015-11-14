@@ -103,7 +103,7 @@ int main() {
 			case 2: //comando cpu
 			{
 				//FALTA TERMINAR DE IMPLEMENTAR
-				printf("USO DE LA CPU\n");
+				printf("\nUSO DE LA CPU\n\n");
 				int usoCPU =0, nro;
 				send(conexiones.CPUS[0].socket, &usoCPU, sizeof(int),0);
 				for(nro=1; nro<=miContexto.cantHilosCpus;nro++)
@@ -119,7 +119,7 @@ int main() {
 
 
 	//pthread_join(hilo_consola, NULL); no habiliten este join, usamos semaforos.lucho
-
+	//test
 
 	//cierra los sockets y libero memoria
 

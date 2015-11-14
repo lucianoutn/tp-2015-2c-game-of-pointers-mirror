@@ -428,7 +428,7 @@ int configuroSocketsYLogs (){
 	int i = 1;
 	CPU = (t_cpu*)malloc(sizeof(t_cpu) * ((configuracion.cantHilos) + 1));
 	//conexion para el comandoCpu
-	//CPU[0].socketPlani = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador);
+	//afuera del while para q no se conecte con la memoria. solo c el plani
 	CPU[0].porcentajeUso=0;
 	CPU[0].cantInstrucEjec=0;
 	CPU[0].tiempoEjec=0;
