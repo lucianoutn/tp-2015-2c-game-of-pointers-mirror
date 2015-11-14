@@ -341,7 +341,8 @@ void escribirEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int
 				if ( listaFramesHuecosMemR->elements_count != 0)
 				{
 					char * contenido = malloc(miContexto.tamanioMarco);
-					envioAlSwap(package, serverSocket, contenido, flag);
+					t_header * header_lectura = crearHeaderLectura(package);
+					envioAlSwap(header_lectura, serverSocket, contenido, flag);
 					//SI TODO SALIO BIEN, EL SWAP CARGO LA PAGINA A LEER EN "CONTENIDO"
 					if(*flag)
 					{
@@ -644,6 +645,8 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 			send(socketCliente, contenido, tamanioMsj, 0);
 		log_info(logger, "Se envia al CPU confirmacion de lectura");
 
+		upPaginasAccedidas(tablaAccesos, header->PID);
+		upFallosPagina(tablaAccesos, header->PID);
 		num_pag = paginaASwapear->pag;
 		free(contenido);
 		free(status_lectura);
