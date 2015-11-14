@@ -153,7 +153,6 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 
 	int pagina;
 	char *mensaje;
-	clock_t tiempoInicio, tiempoFin;
 	//reservo espacio para el header
 	t_header *header = malloc(sizeof(t_header));
 
@@ -185,11 +184,6 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 			case 0: //leer
 
 				//puts("LEER");
-
-				tiempoInicio = clock();  //tiempo inicial de ejecucion
-				//sleep(7);
-				//printf("Tiempo transcurrido: %f", ((double)clock() - tiempoInicio) / CLOCKS_PER_SEC);
-
 				creoHeader(PCB,header,0,pagina); //PCB HEADER TIPOEJECUCION PAGINA
 				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
 				int tmno =0;
@@ -434,7 +428,7 @@ int configuroSocketsYLogs (){
 	int i = 1;
 	CPU = (t_cpu*)malloc(sizeof(t_cpu) * ((configuracion.cantHilos) + 1));
 	//conexion para el comandoCpu
-	//CPU[0].socketPlani = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador);
+	//afuera del while para q no se conecte con la memoria. solo c el plani
 	CPU[0].porcentajeUso=0;
 	CPU[0].cantInstrucEjec=0;
 	CPU[0].tiempoEjec=0;
