@@ -75,7 +75,7 @@ void ejecutoInstruccion(t_header * header, char * mensaje,char *  memoria_real, 
 				leerEnMemReal(tabla_adm, TLB,header, serverSocket,socketCliente, tablaAccesos);
 	 		break;
 	 	case 1:
-			log_info(logger, "Solicitud de escritura recibida del PID: %d y Pagina: %d, el mensaje es: %s", header->PID, header->pagina_proceso, mensaje);
+			log_info(logger, "Solicitud de escritura recibida del PID: %d y Pagina: %d, el mensaje es: \"%s\"", header->PID, header->pagina_proceso, mensaje);
 			// DECLARO UN FLAG PARA SABER SI ESTABA EN LA TLB Y SE ESCRIBIO, O SI NO ESTABA
 			if (!strcmp(miContexto.tlbHabilitada, "SI"))
 			{
@@ -171,7 +171,7 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, t_header * proc, t_list* tabla
 	// SI LA ENCONTRO LA LEO Y LE ENVIO EL FLAG TODO JOYA AL CPU
 	if (registro_tlb != NULL)
 	{
-		log_info(logger, "Encontre la pagina para leer en la tlb y dice -> %s", registro_tlb->direccion_fisica);
+		log_info(logger, "Encontre la pagina para leer en la tlb y dice -> \"%s\"", registro_tlb->direccion_fisica);
 		// SEGUN ISSUE 71, SI LA ENCUENTRA EN TLB HACE UN RETARDO SOLO, CUANDO OPERA CON LA PÁGINA (LA LEE)
 		usleep(miContexto.retardoMemoria);
 
@@ -254,7 +254,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 			}
 		}else // SI NO ESTA EN SWAP, YA CONOZCO LA DIRECCION DE SU MARCO //
 		{
-			printf("LEI PORQUE ESTABA EN MEMORIA -> %s Y MANDO A ACTUALIZAR TABLAS \n", pagina_proc->direccion_fisica);
+			printf("LEI PORQUE ESTABA EN MEMORIA -> \"%s\" Y MANDO A ACTUALIZAR TABLAS \n", pagina_proc->direccion_fisica);
 			usleep(miContexto.retardoMemoria); 	// SLEEP PORQUE OPERO CON LA PAGINA SEGUN ISSUE 71
 
 			/*
@@ -372,7 +372,7 @@ void escribirEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int
 			}
 		}else // SI NO ESTA EN SWAP, YA CONOZCO LA DIRECCION DE SU MARCO //
 		{
-			log_info(logger, "Encontre PID: %d Pagina %d en memoria => tengo la direccion y escribo: %s", package->PID, package->pagina_proceso, mensaje);
+			log_info(logger, "Encontre PID: %d Pagina %d en memoria => tengo la direccion y escribo: \"%s\"", package->PID, package->pagina_proceso, mensaje);
 			escribirMarco(mensaje, pagina_proc->direccion_fisica);
 
 			if (!strcmp(miContexto.tlbHabilitada, "SI"))
@@ -521,7 +521,7 @@ int escribirDesdeTlb (t_list * TLB, int tamanio_msg, char * message, t_header * 
 		// ACTUALIZO EL BIT DIRTY A 1 POR HABER ESCRITO EN LA PAGINA QUE YA ESTABA EN MEMORIA
 		if (!strcmp(miContexto.algoritmoReemplazo, "CLOCK"))
 			paginaProceso->dirty = 1;
-		log_info(logger,"Se escribio en el marco: %d, el contenido: %s",paginaProceso->marco,message);
+		log_info(logger,"Se escribio en el marco: %d, el contenido: \"%s\"",paginaProceso->marco,message);
 		printf ("SE ESCRIBIO CORRECTAMENTE PORQUE ESTABA EN LA TLB \n");
 		bool recibi = true;
 		send(socketCliente,&recibi,sizeof(bool),0);
@@ -563,7 +563,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	process_pag * paginaASwapear = traerPaginaARemover(tablaProceso);
 
 	log_info(logger, "Acceso a swap: Se swapea para traer la pagina %d porque no quedan marcos disponibles para el proceso %d", header->pagina_proceso, header->PID);
-	log_info(logger, "Se va a remover la pagina: %d, que contiene: %s",paginaASwapear->pag, paginaASwapear->direccion_fisica);
+	log_info(logger, "Se va a remover la pagina: %d, que contiene: \"%s\"",paginaASwapear->pag, paginaASwapear->direccion_fisica);
 
 	usleep(miContexto.retardoMemoria);
 
@@ -1033,7 +1033,7 @@ void dumpEnLog(char * memoria_real, t_list * tablaAdm)
 			process_pag * pagina_proc = list_get(tablaProceso, j); //Traigo una pagina
 			if(pagina_proc->marco!=-1) //si el marco no es -1 es porque esta cargado en un marco
 			{
-				log_info(logger,"Marco: %d ; Contenido: %s",pagina_proc->marco, pagina_proc->direccion_fisica);
+				log_info(logger,"Marco: %d ; Contenido: \"%s\"",pagina_proc->marco, pagina_proc->direccion_fisica);
 			}
 		}
 	}

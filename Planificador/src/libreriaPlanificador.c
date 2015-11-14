@@ -118,7 +118,7 @@ void dispatcher()
 
 void enviaACpu(t_cpu *CPU)
 {
-	//puts ("ENVIA A CPU");
+	//printf("SOY LA CPU Nro: %d\n", CPU->numCpu);
 	//bloqueo la cpu
 	CPU->enUso = true;
 	//CPU DISPONIBLE  saco de la cola y envio msj
