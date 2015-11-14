@@ -153,6 +153,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 
 	int pagina;
 	char *mensaje;
+	clock_t tiempoInicio, tiempoFin;
 	//reservo espacio para el header
 	t_header *header = malloc(sizeof(t_header));
 
@@ -184,6 +185,11 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 			case 0: //leer
 
 				//puts("LEER");
+
+				tiempoInicio = clock();  //tiempo inicial de ejecucion
+				//sleep(7);
+				//printf("Tiempo transcurrido: %f", ((double)clock() - tiempoInicio) / CLOCKS_PER_SEC);
+
 				creoHeader(PCB,header,0,pagina); //PCB HEADER TIPOEJECUCION PAGINA
 				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
 				int tmno =0;
