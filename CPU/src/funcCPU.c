@@ -134,7 +134,9 @@ int procesaInstruccion(char* instruccion, int *pagina, char* mensaje){
 		}
 		I++;
 	}
+	//mensaje=(char*)malloc(strlen(texto));
 	strcpy(mensaje, texto);
+	//printf("EL TEXTO ES: \"%s\"\n",texto);
 
 	//Libero memoria
 	free(palabra);
@@ -153,6 +155,8 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 
 	int pagina;
 	char *mensaje;
+	resultados = queue_create();
+	//t_resultados *resultado;
 	//reservo espacio para el header
 	t_header *header = malloc(sizeof(t_header));
 
@@ -183,25 +187,25 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 
 			case 0: //leer
 
-				//puts("LEER");
 				creoHeader(PCB,header,0,pagina); //PCB HEADER TIPOEJECUCION PAGINA
-				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
 				int tmno =0;
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &tmno, sizeof(int),0);		//espero recibir la respuesta
 				usleep(configuracion.retardo); //retardo del cpu
 				if(tmno > 0)	//Controlo que haya llegado bien
 				{
-					puts("Recibi pagina");
 					char *contenido = (char*)malloc(sizeof(char) * tmno);
 					recv(socketMemoria, contenido,tmno,0);
-					contenido[tmno]='\0';
-					log_info(logger, "mProc %d - Pagina %d Leida :\"%s\"", PCB->PID, pagina, contenido);
+					//contenido[tmno]='\0';
+					//log_info(logger, "mProc %d - Pagina %d - Leida :\"%s\"", PCB->PID, pagina, contenido);
+					queue_push(resultados,resultado(0,PCB->PID,pagina,contenido,1));
 					free(contenido);
 				}else if(tmno == 0){
-					log_info(logger, "mProc %d - Pagina %d Leida : vacia", PCB->PID, pagina);
+					queue_push(resultados,resultado(0,PCB->PID,pagina,NULL,0));
+					//log_info(logger, "mProc %d - Pagina %d - Leida : vacia", PCB->PID, pagina);
 				}else{
-					log_info(logger, "mProc %d - Pagina %d Fallo al leer",PCB->PID, pagina);
+					queue_push(resultados,resultado(0,PCB->PID,pagina,NULL,-1));
+					//log_info(logger, "mProc %d - Pagina %d - Fallo al leer",PCB->PID, pagina);
 					PCB->estado =5;
 					recibi=false;
 					send(socketPlanificador,&recibi, sizeof(bool),0);
@@ -218,10 +222,13 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				send(socketMemoria, mensaje, header->tamanio_msj,0);	//envio el texto a excribir
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
 				usleep(configuracion.retardo); //retardo del cpu
-				if(recibi)	//Controlo que haya llegado bien
-					log_info(logger, "mProc %d - Pagina %d Escrita: \"%s\"",PCB->PID, pagina, mensaje);
-				else{
-					log_info(logger, "mProc %d - Pagina %d Fallo al escribir: %s",PCB->PID,pagina, mensaje);
+				if(recibi){	//Controlo que haya llegado bien
+					queue_push(resultados,resultado(1,PCB->PID,pagina,mensaje,1));
+					//free(mensaje);
+					//log_info(logger, "mProc %d - Pagina %d - Escrita: \"%s\"",PCB->PID, pagina, mensaje);
+				}else{
+					queue_push(resultados,resultado(1,PCB->PID,pagina,mensaje,-1));
+					//log_info(logger, "mProc %d - Pagina %d - Fallo al escribir: %s",PCB->PID,pagina, mensaje);
 					PCB->estado =5;
 					send(socketPlanificador,&recibi, sizeof(flag),0);
 				}
@@ -236,10 +243,12 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
 				usleep(configuracion.retardo); //retardo del cpu
 				if(recibi)	//Controlo que haya llegado bien
-					log_info(logger, "mProc %d - Iniciado",PCB->PID);
+					queue_push(resultados,resultado(2,PCB->PID,NULL,NULL,1));
+					//log_info(logger, "mProc %d - Iniciado",PCB->PID);
 					//puts("Inicializado");
 				else{
-					log_info(logger, "mProc %d - Fallo",PCB->PID);
+					queue_push(resultados,resultado(2,PCB->PID,NULL,NULL,-1));
+					//log_info(logger, "mProc %d - Fallo",PCB->PID);
 					//puts("NO Inicializado");
 					PCB->estado =5;
 					send(socketPlanificador,&recibi, sizeof(flag),0);
@@ -254,21 +263,20 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
 				usleep(configuracion.retardo); //retardo del cpu
-				if(recibi)	//Controlo que haya llegado bien
-					log_info(logger, "mProc %d - Finalizado",PCB->PID);
-				else{
-					log_info(logger, "mProc %d - Fallo al finalizar",PCB->PID);
+				if(recibi){	//Controlo que haya llegado bien
+					queue_push(resultados,resultado(3,PCB->PID,NULL,NULL,1));
+					//log_info(logger, "mProc %d - Finalizado",PCB->PID);
+					PCB->estado=4;
+					send(socketPlanificador, &cambio, sizeof(flag), 0);
+				}else{
+					queue_push(resultados,resultado(3,PCB->PID,NULL,NULL,-1));
+					//log_info(logger, "mProc %d - Fallo al finalizar",PCB->PID);
 					PCB->estado =5;
 					send(socketPlanificador,&recibi, sizeof(flag),0);
 					break;
 				}
 
 				printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
-
-				//aviso al plani indicando que termino con este send:
-				PCB->estado=4;
-				send(socketPlanificador, &cambio, sizeof(flag), 0);
-				//recv espero a que el plani me diga que sigo
 
 				//aviso al plani indicando que termino con este semaforo:
 				/*	struct sembuf semOperacion;		//estructura q contiene la operacion sobre el semaforo
@@ -286,7 +294,8 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				//señal al plani avisando que cambie de estado
 				send(socketPlanificador, &cambio, sizeof(flag), 0);
 				send(socketPlanificador, &pagina, sizeof(int), 0); //envio el tiempo del sleep
-				log_info(logger, "mProc %d - En entrada-salida de tiempo: %d",PCB->PID,pagina);
+				queue_push(resultados,resultado(4,PCB->PID,pagina,NULL,1));
+				//log_info(logger, "mProc %d - En entrada-salida de tiempo: %d",PCB->PID,pagina);
 				break;
 			}
 			default:
@@ -302,12 +311,18 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 			}
 			//PASO A LA OTRA INSTRUCCION
 			PCB->instructionPointer	++;
-
+			//free(mensaje);
 
 	}	//FIN WHILE
 
+	while(!queue_is_empty(resultados))
+	{
+		imprimeResultados(queue_pop(resultados));
+	}
+	printf("Numero de instrucciones ejecutadas 2: %d\n",PCB->instructionPointer);
 	free(instrucciones);
 	free(header);
+	queue_destroy(resultados);
 
 }
 
@@ -487,4 +502,64 @@ void comandoCpu (int socket){	//Comando que devuelve el porcentaje de uso de la 
 			//puts("hcie el envio"); //test
 		}
 	}//FIN WHILE
+}
+
+void imprimeResultados(t_resultados *resultado)
+{
+	switch(resultado->codigo)
+	{
+	case 0:
+		if(resultado->flag == 1){
+			log_info(logger, "mProc %d - Pagina %d - Leida :\"%s\"", resultado->pid, resultado->pagina, resultado->mensaje);
+			free(resultado->mensaje);
+		}else if(resultado->flag ==0){
+			log_info(logger, "mProc %d - Pagina %d - Leida : vacia", resultado->pid, resultado->pagina);
+		}else{
+			log_info(logger, "mProc %d - Pagina %d - Fallo al leer",resultado->pid, resultado->pagina);
+		}
+		break;
+	case 1:
+		if(resultado->flag==1){
+			log_info(logger, "mProc %d - Pagina %d - Escrita: \"%s\"",resultado->pid, resultado->pagina, resultado->mensaje);
+		}else{
+			log_info(logger, "mProc %d - Pagina %d - Fallo al Escribir: \"%s\"",resultado->pid, resultado->pagina, resultado->mensaje);
+		}
+		free(resultado->mensaje);
+		break;
+	case 2:
+		if(resultado->flag==1){
+			log_info(logger, "mProc %d - Iniciado", resultado->pid);
+		}else{
+			log_info(logger, "mProc %d - Fallo",resultado->pid);
+		}
+		break;
+	case 3:
+		if(resultado->flag==1){
+			log_info(logger, "mProc %d - Finalizado", resultado->pid);
+		}else{
+			log_info(logger, "mProc %d - Fallo al finalizar",resultado->pid);
+		}
+		break;
+	case 4:
+		log_info(logger, "mProc %d - En entrada-salida de tiempo: %d",resultado->pid,resultado->pagina);
+		break;
+
+	}
+	free(resultado);
+}
+
+t_resultados* resultado(int codigo, int pid, int pagina, char* mensaje,int flag)
+{
+	t_resultados *resultado = (t_resultados*)malloc(sizeof(t_resultados));
+	resultado->codigo = codigo;
+	resultado->pid = pid;
+	resultado->pagina = pagina;
+	resultado->flag = flag;
+	if(mensaje != NULL)
+	{
+		resultado->mensaje = (char*)malloc(strlen(mensaje));
+		strcpy(resultado->mensaje,mensaje);
+	}else
+		resultado->mensaje=mensaje;
+	return resultado;
 }

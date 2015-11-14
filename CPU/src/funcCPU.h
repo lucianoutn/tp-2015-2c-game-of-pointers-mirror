@@ -31,6 +31,7 @@
 #include <sys/stat.h>      //  para las constantes de modo de los semaforos ipc
 #include <linux/unistd.h>   //para alguna syscall
 #include <sys/poll.h> 		//para el poll del reciv del socket
+#include <commons/collections/queue.h>
 
 typedef int pid;
 
@@ -107,9 +108,17 @@ typedef struct {
 
 t_cpu *CPU;
 
+typedef struct {
+	int codigo;
+	int pid;
+	int pagina;
+	char *mensaje;
+	int flag;
+}t_resultados;
+
 //pthread_t cpu[0];
 
-//t_sockets *sockets;
+t_queue *resultados;
 
 /*		// estructura para el poll:
 typedef struct {
@@ -142,5 +151,9 @@ int configuroSocketsYLogs ();
 void timer ();
 
 void comandoCpu (int);
+
+void imprimeResultados(t_resultados *);
+
+t_resultados* resultado(int codigo, int pid, int pagina, char* mensaje, int flag);
 
 #endif /* FUNCCPU_H_ */
