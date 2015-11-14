@@ -75,7 +75,7 @@ void analizoPaquete(t_header * package, int socketCliente) {
 	switch (package->type_ejecution)
 	{
 	case 0:
-		printf("Se recibio orden de lectura\n");
+		log_info(logger,"Se recibio orden de lectura PID: %d, Pagina %d", package->PID, package->pagina_proceso);
 		char * contenido = malloc(contexto->tam_pagina+1);
 		leerSwap(package,contenido);
 		if(contenido!=NULL){
@@ -92,19 +92,19 @@ void analizoPaquete(t_header * package, int socketCliente) {
 		free(contenido);
 		break;
 	case 1:
-		printf("Se recibio orden de escritura\n");
+		log_info(logger,"Se recibio orden de escritura PID: %d, Pagina %d", package->PID, package->pagina_proceso);
 		status = escribirSwap(package, socketCliente);
 		usleep(contexto->retardo_swap);
 		send(socketCliente,&status,sizeof(int),0);
 		break;
 	case 2:
-		printf("Se recibio orden de inicializacion\n");
+		log_info(logger,"Se recibio orden de inicializacion PID: %d", package->PID);
 		status = inicializarProc(package);
 		usleep(contexto->retardo_swap);
 		send(socketCliente,&status,sizeof(int),0);
 		break;
 	case 3:
-		printf("Se recibio orden de finalizacion de proceso\n");
+		log_info(logger,"Se recibio orden de finalizacion PID: %d, Pagina %d", package->PID);
 		status = finalizarProc(package);
 		usleep(contexto->retardo_swap);
 		send(socketCliente,&status,sizeof(int),0);
@@ -128,14 +128,14 @@ void leerSwap(t_header * package,char * contenido)
 	{
 		fseek(archivo,pag->inicio + (package->pagina_proceso * contexto->tam_pagina),SEEK_SET);
 		fread(contenido, contexto->tam_pagina, 1, archivo);
-		log_info(logger, "Se recibio orden de lectura: PID: %d Pag: %d, Byte Inicial: %d Contenido: %s"
+		log_info(logger, "Se proceso lectura: PID: %d Pag: %d, Byte Inicial: %d Contenido: %s"
 								,package->PID, package->pagina_proceso, pag->inicio+(package->pagina_proceso * contexto->tam_pagina),contenido);
 		pag->leidas=pag->leidas+1;
 	}
 	else
 	{
 		contenido=NULL;
-		log_error(logger, "No se encontro la pagina solicitada \n");
+		log_error(logger, "No se encontro la pagina solicitada");
 	}
 }
 
@@ -155,7 +155,7 @@ int escribirSwap(t_header * package, int socketCliente)
 	{
 		fseek(archivo,pag->inicio + ((package->pagina_proceso) * contexto->tam_pagina),SEEK_SET);
 		fwrite(mensaje, contexto->tam_pagina, 1, archivo);
-		log_info(logger, "Se recibio orden de escritura: PID: %d Pag: %d Byte Inicial: %d Contenido: %s"
+		log_info(logger, "Se proceso escritura: PID: %d Pag: %d Byte Inicial: %d Contenido: %s"
 										,package->PID, package->pagina_proceso, pag->inicio+(package->pagina_proceso * contexto->tam_pagina),mensaje);
 		//Actualizo cant escritas
 		pag->escritas= pag->escritas+1;
@@ -171,7 +171,7 @@ int escribirSwap(t_header * package, int socketCliente)
 	}
 	else
 	{
-		log_error(logger, "No se encontro la pagina solicitada \n");
+		log_error(logger, "No se encontro la pagina solicitada");
 		return 0;
 	}
 
@@ -188,7 +188,7 @@ int inicializarProc(t_header * package) {
 	{
 		//Inicializo
 		list_add(lista_paginas,pag_create(package->PID, hueco->inicio, package->pagina_proceso,0,0));
-		log_info(logger, "Se recibio orden de inicializacion: PID: %d Inicio: %d Bytes: %d"
+		log_info(logger, "Se proceso la inicializacion: PID: %d Inicio: %d Bytes: %d"
 				,package->PID, hueco->inicio,package->pagina_proceso * contexto->tam_pagina);
 		rellenarParticion(hueco->inicio, package->pagina_proceso);
 		//Actualizo huecos
@@ -199,7 +199,7 @@ int inicializarProc(t_header * package) {
 	else
 	{
 		//Si no encontro hueco, es por falta de espacion, tengo que rechazar proceso
-		log_error(logger, "Rechazo proceso por falta de espacio al proceso de PID: \n", package->PID);
+		log_error(logger, "Rechazo proceso por falta de espacio al proceso de PID: ", package->PID);
 		return 0;
 	}
 
@@ -217,13 +217,12 @@ int finalizarProc(t_header* package)
 	if(pag!= NULL)
 	{
 		list_add(lista_huecos, hueco_create(pag->inicio, pag->paginas));
-		log_info(logger, "Se recibio orden de finalizacion: PID: %d Inicio: %d Bytes: %d"
+		log_info(logger, "Se proceso la finalizacion: PID: %d Inicio: %d Bytes: %d"
 						,package->PID, pag->inicio,pag->paginas * contexto->tam_pagina);
 		//Mostrar paginas leidas y paginas escritas
 		leidasYEscritas(lista_paginas);
 		//Actualizo lista paginas
 		list_remove_and_destroy_by_condition(lista_paginas, (void *)_numeroDePid, (void *)pag_destroy);
-
 		return 1;
 	}
 	else
@@ -238,6 +237,7 @@ int finalizarProc(t_header* package)
 void compactarSwap()
 {
 	log_info(logger, "Se comenzo con la compactacion");
+
 	int inicio_ant = 0,pag_ant = 0;
 	int tamanio_lista= list_size(lista_paginas);
 	int inicio = 0,cant_pag = 0,i = 0;
@@ -272,7 +272,6 @@ void compactarSwap()
 		pagina->inicio=inicio;
 		free(contenido);
 	}
-
 	//actualizo lista huecos
 	int tamanio_huecos = list_size(lista_huecos);
 	t_hueco * hueco = list_get(lista_huecos,0);
@@ -282,7 +281,7 @@ void compactarSwap()
 	int j= 1;
 	for(; j<tamanio_huecos; j++)
 	{
-		list_remove(lista_huecos, j);
+		list_remove(lista_huecos, 1);
 	}
 
 	usleep(contexto->retardo_compac);
