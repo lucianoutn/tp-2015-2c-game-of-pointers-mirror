@@ -80,6 +80,8 @@ int main() {
 	pthread_create(&hilo_consola, NULL, (void*)consola, NULL);
 	//creo hilo despachador
 	pthread_create(&hilo_dispatcher, NULL, (void*)dispatcher, NULL);
+	//creo hilo bloqueados
+	pthread_create(&hilo_dispatcher, NULL, (void*)dispatcher, NULL);
 
 	int recivoOrden=1;
 	while (recivoOrden)		//controla que no se salga desde la Consola()

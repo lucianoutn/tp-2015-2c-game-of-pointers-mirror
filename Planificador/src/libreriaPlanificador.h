@@ -89,6 +89,7 @@ typedef struct PCB {
 	int quantum; //valor que lee y guarda desde el config
 	bool finalizar;
 	char *ruta; //ruta del archivo mCod que tiene las instrucciones a procesar
+	int tiempo; //tiempo en la cola de bloqueados que tiene que cumplir el proceso
 
 }t_pcb;
 
@@ -138,6 +139,8 @@ void *escuchar (struct Conexiones* conexion);
 void dispatcher();
 
 void enviaACpu(t_cpu *);
+
+void bloqueados();
 
 t_pcb* procesarPCB(char *);
 

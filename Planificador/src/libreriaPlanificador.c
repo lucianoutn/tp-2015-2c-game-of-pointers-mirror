@@ -152,10 +152,6 @@ void enviaACpu(t_cpu *CPU)
 	if(!termino)	//Controlo que haya llegado bien
 		log_info(logger, "mProc %d <%s> Fallo",pcb->PID,ruta(pcb->PID));
 
-	//si el proceso esta bloqueado, recivo el tiempo de bloqueo
-	int tiempo;
-	if(pcb->estado == 3) recv(CPU->socket, &tiempo, sizeof(int),0);
-
 	//libero la cpu
 	CPU->enUso = false;
 	sem_post(&semCpuLibre);
@@ -173,12 +169,8 @@ void enviaACpu(t_cpu *CPU)
 		}
 		case 3: //bloqueado
 		{
-			//bloqueo el pcb
-			log_info(logger, "mProc %d En entrada-salida de tiempo: %d",pcb->PID,tiempo);
-			usleep(tiempo * 10000);
-			//lo vuelve a meter en la cola de readys
-			queue_push(cola_ready, pcb);
-			sem_post(&semEnvioPcb);
+			//bloqueo el pcb, lo pongo en la cola de bloqueados
+			queue_push(cola_block, pcb);
 			break;
 		}
 		case 4: //finalizado
@@ -198,6 +190,24 @@ void enviaACpu(t_cpu *CPU)
 
 }
 
+//Funcion para hacer el tratamiento de la cola de bloqueados
+void bloqueados()
+{
+	while(1) //habilitado todo el tiempo
+	{
+		//sem productor-consumidor
+		//saco el pcb de la cola
+		t_pcb* pcb= queue_pop(cola_block);
+		//lo bloqueo segun el tiempo indicado
+		log_info(logger, "mProc %d En entrada-salida de tiempo: %d",pcb->PID,pcb->tiempo);
+		usleep(pcb->tiempo * 10000);
+		//lo vuelvo a poner en la cola de ready
+		queue_push(cola_ready, pcb);
+		//aviso
+		sem_post(&semEnvioPcb);
+	}
+
+}
 
 //Funcion que permite procesar el PCB creado a partir del comando correr PATH
 t_pcb* procesarPCB(char *path)

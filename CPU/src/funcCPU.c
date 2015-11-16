@@ -293,7 +293,8 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				usleep(configuracion.retardo); //retardo del cpu
 				//señal al plani avisando que cambie de estado
 				send(socketPlanificador, &cambio, sizeof(flag), 0);
-				send(socketPlanificador, &pagina, sizeof(int), 0); //envio el tiempo del sleep
+				PCB->tiempo=pagina;
+				//send(socketPlanificador, &pagina, sizeof(int), 0); //envio el tiempo del sleep
 				queue_push(resultados,resultado(4,PCB->PID,pagina,NULL,1));
 				//log_info(logger, "mProc %d - En entrada-salida de tiempo: %d",PCB->PID,pagina);
 				break;
