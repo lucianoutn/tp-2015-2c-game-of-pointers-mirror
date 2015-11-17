@@ -155,6 +155,9 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 
 	int pagina;
 	char *mensaje;
+	//double tiempoInicio, tiempoFin;
+	//time_t *t1 = malloc(sizeof(time_t));
+	//time_t *t2 = malloc(sizeof(time_t));
 	resultados = queue_create();
 	//t_resultados *resultado;
 	//reservo espacio para el header
@@ -187,6 +190,9 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 
 			case 0: //leer
 
+				//puts("LEER");
+				//tiempoInicio = time(t1);
+				//printf("el tiempo es: %f\n", (double)(tiempoFin - tiempoInicio)); //test
 				creoHeader(PCB,header,0,pagina); //PCB HEADER TIPOEJECUCION PAGINA
 				int tmno =0;
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
@@ -210,6 +216,12 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 					recibi=false;
 					send(socketPlanificador,&recibi, sizeof(bool),0);
 				}
+				//tiempoFin = time(t2);
+				//puts("aca");
+				//tiempoEjec = 577; //test
+				//tiempoEjec =+ tiempoFin - tiempoInicio;
+				//printf("tiempo ejec: %f", tiempoEjec);
+				//puts("aca2");
 				break;
 
 			case 1: //Escribir
@@ -331,7 +343,7 @@ void timer(){ //funcion que resetea y calcula los valores de porcentaje de uso d
 
 	int i;
 	while(1){  // aca hay q preguntar lo de esta espera activa. VER setitimer()
-		sleep(5);
+		sleep(5); // cambiarlo a 60 segs cuando ande todo bien
 		for (i=1; i <= configuracion.cantHilos; i++){
 		//	printf("\ntiempoEjec: %d\n", CPU[i].tiempoEjec);	//teste
 		CPU[i].porcentajeUso = ((double)(CPU[i].tiempoEjec) * 100) / 60;
@@ -448,9 +460,9 @@ int configuroSocketsYLogs (){
 	CPU = (t_cpu*)malloc(sizeof(t_cpu) * ((configuracion.cantHilos) + 1));
 	//conexion para el comandoCpu
 	//afuera del while para q no se conecte con la memoria. solo c el plani
-	//CPU[0].porcentajeUso=0;
-	//CPU[0].cantInstrucEjec=0;
-	//CPU[0].tiempoEjec=0;
+	CPU[0].porcentajeUso=0;
+	CPU[0].cantInstrucEjec=0;
+	CPU[0].tiempoEjec=0;
 	CPU[0].socketPlani = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
 	if (CPU[0].socketPlani==-1){	//controlo error
 		puts("No se pudo conectar con el Planificador");
@@ -462,7 +474,7 @@ int configuroSocketsYLogs (){
 	while(i <= configuracion.cantHilos){
 		CPU[i].porcentajeUso=0;
 		CPU[i].cantInstrucEjec=0;
-		CPU[i].tiempoEjec=0;
+		CPU[i].tiempoEjec=577; //testeo, volver a 0 cuando ande todo bien!
 		CPU[i].socketPlani = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
 		if (CPU[i].socketPlani==-1){	//controlo error
 			puts("No se pudo conectar con el Planificador");
