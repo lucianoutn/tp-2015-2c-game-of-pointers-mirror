@@ -91,7 +91,7 @@ typedef struct {
 sem_t semSalir;
 sem_t *semProduccionMsjs;
 sem_t *semRespuestaCpu;
-int semVCPU; // vector de semaforos dinamico compartidos
+//int semVCPU; // vector de semaforos dinamico compartidos
 
 pthread_mutex_t mutex;
 //ptrhead_mutex_unlock(&mutex);
@@ -116,6 +116,8 @@ typedef struct {
 	char *mensaje;
 	int flag;
 }t_resultados;
+
+pthread_t hiloTimer;
 
 //pthread_t cpu[0];
 

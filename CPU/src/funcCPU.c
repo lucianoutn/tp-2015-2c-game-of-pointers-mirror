@@ -329,13 +329,16 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 
 void timer(){ //funcion que resetea y calcula los valores de porcentaje de uso de los cpus cada 60s.
 
+	int i;
 	while(1){  // aca hay q preguntar lo de esta espera activa. VER setitimer()
-		sleep(60);
-		CPU->porcentajeUso=(CPU->tiempoEjec * 100) / 60;
-
+		sleep(5);
+		for (i=1; i <= configuracion.cantHilos; i++){
+		//	printf("\ntiempoEjec: %d\n", CPU[i].tiempoEjec);	//teste
+		CPU[i].porcentajeUso = ((double)(CPU[i].tiempoEjec) * 100) / 60;
 		//reseteo los valores
-		CPU->tiempoEjec = 0;
-		CPU->cantInstrucEjec = 0;
+		CPU[i].tiempoEjec = 0;
+		CPU[i].cantInstrucEjec = 0;
+		}
 		//setitimer(,,NULL);
 
 	}
@@ -344,8 +347,8 @@ void timer(){ //funcion que resetea y calcula los valores de porcentaje de uso d
 
 void iniciarCPU(t_cpu *CPUS){
 
-	pthread_t *hiloTimer;
-	pthread_create(&hiloTimer, NULL, (void*)timer, NULL);
+	//pthread_t *hiloTimer;
+	//pthread_create(&hiloTimer, NULL, (void*)timer, &CPUS); //este hilo es uno x cpu y va a quedar bloqueado contando
 	//puts("cree el hiloTimer"); //test
 	//pthread_t id= pthread_self(); //retorna el id del hilo q lo llamo
 	//unsigned int tid = process_get_thread_id(); //no borrar puede servir mas adelante
@@ -423,11 +426,11 @@ void iniciarCPU(t_cpu *CPUS){
 
 	}	//FIN DEL WHILE
 
-	pthread_cancel(hiloTimer);
+	//pthread_cancel(hiloTimer);
 	//CIERRO LOS SOCKETS Y EL HEADER
 	free(header);
 	close(CPUS->socketPlani);
-	close(CPU->socketMem);
+	close(CPUS->socketMem);
 	sem_post(&semSalir);	//Semaforo para controlar la finalizacion de la CPU
 
 }
@@ -445,9 +448,9 @@ int configuroSocketsYLogs (){
 	CPU = (t_cpu*)malloc(sizeof(t_cpu) * ((configuracion.cantHilos) + 1));
 	//conexion para el comandoCpu
 	//afuera del while para q no se conecte con la memoria. solo c el plani
-	CPU[0].porcentajeUso=0;
-	CPU[0].cantInstrucEjec=0;
-	CPU[0].tiempoEjec=0;
+	//CPU[0].porcentajeUso=0;
+	//CPU[0].cantInstrucEjec=0;
+	//CPU[0].tiempoEjec=0;
 	CPU[0].socketPlani = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
 	if (CPU[0].socketPlani==-1){	//controlo error
 		puts("No se pudo conectar con el Planificador");

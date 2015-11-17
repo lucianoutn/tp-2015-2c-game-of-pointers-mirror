@@ -38,6 +38,10 @@ int main()
 	err = pthread_create(&CPU[0].hilo, NULL, (void*)comandoCpu, CPU[0].socketPlani);
 	if (err != 0)
 		printf("no se pudo crear el hilo del COMANDO CPU :[%s]", strerror(err));
+	//hilo del timer para el comando cpu
+	err = pthread_create(&hiloTimer, NULL, (void*)timer, NULL); //este hilo es uno x cpu y va a quedar bloqueado contando
+	if (err != 0)
+		printf("no se pudo crear el hilo del timer :[%s]", strerror(err));
 
 	for (i=1; i<=configuracion.cantHilos; i++){
 		CPU[i].numeroCPU = i;
@@ -59,6 +63,7 @@ int main()
 			close(CPU[i].socketPlani);
 			pthread_cancel(CPU[i].hilo);
 	}
+	pthread_cancel(hiloTimer);
 	free(CPU);
 	//free(sockets);
 
