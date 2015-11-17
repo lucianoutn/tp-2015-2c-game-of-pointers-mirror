@@ -95,6 +95,7 @@ int procesaInstruccion(char* instruccion, int *pagina, char* mensaje){
 	while(instruccion[I]!= ' ')
 	{
 		if(instruccion[I]== '\0')	break;
+		if(instruccion[I]== ';') I++; //ignoro el ";" del final hasta llegar al"\0"
 		palabra[I]=instruccion[I];
 		I++;
 		palabra= (char*)realloc(palabra, (I+1)*sizeof(char));
