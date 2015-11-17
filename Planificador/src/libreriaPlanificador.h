@@ -112,6 +112,7 @@ sem_t ordenIngresada;
 sem_t semConsola;
 sem_t semCpuLibre;
 sem_t semEnvioPcb;
+sem_t semBloqueados;
 
 
 

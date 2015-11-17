@@ -171,6 +171,7 @@ void enviaACpu(t_cpu *CPU)
 		{
 			//bloqueo el pcb, lo pongo en la cola de bloqueados
 			queue_push(cola_block, pcb);
+			sem_post(&semBloqueados); //habilito el hilo de bloqueados
 			break;
 		}
 		case 4: //finalizado
@@ -193,10 +194,11 @@ void enviaACpu(t_cpu *CPU)
 //Funcion para hacer el tratamiento de la cola de bloqueados
 void bloqueados()
 {
-	while(1) //habilitado todo el tiempo
+	while(1) //habilitado todo el tiempo // ojo con la espera activa
 	{
 		//sem productor-consumidor
 		//saco el pcb de la cola
+		sem_wait(&semBloqueados);
 		t_pcb* pcb= queue_pop(cola_block);
 		//lo bloqueo segun el tiempo indicado
 		log_info(logger, "mProc %d En entrada-salida de tiempo: %d",pcb->PID,pcb->tiempo);

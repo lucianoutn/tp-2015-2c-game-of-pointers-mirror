@@ -76,12 +76,12 @@ int main() {
 	sleep(2);
 
 	//crear hilo de consola para que quede a la escucha de comandos por consola para el planificador
-	pthread_t hilo_consola, hilo_dispatcher;
+	pthread_t hilo_consola, hilo_dispatcher, hilo_bloqueados;
 	pthread_create(&hilo_consola, NULL, (void*)consola, NULL);
 	//creo hilo despachador
 	pthread_create(&hilo_dispatcher, NULL, (void*)dispatcher, NULL);
 	//creo hilo bloqueados
-	pthread_create(&hilo_dispatcher, NULL, (void*)dispatcher, NULL);
+	pthread_create(&hilo_bloqueados, NULL, (void*)bloqueados, NULL);
 
 	int recivoOrden=1;
 	while (recivoOrden)		//controla que no se salga desde la Consola()
