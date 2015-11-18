@@ -66,7 +66,7 @@ void ejecutoInstruccion(t_header * header, char * mensaje,char *  memoria_real, 
 			// PRIMERO VERIFICO QUE LA TLB ESTE HABILITADA*/
 			if (!strcmp(miContexto.tlbHabilitada, "SI"))
 			{
-				int flagg=leerDesdeTlb(socketCliente,TLB, header, tablaAccesos);
+				int flagg=leerDesdeTlb(socketCliente,TLB, header, tablaAccesos, tabla_adm);
 				// SI NO ESTABA EN TLB, ME FIJO EN MEMORIA
 				if(!flagg)
 					leerEnMemReal(tabla_adm,TLB, header, serverSocket,socketCliente, tablaAccesos);
@@ -158,7 +158,7 @@ void iniciarProceso(t_list* tabla_adm, t_header * proceso, t_list* tablaAccesos)
 		list_add(tabla_adm,tabla_adm_create(proceso->PID, lista_proceso) );
 }
 
-int leerDesdeTlb(int socketCliente, t_list * TLB, t_header * proc, t_list* tablaAccesos)
+int leerDesdeTlb(int socketCliente, t_list * TLB, t_header * proc, t_list* tablaAccesos, t_list* tabla_adm)
 {
 	bool _numeroDePid (void * p){ return(*(int *)p == proc->PID);	}
 	bool _numeroDePagina (void * p)	{ return(*(int *)p == proc->pagina_proceso);}
@@ -170,7 +170,7 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, t_header * proc, t_list* tabla
 	// SI LA ENCONTRO LA LEO Y LE ENVIO EL FLAG TODO JOYA AL CPU
 	if (registro_tlb != NULL)
 	{
-		log_info(logger, "Encontre la pagina para leer en la tlb y dice -> \"%s\"", registro_tlb->direccion_fisica);
+		log_info(logger, "TLB HIT pagina: %d en el marco numero: %d y dice: \"%s\"", registro_tlb->pagina,registro_tlb->marco, registro_tlb->direccion_fisica);
 		// SEGUN ISSUE 71, SI LA ENCUENTRA EN TLB HACE UN RETARDO SOLO, CUANDO OPERA CON LA PÁGINA (LA LEE)
 		usleep(miContexto.retardoMemoria);
 
@@ -182,6 +182,16 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, t_header * proc, t_list* tabla
 		if(tamanioMsj > 0)
 			send(socketCliente, registro_tlb->direccion_fisica, tamanioMsj , 0);
 
+		t_list * tabla_proc = obtenerTablaProceso(tabla_adm, proc->PID);
+		// SI ENCONTRO UN REGISTRO CON ESE PID
+		if(tabla_proc!=NULL)
+		{	// TRAIGO LA PAGINA BUSCADA
+			process_pag * pagina_proc= obtenerPaginaProceso(tabla_proc, proc->pagina_proceso);
+			actualizoTablaProceso(tabla_proc, NULL, proc);
+		}else
+		{
+			log_error(logger, "No se encontro la tabla del proceso");
+		}
 		return 1;
 	}
 	// SI LA TLB NO ESTA HABILITADA ENTONCES TENGO QUE VERIFICAR EN LA TABLA DE TABLAS
@@ -511,7 +521,7 @@ int escribirDesdeTlb (t_list * TLB, int tamanio_msg, char * message, t_header * 
 	if (registro_tlb != NULL)
 	{
 		upPaginasAccedidas(tablaAccesos, pagina->PID);
-		log_info(logger, "TLB HIT pagina: %d en el marco numero: %d", registro_tlb->pagina,registro_tlb->marco);
+		log_info(logger, "TLB HIT pagina: %d en el marco numero: %d y dice: \"%s\"", registro_tlb->pagina,registro_tlb->marco, registro_tlb->direccion_fisica);
 		//Actualizo cantidad de aciertos
 		cantHitTlb= cantHitTlb +1;
 		escribirMarco(message, registro_tlb->direccion_fisica);
@@ -529,6 +539,9 @@ int escribirDesdeTlb (t_list * TLB, int tamanio_msg, char * message, t_header * 
 		log_info(logger,"Se escribio en el marco: %d, el contenido: \"%s\"",paginaProceso->marco,message);
 		bool recibi = true;
 		send(socketCliente,&recibi,sizeof(bool),0);
+
+		actualizoTablaProceso(tablaProceso, NULL, pagina);
+
 		return 1;
 	}else
 	{

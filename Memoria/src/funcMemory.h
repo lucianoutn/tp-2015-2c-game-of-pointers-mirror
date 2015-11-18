@@ -100,7 +100,7 @@ t_list * obtenerTablaProceso(t_list*, int);
 process_pag * obtenerPaginaProceso(t_list *, int);
 
 // Se fija si la encuentra cargada en tlb, en ese caso se la envia al cpu
-int leerDesdeTlb(int , t_list * , t_header *, t_list*);
+int leerDesdeTlb(int , t_list * , t_header *, t_list*, t_list*);
 
 /*
  * Unicamente crea las tablas para manejarlo
