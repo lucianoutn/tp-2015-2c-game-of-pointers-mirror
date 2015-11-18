@@ -26,10 +26,10 @@ FILE* crearParticion() {
 	archivo = fopen(contexto->nombre, "rb+");
 	if (archivo)
 	{
-		printf("Particion creada y abierta\n");
+		log_info(logger,"Particion creada y abierta");
 	}
 	else {
-		printf("Error, no se pudo crear\n");
+		log_error(logger,"Error, no se pudo crear\n");
 		return NULL;
 	}
 
@@ -39,9 +39,9 @@ FILE* crearParticion() {
 
 void cerrarParticion() {
 	if (!fclose(archivo))
-		printf("Archivo Cerrado\n");
+		log_info(logger,"Archivo Cerrado");
 	else {
-		printf("Error: archivo NO CERRADO\n");
+		log_error(logger,"Error, no se pudo cerrar el archivo");
 	}
 }
 
@@ -110,7 +110,7 @@ void analizoPaquete(t_header * package, int socketCliente) {
 		send(socketCliente,&status,sizeof(int),0);
 		break;
 	default:
-		printf("El tipo de ejecucion recibido no es valido\n");
+		log_error(logger,"El tipo de ejecucion recibido no es valido\n");
 		abort();
 		break;
 	}
@@ -192,7 +192,6 @@ int inicializarProc(t_header * package) {
 				,package->PID, hueco->inicio,package->pagina_proceso * contexto->tam_pagina);
 		rellenarParticion(hueco->inicio, package->pagina_proceso);
 		//Actualizo huecos
-		hueco->inicio = hueco->inicio + (package->pagina_proceso * contexto->tam_pagina);
 		hueco->paginas = hueco->paginas - package->pagina_proceso;
 		return 1;
 	}
@@ -216,6 +215,20 @@ int finalizarProc(t_header* package)
 
 	if(pag!= NULL)
 	{
+		int i =0;
+		for(;i<(pag->paginas*contexto->tam_pagina);i++)
+		{
+			fseek(archivo, pag->inicio+ i, SEEK_SET);
+			fputc('\0',archivo);
+		}
+		/*
+		puts("VACIEEEEEEEEEEEEEEEE EL SWAP");
+		char* contenido=malloc(10);
+		fseek(archivo, pag->inicio, SEEK_SET);
+		fread(contenido, contexto->tam_pagina, 1, archivo);
+
+		printf("PRUEEEEEEEEEEEEEBA contenido %s: \n", contenido);
+*/
 		list_add(lista_huecos, hueco_create(pag->inicio, pag->paginas));
 		log_info(logger, "Se proceso la finalizacion: PID: %d Inicio: %d Bytes: %d"
 						,package->PID, pag->inicio,pag->paginas * contexto->tam_pagina);
