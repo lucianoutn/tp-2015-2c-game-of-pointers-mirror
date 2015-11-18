@@ -111,8 +111,7 @@ void ejecutoInstruccion(t_header * header, char * mensaje,char *  memoria_real, 
 	 		}
 	 		break;
 	 	case 3:
-			printf ("*********************Se recibio orden de finalizacion de proceso :)********************\n");
-			log_info(logger, "Se recibio orden de finalizacion del PID: %d",header->PID);
+			log_info(logger, "+++++++++++++++++++++Se recibio orden de finalizacion del PID: %d+++++++++++++++++++++",header->PID);
 			// Lo muestro aca porque si lo muestro despues de que lo mate, la tabla no tiene el registro
 			mostrarVersus(tablaAccesos, header->PID);
 			matarProceso(header, tabla_adm, TLB, tablaAccesos);
@@ -256,7 +255,6 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 			}
 		}else // SI NO ESTA EN SWAP, YA CONOZCO LA DIRECCION DE SU MARCO //
 		{
-			printf("LEI PORQUE ESTABA EN MEMORIA -> \"%s\" Y MANDO A ACTUALIZAR TABLAS \n", pagina_proc->direccion_fisica);
 			usleep(miContexto.retardoMemoria); 	// SLEEP PORQUE OPERO CON LA PAGINA SEGUN ISSUE 71
 
 			/*
@@ -432,7 +430,6 @@ void envioAlSwap ( t_header * header, int serverSocket, char * contenido, int * 
 		//SI EL TIPO DE EJECUCION ES ESCRITURA, MANDO EL CONTENIDO
 		if (header->type_ejecution == 1)
 		{
-			printf("ENVIO A ESCRIBIR AL SWAP --> %s  \n", contenido);
 			send(serverSocket, contenido, miContexto.tamanioMarco, 0);
 		}
 		recv(serverSocket, flag, sizeof(int),0);
@@ -442,7 +439,6 @@ void envioAlSwap ( t_header * header, int serverSocket, char * contenido, int * 
 			if(header->type_ejecution==0) //si hice una lectura, devuelve la pag
 			{
 				recv(serverSocket, (void *)contenido, miContexto.tamanioMarco,0);
-				printf("EL SWAP ME DEVOLVIO DE LA LECTURA ---> %s \n", contenido);
 			}
 		}
 }
@@ -488,7 +484,7 @@ void matarProceso(t_header * proceso_entrante, t_list * tabla_adm, t_list * TLB,
 	}
 	else
 	{
-		printf("NO SE ENCONTRO LA TABLA DEL PROCESO \n");
+		log_error(logger, "No se encontro la tabla del proceso a remover");
 	}
 }
 
@@ -528,7 +524,6 @@ int escribirDesdeTlb (t_list * TLB, int tamanio_msg, char * message, t_header * 
 		if (!strcmp(miContexto.algoritmoReemplazo, "CLOCK"))
 			paginaProceso->dirty = 1;
 		log_info(logger,"Se escribio en el marco: %d, el contenido: \"%s\"",paginaProceso->marco,message);
-		printf ("SE ESCRIBIO CORRECTAMENTE PORQUE ESTABA EN LA TLB \n");
 		bool recibi = true;
 		send(socketCliente,&recibi,sizeof(bool),0);
 		return 1;
@@ -567,7 +562,6 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	//header es la pagina que quiero leer de swap para escribir en el marco de paginaASwapear
 	// TRAIGO LA PRIMER PAGINA QUE SE HAYA CARGADO EN MEMORIA
 	process_pag * paginaASwapear = traerPaginaARemover(tablaProceso);
-	printf("LA PAGINA A SWAPEAR CONTIENE ----> %s", paginaASwapear->direccion_fisica);
 	log_info(logger, "Acceso a swap: Se swapea para traer la pagina %d porque no quedan marcos disponibles para el proceso %d", header->pagina_proceso, header->PID);
 	log_info(logger, "Se va a remover la pagina: %d, que contiene: \"%s\"",paginaASwapear->pag, paginaASwapear->direccion_fisica);
 
@@ -671,15 +665,15 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	//ACTUALIZO LA TABLA DEL PROCESO SEGUN ALGORITMOS // NO USO ACTUALIZOTABLAPROCESO POR LOS PARAMETROS
 	if ( !strcmp(miContexto.algoritmoReemplazo, "FIFO"))
 	{
-		printf("SWAPEA CORTE FIFO \n");
+		log_info(logger, "Swapea corte FIFO");
 		actualizarTablaProcesoFifo(tablaProceso, header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco);
 	}else if (!strcmp(miContexto.algoritmoReemplazo, "LRU")) // LA MUE
 	{
-		printf("SWAPEA CORTE LRU \n");
+		log_info(logger, "Swapea corte LRU");
 		actualizarTablaProcesoLru(tablaProceso, header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco);
 	}else // CLOCK POR DESCARTE YA QUE NO PUEDE HABER ERRORES EN EL ARCHIVO DE CONFIGURACION, ACTUALIZA EL BIT DE ACCEDIDO A 1
 	{
-		printf("SWAPEA CORTE CLOCK \n");
+		log_info(logger, "Swapea corte Clock");
 		actualizarTablaProcesoClock(tablaProceso, header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco);
 	}
 
@@ -710,21 +704,21 @@ void actualizoTablaProceso(t_list * tablaProceso, t_marco_hueco * marco_a_llenar
 {
 	if(!strcmp(miContexto.algoritmoReemplazo, "FIFO"))
 	{
-		printf("Entra a actualizar corte FIFO \n");
+		log_info(logger, "Actualizando tabla corte FIFO");
 		if(marco_a_llenar!=NULL)
 			actualizarTablaProcesoFifo(tablaProceso, header->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
 		else
 			actualizarTablaProcesoFifo(tablaProceso, header->pagina_proceso, NULL, NULL);
 	}else if (!strcmp(miContexto.algoritmoReemplazo, "LRU"))
 	{
-		printf("Entra a actualizar corte LRU \n");
+		log_info(logger, "Actualizando tabla corte LRU");
 		if(marco_a_llenar!=NULL)
 			actualizarTablaProcesoLru(tablaProceso, header->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
 		else
 			actualizarTablaProcesoLru(tablaProceso, header->pagina_proceso, NULL, NULL);
 	}else
 	{
-		printf("Entra a actualizar corte CLOCK \n");
+		log_info(logger, "Actualizando tabla corte CLOCK");
 		if(marco_a_llenar!=NULL)
 			actualizarTablaProcesoClock(tablaProceso, header->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
 		else
@@ -875,11 +869,9 @@ void escribirMarco(char * mensaje, char* direccion)
 		memcpy(direccion, mensaje, tam_msj+1);
 	}
 
-	printf("-------------------> ESCRIBI--> %s DE TAMANIO --> %d \n", direccion, strlen(direccion));
-
+	log_info(logger, "Se escribio en el marco --> %s ", direccion);
 
 	//free(pagAux);
-	puts("TERMINE ESCRIBIR MARCO");
 }
 
 int marcosProcesoLlenos(t_list * lista_proceso)
@@ -944,8 +936,6 @@ void upFallosPagina(t_list* tablaAccesos, int pid)
 
 	t_versus * reg = list_find(tablaAccesos, (void*)_numeroDePid);
 	reg->cantFallosPag++;
-
-	printf("KKKKKKKKKKKKKKKKKK AHORA VAN %d FALLOS \n", reg->cantFallosPag);
 }
 
 void mostrarVersus(t_list* tablaAccesos, int pid)
@@ -987,7 +977,6 @@ void removerMarcoPorMarco(int marco)
 
 			//AGREGO EL MARCO AHORA HUECO, A LA LISTA DE MARCOS HUECOS
 			// SIGUE TENIENDO SU DIRECCION Y SU NUMERO DE MARCO, NO IMPORTA EN QUE LISTA ESTE
-			printf("VERIFICO QUE EL MARCO ESTE VACIO POSTA --> %s \n", marco_a_remover->direccion_inicio);
 			list_add(listaFramesHuecosMemR, marco_a_remover);
 		}
 		x++;
