@@ -131,7 +131,7 @@ void ejecutoInstruccion(t_header * header, char * mensaje,char *  memoria_real, 
 			}
 	 		break;
 	 	default:
-			printf ("El tipo de ejecucion recibido no es valido\n");
+			log_error(logger, "El tipo de ejecucion recibido no es valido");
 	 		break;
 	 	}
 	free(flag);
@@ -243,7 +243,6 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 						log_error(logger, "Hubo un problema con la conexion/envio al swap");
 						return 0;
 					}
-					puts("LLEGO ACA");
 					//free(contenido);
 				}else
 				{
@@ -255,6 +254,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 			}
 		}else // SI NO ESTA EN SWAP, YA CONOZCO LA DIRECCION DE SU MARCO //
 		{
+			log_info(logger, "Se encontro la pagina a leer en memoria");
 			usleep(miContexto.retardoMemoria); 	// SLEEP PORQUE OPERO CON LA PAGINA SEGUN ISSUE 71
 
 			/*
@@ -272,6 +272,9 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		 	upPaginasAccedidas(tablaAccesos, package->PID );
 		 	int tamanioMsj = strlen(pagina_proc->direccion_fisica)+1;
 		 	send(socketCliente,&tamanioMsj,sizeof(int),0);
+
+		 	log_info(logger, "La pagina contiene: %s. Se envia al CPU", pagina_proc->direccion_fisica);
+
 		 	if (tamanioMsj >0)
 		 		send(socketCliente, pagina_proc->direccion_fisica, tamanioMsj, 0);
 			free(flag);
@@ -350,8 +353,8 @@ void escribirEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int
 						asignarMarcosYTablas(mensaje, package, tabla_proc,TLB);
 						upPaginasAccedidas(tablaAccesos, package->PID);
 						upFallosPagina(tablaAccesos, package->PID);
-						log_info(logger, "Se hizo conexion con swap, se envio pedido de lectura de la"
-												"pagina a escribir y esta fue recibida correctamente");
+						//log_info(logger, "Se hizo conexion con swap, se envio pedido de lectura de la"
+						//						"pagina a escribir y esta fue recibida correctamente");
 
 						// Como la transferencia con el swap fue exitosa, le envio la pagina al CPU
 						bool recibi= true;
@@ -563,28 +566,29 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	// TRAIGO LA PRIMER PAGINA QUE SE HAYA CARGADO EN MEMORIA
 	process_pag * paginaASwapear = traerPaginaARemover(tablaProceso);
 	log_info(logger, "Acceso a swap: Se swapea para traer la pagina %d porque no quedan marcos disponibles para el proceso %d", header->pagina_proceso, header->PID);
-	log_info(logger, "Se va a remover la pagina: %d, que contiene: \"%s\"",paginaASwapear->pag, paginaASwapear->direccion_fisica);
+	log_info(logger, "+++++++++++++++++++++++++Se va a remover la pagina: %d, que contiene: \"%s\"+++++++++++++++++++++++++++",paginaASwapear->pag, paginaASwapear->direccion_fisica);
 
 	usleep(miContexto.retardoMemoria);
+
+	t_header * header_escritura = crearHeaderEscritura( header->PID, paginaASwapear->pag, 0);
+
+	int * status_escritura = malloc(sizeof(int));
+	envioAlSwap(header_escritura, serverSocket, paginaASwapear->direccion_fisica, status_escritura);
+
+	if ( *status_escritura != 1)
+	{
+		bool recibi=false;
+		send(socketCliente,&recibi,sizeof(bool),0);
+		log_error(logger, "No se pudo escribir en el Swap, aviso al CPU");
+		return 0;
+	}
 
 	int num_pag;
 
 	bool _numeroDePag (void * p){ return(*(int*)p == num_pag); }
-
 	// SI SE TRATA DE UNA ESCRITURA
 	if (header->type_ejecution == 1)
 	{
-		t_header * header_escritura = crearHeaderEscritura( header->PID, paginaASwapear->pag, strlen(mensaje));
-		int * status_escritura = malloc(sizeof(int));
-		envioAlSwap(header_escritura, serverSocket, paginaASwapear->direccion_fisica, status_escritura);
-		if ( *status_escritura != 1)
-		{
-			bool recibi=false;
-			send(socketCliente,&recibi,sizeof(bool),0);
-			log_error(logger, "No se pudo escribir en el Swap, aviso al CPU");
-			return 0;
-		}
-
 		// LE PIDO LA PAGINA QUE QUIERO ESCRIBIR Y LA AGREGO AL FINAL DE LA LISTA
 		t_header * header_lectura = crearHeaderLectura(header);
 
@@ -623,10 +627,8 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		// SI SE TRATA DE UNA LECTURA
 	}else if(header->type_ejecution ==0)
 	{
-		puts("ENTRE A LECTURA SEAPEANDO \n");
-
 		int * status_lectura = malloc(sizeof(int));
-		char * contenido = malloc(sizeof(miContexto.tamanioMarco));
+		char * contenido = malloc(miContexto.tamanioMarco);
 		envioAlSwap(header, serverSocket, contenido, status_lectura);
 
 		if ( *status_lectura != 1)
@@ -644,8 +646,6 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		//strcpy(paginaASwapear->direccion_fisica, contenido);
 		// SI ACA LLAMO A escriboMarco, explota todo cual hiroshima
 
-		puts("SIGO EN LECTURA SWAPEANDO\n");
-
 		int tamanioMsj = strlen(contenido)+1;
 		send(socketCliente,&tamanioMsj,sizeof(int),0);
 		if (tamanioMsj >0)
@@ -659,7 +659,6 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		free(contenido);
 		free(status_lectura);
 		*/
-		puts("TERMINE LECTURA SWAPEANDO \n");
 	}
 
 	//ACTUALIZO LA TABLA DEL PROCESO SEGUN ALGORITMOS // NO USO ACTUALIZOTABLAPROCESO POR LOS PARAMETROS
@@ -737,7 +736,6 @@ void actualizarTablaProcesoLru(t_list * tabla_proceso, int num_pagina, char * di
 	else
 		pagina = pag_proc_create(num_pagina, pag->direccion_fisica, pag->marco, 0, 0);
 	list_add(tabla_proceso,pagina);
-	puts("Se actualizo TablaProceso corte Lru");
 }
 
 void actualizarTablaProcesoFifo(t_list * tabla_proceso, int num_pagina, char * direccion_marco, int num_marco)
