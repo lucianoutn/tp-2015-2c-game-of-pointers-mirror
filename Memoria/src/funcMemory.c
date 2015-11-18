@@ -177,7 +177,8 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, t_header * proc, t_list* tabla
 
 		upPaginasAccedidas(tablaAccesos, registro_tlb->pid);
 
-		int tamanioMsj = strlen(registro_tlb->direccion_fisica);
+		int tamanioMsj = strlen(registro_tlb->direccion_fisica)+1;
+
 		send(socketCliente,&tamanioMsj,sizeof(int),0);
 		if(tamanioMsj > 0)
 			send(socketCliente, registro_tlb->direccion_fisica, tamanioMsj , 0);
@@ -226,7 +227,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 						log_info(logger, "Se hizo conexion con swap, se envio paquete a leer y este fue recibido correctamente");
 
 						// Como la transferencia con el swap fue exitosa, le envio la pagina al CPU
-						int tamanioMsj = strlen(contenido);
+						int tamanioMsj = strlen(contenido)+1;
 						send(socketCliente,&tamanioMsj,sizeof(int),0);
 						if (tamanioMsj >0)
 							send(socketCliente, contenido, tamanioMsj, 0);
@@ -271,7 +272,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 					actualizarTlb(package->PID, package->pagina_proceso, pagina_proc->direccion_fisica, TLB, pagina_proc->marco);
 
 		 	upPaginasAccedidas(tablaAccesos, package->PID );
-		 	int tamanioMsj = strlen(pagina_proc->direccion_fisica);
+		 	int tamanioMsj = strlen(pagina_proc->direccion_fisica)+1;
 		 	send(socketCliente,&tamanioMsj,sizeof(int),0);
 		 	if (tamanioMsj >0)
 		 		send(socketCliente, pagina_proc->direccion_fisica, tamanioMsj, 0);
@@ -651,7 +652,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 
 		puts("SIGO EN LECTURA SWAPEANDO\n");
 
-		int tamanioMsj = strlen(contenido);
+		int tamanioMsj = strlen(contenido)+1;
 		send(socketCliente,&tamanioMsj,sizeof(int),0);
 		if (tamanioMsj >0)
 			send(socketCliente, contenido, tamanioMsj, 0);
@@ -863,10 +864,19 @@ void escribirMarco(char * mensaje, char* direccion)
 	usleep(miContexto.retardoMemoria);
 	char * pagAux = calloc(1, miContexto.tamanioMarco); // sobreescribo pagina con \0
 	strcpy(direccion, pagAux);
-	strcpy(direccion, mensaje ); // y despues le escribo el mensaje
 	int tam_msj = strlen(mensaje);
-	printf("-------------------> ESCRIBI--> %s DE TAMANIO %d \n", mensaje, tam_msj);
-	mensaje[tam_msj-1] = '\0';
+	if (tam_msj >= miContexto.tamanioMarco )
+	{
+		mensaje[miContexto.tamanioMarco-1] = '\0';
+		memcpy(direccion, mensaje, miContexto.tamanioMarco); // y despues le escribo el mensaje
+	}else
+	{
+		mensaje[tam_msj] = '\0';
+		memcpy(direccion, mensaje, tam_msj+1);
+	}
+
+	printf("-------------------> ESCRIBI--> %s DE TAMANIO --> %d \n", direccion, strlen(direccion));
+
 
 	//free(pagAux);
 	puts("TERMINE ESCRIBIR MARCO");
@@ -973,10 +983,11 @@ void removerMarcoPorMarco(int marco)
 		{
 			t_marco_hueco * marco_a_remover = list_remove(listaFramesMemR, x);
 
-			strcpy(marco_a_remover, marcoAux); // limpio el marco para mandarlo a la lista de marcos vacios
+			strcpy(marco_a_remover->direccion_inicio, marcoAux); // limpio el marco para mandarlo a la lista de marcos vacios
 
 			//AGREGO EL MARCO AHORA HUECO, A LA LISTA DE MARCOS HUECOS
 			// SIGUE TENIENDO SU DIRECCION Y SU NUMERO DE MARCO, NO IMPORTA EN QUE LISTA ESTE
+			printf("VERIFICO QUE EL MARCO ESTE VACIO POSTA --> %s \n", marco_a_remover->direccion_inicio);
 			list_add(listaFramesHuecosMemR, marco_a_remover);
 		}
 		x++;
