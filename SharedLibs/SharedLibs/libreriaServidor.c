@@ -15,9 +15,10 @@ int crearServer(const char *PUERTO)
 	struct addrinfo *serverInfo; //estructura que almacena los datos de conexion
 
 	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;		// No importa si uso IPv4 o IPv6
-	hints.ai_flags = AI_PASSIVE;// Asigna el address del localhost: 127.0.0.1
+	hints.ai_family = AF_INET;		// No importa si uso IPv4 o IPv6
+	hints.ai_flags = INADDR_ANY;// Asigna el address del localhost: 127.0.0.1
 	hints.ai_socktype = SOCK_STREAM;	// Indica que usaremos el protocolo TCP
+	hints.ai_protocol = 0;
 
 	getaddrinfo(NULL, PUERTO, &hints, &serverInfo); // Carga en serverInfo los datos de la conexion
 

@@ -156,9 +156,10 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 	int err=0;
 
 	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_UNSPEC;		// No importa si uso IPv4 o IPv6
-	hints.ai_flags = AI_PASSIVE;// Asigna el address del localhost: 127.0.0.1
+	hints.ai_family = AF_INET;	//cambiado	// No importa si uso IPv4 o IPv6
+	hints.ai_flags = htons(INADDR_ANY);// cambiado// Asigna el address del localhost: 127.0.0.1
 	hints.ai_socktype = SOCK_STREAM;	// Indica que usaremos el protocolo TCP
+	hints.ai_protocol = 0;
 
 	getaddrinfo(NULL, miContexto.puertoServidor, &hints, &serverInfo); // Carga en serverInfo los datos de la conexion
 	if ((listener = socket(serverInfo->ai_family, serverInfo->ai_socktype,
