@@ -145,7 +145,7 @@ int palabraAValor(char *palabra);
 
 int procesaInstruccion(char*,int *, char*);
 
-void ejecutoPCB(int,int, t_pcb *);
+void ejecutoPCB(int,int, t_pcb *,int*);
 
 void iniciarCPU(t_cpu *);
 

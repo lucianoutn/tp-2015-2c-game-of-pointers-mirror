@@ -152,7 +152,7 @@ int procesaInstruccion(char* instruccion, int *pagina, char* mensaje){
 /* Procesa los MSJ recibidos
  * y envia el MSJ correspondiente a la memoria
  */
-void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
+void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cantInstrucEjec){
 
 	int pagina;
 	char *mensaje;
@@ -223,6 +223,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				//tiempoEjec =+ tiempoFin - tiempoInicio;
 				//printf("tiempo ejec: %f", tiempoEjec);
 				//puts("aca2");
+				*cantInstrucEjec= *cantInstrucEjec + 1; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				break;
 
 			case 1: //Escribir
@@ -245,6 +246,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 					PCB->estado =5;
 					send(socketPlanificador,&recibi, sizeof(flag),0);
 				}
+				*cantInstrucEjec= *cantInstrucEjec + 1; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				break;
 
 			case 2://iniciar
@@ -266,7 +268,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 					PCB->estado =5;
 					send(socketPlanificador,&recibi, sizeof(flag),0);
 				}
-
+				*cantInstrucEjec= *cantInstrucEjec + 1; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				break;
 
 			case 3: //finalizar
@@ -298,7 +300,10 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 					semOperacion.sem_flg = 0; //un flag siempre en0
 					semop (semVCPU, &semOperacion, 1); //aplico la operacion sobre el semaforo
 		     	*/
+
+				*cantInstrucEjec= *cantInstrucEjec + 1; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				break;
+
 			case 4: //entrada-salida
 			{
 				//puts("ENTRADA-SALIDA");
@@ -310,7 +315,10 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB){
 				//send(socketPlanificador, &pagina, sizeof(int), 0); //envio el tiempo del sleep
 				queue_push(resultados,resultado(4,PCB->PID,pagina,NULL,1));
 				//log_info(logger, "mProc %d - En entrada-salida de tiempo: %d",PCB->PID,pagina);
+
+				*cantInstrucEjec= *cantInstrucEjec + 1; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				break;
+
 			}
 			default:
 			{
@@ -344,10 +352,11 @@ void timer(){ //funcion que resetea y calcula los valores de porcentaje de uso d
 
 	int i;
 	while(1){  // aca hay q preguntar lo de esta espera activa. VER setitimer()
-		sleep(5); // cambiarlo a 60 segs cuando ande todo bien
+		sleep(60); // cambiarlo a 60 segs cuando ande todo bien
 		for (i=1; i <= configuracion.cantHilos; i++){
 		//	printf("\ntiempoEjec: %d\n", CPU[i].tiempoEjec);	//teste
-		CPU[i].porcentajeUso = ((double)(CPU[i].tiempoEjec) * 100) / 60;
+		//CPU[i].porcentajeUso = ((double)(CPU[i].tiempoEjec) * 100) / 60; //si se toma en cuenta el tiempo
+		CPU[i].porcentajeUso = ((CPU[i].cantInstrucEjec) * 100) / (60 / configuracion.retardo); //si se toma en cuenta la cantidad de instrucciones
 		//reseteo los valores
 		CPU[i].tiempoEjec = 0;
 		CPU[i].cantInstrucEjec = 0;
@@ -418,7 +427,7 @@ void iniciarCPU(t_cpu *CPUS){
 
 				//printf("PCB Recibido. PID:%d Ruta: <%s>\n",PCB->PID,PCB->ruta);
 				//ejecuto
-				ejecutoPCB(CPUS->socketMem,CPUS->socketPlani,PCB);	//analiza el PCB y envia a memoria si corresponde (nuevo)
+				ejecutoPCB(CPUS->socketMem,CPUS->socketPlani,PCB, &CPUS->cantInstrucEjec);	//analiza el PCB y envia a memoria si corresponde (nuevo)
 
 				break;
 			}
@@ -474,8 +483,8 @@ int configuroSocketsYLogs (){
 
 	while(i <= configuracion.cantHilos){
 		CPU[i].porcentajeUso=0;
-		CPU[i].cantInstrucEjec=0;
-		CPU[i].tiempoEjec=577; //testeo, volver a 0 cuando ande todo bien!
+		CPU[i].cantInstrucEjec=0;  //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
+		CPU[i].tiempoEjec=0; //testeo, volver a 0 cuando ande todo bien!
 		CPU[i].socketPlani = crearCliente(configuracion.ipPlanificador, configuracion.puertoPlanificador); //conecta con el planificador
 		if (CPU[i].socketPlani==-1){	//controlo error
 			puts("No se pudo conectar con el Planificador");
