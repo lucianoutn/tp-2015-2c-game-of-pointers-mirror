@@ -31,9 +31,4 @@
 # Debug files
 *.dSYM/
 /Default/
-/Swap/Debug/
-/Planificador/Debug/
-/CPU/Debug/
-/Memoria/Debug/
-/SharedLibs/Debug/
-/*.*/Debug/
+
