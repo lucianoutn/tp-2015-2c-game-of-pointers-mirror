@@ -140,6 +140,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 	fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
 	// struct sockaddr_in myaddr;     // dirección del servidor
 	struct sockaddr_in remoteaddr; // dirección del cliente
+	struct sockaddr_in myaddr;
 	int fdmax;        // número máximo de descriptores de fichero
 	int listener;     // descriptor de socket a la escucha
 	int newfd;        // descriptor de socket de nueva conexión aceptada
@@ -155,15 +156,18 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 	struct addrinfo *serverInfo; //estructura que almacena los datos de conexion
 	int err=0;
 
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_family = AF_INET;	//cambiado	// No importa si uso IPv4 o IPv6
-	hints.ai_flags = htons(INADDR_ANY);// cambiado// Asigna el address del localhost: 127.0.0.1
-	hints.ai_socktype = SOCK_STREAM;	// Indica que usaremos el protocolo TCP
-	hints.ai_protocol = 0;
+	//memset(&hints, 0, sizeof(hints));
+	myaddr.sin_family = AF_INET;
+	myaddr.sin_addr.s_addr = INADDR_ANY;
+	myaddr.sin_port = htons(5000);
+	memset(&(myaddr.sin_zero), '\0', 8); // SE TIENE QUE RELLENAR DE 0, NO SE SI HACE FALTA (explica en beej)
 
-	getaddrinfo(NULL, miContexto.puertoServidor, &hints, &serverInfo); // Carga en serverInfo los datos de la conexion
-	if ((listener = socket(serverInfo->ai_family, serverInfo->ai_socktype,
-			serverInfo->ai_protocol)) == -1) {
+	/*hints..myaddr.sin_family = AF_INET;	//cambiado	// No importa si uso IPv4 o IPv6
+	myaddr.sin_addr = INADDR_ANY;// cambiado// Asigna el address del localhost: 127.0.0.1
+	 = SOCK_STREAM;	// Indica que usaremos el protocolo TCP
+	hints.ai_protocol = 0;*/
+//	getaddrinfo(NULL, miContexto.puertoServidor, &hints, &serverInfo); // Carga en serverInfo los datos de la conexion
+	if ((listener = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		perror("socket");
 		exit(1);
 	}
@@ -174,7 +178,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 		exit(1);
 	}
 	// enlazar
-	if (bind(listener, serverInfo->ai_addr, serverInfo->ai_addrlen) == -1) {
+	if (bind(listener,(struct sockaddr *)&myaddr, sizeof(myaddr)) == -1) {
 		perror("bind");
 		exit(1);
 	}

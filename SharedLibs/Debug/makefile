@@ -25,14 +25,11 @@ endif
 # All Target
 all: libSharedLibs.so
 
-dependents:
-	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/commons/Debug && $(MAKE) clean all
-
 # Tool invocations
-libSharedLibs.so: $(OBJS) $(USER_OBJS) /home/utnso/git/tp-2015-2c-game-of-pointers/commons/Debug/libcommons.so
+libSharedLibs.so: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/git/tp-2015-2c-game-of-pointers/commons/Debug" -shared -o "libSharedLibs.so" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -shared -o "libSharedLibs.so" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -43,6 +40,5 @@ clean:
 
 .PHONY: all clean dependents
 .SECONDARY:
-/home/utnso/git/tp-2015-2c-game-of-pointers/commons/Debug/libcommons.so:
 
 -include ../makefile.targets

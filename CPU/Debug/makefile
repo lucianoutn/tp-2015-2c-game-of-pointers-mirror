@@ -26,7 +26,7 @@ endif
 all: CPU
 
 dependents:
-	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug && $(MAKE) all
+	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug && $(MAKE) clean all
 
 # Tool invocations
 CPU: $(OBJS) $(USER_OBJS) /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug/libSharedLibs.so

@@ -27,13 +27,12 @@ all: Memoria
 
 dependents:
 	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug && $(MAKE) clean all
-	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/commons/Debug && $(MAKE) clean all
 
 # Tool invocations
-Memoria: $(OBJS) $(USER_OBJS) /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug/libSharedLibs.so /home/utnso/git/tp-2015-2c-game-of-pointers/commons/Debug/libcommons.so
+Memoria: $(OBJS) $(USER_OBJS) /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug/libSharedLibs.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/git/tp-2015-2c-game-of-pointers/commons/Debug" -L"/home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug" -o "Memoria" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug" -o "Memoria" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -45,6 +44,5 @@ clean:
 .PHONY: all clean dependents
 .SECONDARY:
 /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug/libSharedLibs.so:
-/home/utnso/git/tp-2015-2c-game-of-pointers/commons/Debug/libcommons.so:
 
 -include ../makefile.targets
