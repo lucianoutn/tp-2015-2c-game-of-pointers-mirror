@@ -20,6 +20,7 @@
 #include <pthread.h>
 
 typedef struct{
+char * ipSwap;
  char * puertoServidor;
  char * puertoCliente;
  int maxMarcos;

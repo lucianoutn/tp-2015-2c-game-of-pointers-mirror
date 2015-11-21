@@ -22,6 +22,7 @@ void traigoContexto()
  }
 
  // OBTENGO CONFIGURACION DEL CONFIG /
+ miContexto.ipSwap = config_get_string_value(config_memory, "IP_SWAP" );
  miContexto.puertoServidor = config_get_string_value(config_memory, "PUERTO_ESCUCHA" );
  miContexto.puertoCliente = config_get_string_value(config_memory, "PUERTO_SWAP" );
  miContexto.maxMarcos = config_get_int_value(config_memory, "MAXIMO_MARCOS_POR_PROCESO");

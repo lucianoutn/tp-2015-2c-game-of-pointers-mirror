@@ -26,7 +26,7 @@
 #include <signal.h>			//Para señales
 #include <wait.h>
 
-#define IP "127.0.0.1"
+//#define IP "192.168.3.61"
 #define BACKLOG 10
 #define N 50
 
@@ -123,7 +123,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 	 printf("Conexion aceptada Socket= %d \n",socketCPU);
 	 */
 	// ME CONECTO AL SWAP PARA ENVIARLE LO QUE VOY A RECIBIR DE LA CPU
-	int serverSocket = crearCliente(IP, miContexto.puertoCliente);
+	int serverSocket = crearCliente(miContexto.ipSwap, miContexto.puertoCliente);
 	/*
 	 while(status!=0)
 	 {
