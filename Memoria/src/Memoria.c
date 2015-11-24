@@ -152,21 +152,13 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 	FD_ZERO(&master);    // borra los conjuntos maestro y temporal
 	FD_ZERO(&read_fds);        // obtener socket a la escucha
 
-	struct addrinfo hints; //estructura que almacena los datos de conexion
-	struct addrinfo *serverInfo; //estructura que almacena los datos de conexion
 	int err=0;
 
-	//memset(&hints, 0, sizeof(hints));
 	myaddr.sin_family = AF_INET;
 	myaddr.sin_addr.s_addr = INADDR_ANY;
-	myaddr.sin_port = htons(5000);
-	memset(&(myaddr.sin_zero), '\0', 8); // SE TIENE QUE RELLENAR DE 0, NO SE SI HACE FALTA (explica en beej)
+	myaddr.sin_port = htons(atoi(miContexto.puertoServidor));
+	memset(&(myaddr.sin_zero), '\0', 8);
 
-	/*hints..myaddr.sin_family = AF_INET;	//cambiado	// No importa si uso IPv4 o IPv6
-	myaddr.sin_addr = INADDR_ANY;// cambiado// Asigna el address del localhost: 127.0.0.1
-	 = SOCK_STREAM;	// Indica que usaremos el protocolo TCP
-	hints.ai_protocol = 0;*/
-//	getaddrinfo(NULL, miContexto.puertoServidor, &hints, &serverInfo); // Carga en serverInfo los datos de la conexion
 	if ((listener = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
 		perror("socket");
 		exit(1);

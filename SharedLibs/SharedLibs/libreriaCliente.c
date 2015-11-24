@@ -14,9 +14,9 @@ int crearCliente(const char *IP, const char *PUERTO){
 	//configuraciones varias
 	memset(&hints_server, 0, sizeof(hints_server));
 	hints_server.ai_family = AF_INET;		// Permite que la maquina se encargue de verificar si usamos IPv4 o IPv6
-	hints_server.ai_flags = INADDR_ANY;
+	//hints_server.ai_flags = INADDR_ANY;
 	hints_server.ai_socktype = SOCK_STREAM;	// Indica que usaremos el protocolo TCP
-	hints_server.ai_protocol = 0;
+	//hints_server.ai_protocol = 0;
 
 	getaddrinfo(IP, PUERTO, &hints_server, &serverInfo_server);	// Carga en serverInfo los datos de la conexion
 

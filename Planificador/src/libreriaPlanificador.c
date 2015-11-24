@@ -202,7 +202,7 @@ void bloqueados()
 		t_pcb* pcb= queue_pop(cola_block);
 		//lo bloqueo segun el tiempo indicado
 		log_info(logger, "mProc %d En entrada-salida de tiempo: %d",pcb->PID,pcb->tiempo);
-		usleep(pcb->tiempo * 10000);
+		usleep(pcb->tiempo * 1000000);
 		//lo vuelvo a poner en la cola de ready
 		queue_push(cola_ready, pcb);
 		//aviso
