@@ -44,6 +44,12 @@ typedef struct
    int puntero;
 }process_pag;
 // ------------------------------------//
+typedef struct{
+	char * memoria;
+	t_list *tabla_adm;
+	t_list *tlb;
+}parametros;
+
 
 //DECLARACIONES GLOBALES PARA MOSTRAR TASA DE ACIERTOS DE LA TLB.
 int cantAccesosTlb;
@@ -61,6 +67,9 @@ contexto miContexto;
  */
 t_list * listaFramesMemR; // LISTA DE FRAMES OCUPADOS
 t_list * listaFramesHuecosMemR; // LISTA DE FRAMES VACIOS
+
+pthread_mutex_t mutexTLB;
+pthread_mutex_t mutexMem;
 
 // FUNCION QUE OBTIENE EL CONTEXTO DE LA MEMORIA Y LO GUARDA EN "miContexto" (variable global)
 void traigoContexto();
@@ -206,7 +215,7 @@ void tlbFlush(t_list *);
  * Cuando se recibe esta señal, se debe limpiar completamente la memoria principal,
  * actualizando los bits que sean necesarios en las tablas de páginas de los diferentes procesos
  */
-void limpiarMemoria(char *, t_list*, t_list*);
+void limpiarMemoria(void*);
 /*
  * Cuando recibe esta señal se deberá realizar un volcado (dump) del contenido de la memoria principal,
  * en el archivo log de Administrador de Memoria, creando para tal fin un proceso nuevo.
@@ -218,6 +227,7 @@ void actualizarPunteroClock();
 int buscarIndicePunteroUno (t_list *);
 
 void dumpEnLog();
+void seniales(t_list*, char*, t_list * );
 //-----------------------------------------------------------//
 void tasasDeTLB();
 

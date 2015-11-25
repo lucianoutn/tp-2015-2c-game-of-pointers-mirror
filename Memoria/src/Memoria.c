@@ -54,34 +54,31 @@ int main() {
 		cantHitTlb = 0;
 	}
 	//Me quedo atenta a las señales, y si las recibe ejecuta esa funcion
-	seniales(TLB, memoria_real, tablaAdm);
-
-	reciboDelCpu(memoria_real, TLB, tablaAdm, tablaAccesos);
-
-	free(memoria_real);
-	list_destroy_and_destroy_elements(tablaAdm, (void*) tabla_adm_destroy);
-	//list_destroy_and_destroy_elements(TLB,(void*)reg_tlb_destroy);
-	list_destroy_and_destroy_elements(listaFramesHuecosMemR,(void*) marco_hueco_destroy);
-	list_destroy_and_destroy_elements(listaFramesMemR, (void*) marco_destroy);
-	log_destroy(logger);
-	return 1;
-}
-
-void seniales(t_list* TLB, char* memoria_real, t_list * tablaAdm)
-{
-	void flush()
+	// Se inicializa el mutex
+	pthread_t senial[3];
+	pthread_mutex_init (&mutexTLB, NULL);
+	pthread_mutex_init (&mutexMem, NULL);
+	void flush ()
 	{
-		log_info(logger,"Se recibio SIGUSR1, si corresponde se vacia la TLB.");
-		//sleep(3);
-		tlbFlush(TLB);
+		log_info(logger, "Se recibio SIGUSR1, si corresponde se vacia la TLB \n");
+		int err= pthread_create(&(senial[0]), NULL, (void*)tlbFlush,TLB);
+		if (err != 0)
+			printf("no se pudo crear el hilo de TLBFlush :[%s]", strerror(err));
 		log_info(logger, "Tratamiento de la señal SIGUSR1 terminado.");
 	}
 	void limpiar()
 	{
-		log_info(logger, "Se recibio SIGUSR2, se limpia la memoria.");
-		//sleep(3);
-		limpiarMemoria(memoria_real, TLB, tablaAdm);
-		log_info(logger, "Se finalizo el tratamiento de la señal SIGUSR2.");
+		//log_info(logger, "Se recibio SIGUSR2, se limpia la memoria \n");
+		parametros * param=malloc(sizeof(parametros));
+		param->memoria= memoria_real;
+		param->tabla_adm = tablaAdm;
+		param->tlb=TLB;
+
+		int err= pthread_create(&(senial[1]), NULL, (void*)limpiarMemoria,param);
+		if (err != 0)
+			printf("No se pudo crear el hilo de limpiarMemoria :[%s]", strerror(err));
+
+		//log_info(logger, "Se finalizo el tratamiento de la señal SIGUSR2 \n");
 	}
 	void dump()
 	{
@@ -97,45 +94,91 @@ void seniales(t_list* TLB, char* memoria_real, t_list * tablaAdm)
 	}
 
 	signal(SIGUSR1, flush);
-	signal(SIGUSR2, limpiar);
+	signal(SIGINT, limpiar);
+	signal(SIGPOLL, dump);
+	signal(SIGALRM,mostrar);
+	alarm(600);
+
+	reciboDelCpu(memoria_real, TLB, tablaAdm, tablaAccesos);
+
+	free(memoria_real);
+	list_destroy_and_destroy_elements(tablaAdm, (void*) tabla_adm_destroy);
+	//list_destroy_and_destroy_elements(TLB,(void*)reg_tlb_destroy);
+	list_destroy_and_destroy_elements(listaFramesHuecosMemR,(void*) marco_hueco_destroy);
+	list_destroy_and_destroy_elements(listaFramesMemR, (void*) marco_destroy);
+	log_destroy(logger);
+	return 1;
+}
+/*
+void seniales(t_list* TLB, char* memoria_real, t_list * tablaAdm)
+{
+	puts("Entre a seniales");
+	// Se inicializa el mutex
+	pthread_t senial[3];
+	pthread_mutex_init (&mutexTLB, NULL);
+	pthread_mutex_init (&mutexMem, NULL);
+	void flush()
+	{
+		pthread_mutex_lock (&mutexTLB);
+		log_info(logger,"Se recibio SIGUSR1, si corresponde se vacia la TLB.");
+		int err= pthread_create(&(senial[0]), NULL, (void*)tlbFlush,TLB);
+		if (err != 0)
+			printf("No se pudo crear el hilo de TLBFlush :[%s]", strerror(err));
+		pthread_join(senial[0], NULL);
+			//tlbFlush(TLB);
+		log_info(logger, "Tratamiento de la señal SIGUSR1 terminado.");
+		pthread_mutex_unlock (&mutexTLB);
+	}
+	void limpiar()
+	{
+		pthread_mutex_lock (&mutexMem);
+
+		log_info(logger, "Se recibio SIGUSR2, se limpia la memoria.");
+
+	//	parametros * param=malloc(sizeof(parametros));
+
+		printf("La direccion de la mem real es: %p \n",memoria_real);
+
+		param->memoria= memoria_real;
+		param->tabla_adm = tablaAdm;
+		param->tlb=TLB;
+
+				int err= pthread_create(&(senial[1]), NULL, (void*)limpiarMemoria,param);
+				if (err != 0)
+					printf("No se pudo crear el hilo de limpiarMemoria :[%s]", strerror(err));
+				pthread_join(senial[1], NULL);
+
+		//limpiarMemoria(memoria_real, TLB, tablaAdm);
+
+		log_info(logger, "Se finalizo el tratamiento de la señal SIGUSR2.");
+		pthread_mutex_unlock (&mutexMem);
+	}
+	void dump()
+	{
+		log_info(logger,"Se recibio SIGPOLL, se muestra el contenido de la memoria actualmente");
+		dumpEnLog(memoria_real, tablaAdm);
+		log_info(logger, "Tratamiento de la señal SIGPOLL terminado");
+	}
+	void mostrar()
+	{
+		log_info(logger,"Luego de un minuto, muestro tasa de aciertos de la TLB");
+		tasasDeTLB();
+		alarm(600);
+	}
+
+	signal(SIGUSR1, flush);
+	signal(SIGINT, limpiar);
 	signal(SIGPOLL, dump);
 	signal(SIGALRM,mostrar);
 	alarm(600);
 }
-
+*/
 void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* tablaAccesos)
 {
 	t_header * package = malloc(sizeof(t_header));
-	/*
-	 //CONEXION AL CPU
-	 int listenningSocket=crearServer(miContexto.puertoServidor);
 
-	 //Estructura que tendra los datos de la conexion del cliente MEMORIA
-	 struct sockaddr_in addr;
-	 socklen_t addrlen = sizeof(addr);
-
-	 int L = listen(listenningSocket, BACKLOG);
-	 if (L==-1)
-	 perror("LISTEN");
-
-	 socketCPU = accept(listenningSocket, (struct sockaddr *) &addr,	&addrlen);
-	 printf("Administrador de memoria conectado al CPU\n. Esperando mensajes:\n");
-	 printf("Conexion aceptada Socket= %d \n",socketCPU);
-	 */
 	// ME CONECTO AL SWAP PARA ENVIARLE LO QUE VOY A RECIBIR DE LA CPU
 	int serverSocket = crearCliente(miContexto.ipSwap, miContexto.puertoCliente);
-	/*
-	 while(status!=0)
-	 {
-	 // RECIBO EL PAQUETE(t_header) ENVIADO POR LA CPU
-	 status = recv(socketCPU, package, sizeof(t_header), 0);
-
-	 printf ("El tipo de ejecucion recibido es %d \n", package->type_ejecution);
-
-	 // MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
-	 ejecutoInstruccion(package, mensaje, memoria_real, TLB, tablaAdm, socketCPU, serverSocket);
-	 }
-	 */
 	fd_set master;   // conjunto maestro de descriptores de fichero
 	fd_set read_fds; // conjunto temporal de descriptores de fichero para select()
 	// struct sockaddr_in myaddr;     // dirección del servidor
