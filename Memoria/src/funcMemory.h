@@ -41,6 +41,7 @@ typedef struct
    int marco; // numero de marco ( si tiene ) en donde esta guardada la pagina
    int accessed;
    int dirty;
+   int puntero;
 }process_pag;
 // ------------------------------------//
 
@@ -151,7 +152,7 @@ void actualizarTablaProcesoLru(t_list *, int ,char*,int);
 void actualizarTablaProcesoFifo(t_list *, int, char*, int);
 
 // ATUALIZA LA TABLA PARA ALGORITMO CLOCK
-void actualizarTablaProcesoClock(t_list *, int, char *, int);
+void actualizarTablaProcesoClock(t_list *, t_header *, char *, int, int);
 
 
 // BUSCO Y RETORNO EL REGISTRO DE LA TLB BUSCADO EN EL CASO DE ENCONTRARLO, SINO RETORNO NULL.
@@ -212,13 +213,17 @@ void limpiarMemoria(char *, t_list*, t_list*);
  * Se recomienda usar fork().
  */
 
+void actualizarPunteroClock();
+
+int buscarIndicePunteroUno (t_list *);
+
 void dumpEnLog();
 //-----------------------------------------------------------//
 void tasasDeTLB();
 
 
 /* PASAR A MANEJOLISTAS */
-process_pag * pag_proc_create(int, char*, int, int, int);
+process_pag * pag_proc_create(int, char*, int, int, int, int);
 
 void pag_proc_destroy(process_pag *);
 /* ---------------------*/

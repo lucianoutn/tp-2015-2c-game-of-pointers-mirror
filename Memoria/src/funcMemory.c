@@ -151,7 +151,7 @@ void iniciarProceso(t_list* tabla_adm, t_header * proceso, t_list* tablaAccesos)
 		// MIENTRAS FALTEN PAGINAS PARA INICIAR //
 		while (x<proceso->pagina_proceso)
 		{
-			list_add(lista_proceso,pag_proc_create(x, NULL, -1, 0 , 0));
+			list_add(lista_proceso,pag_proc_create(x, NULL, -1, 0 , 0, 0));
 			//cuando la creo el marco lo pongo en -1
 			x++;
 		}
@@ -358,16 +358,14 @@ void escribirEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int
 					t_header * header_lectura = crearHeaderLectura(package);
 
 					envioAlSwap(header_lectura, serverSocket, contenido, flag);
-					//SI TODO SALIO BIEN, EL SWAP CARGO LA PAGINA A LEER EN "CONTENIDO"
+
 					if(*flag)
 					{
 						asignarMarcosYTablas(mensaje, package, tabla_proc,TLB);
 						upPaginasAccedidas(tablaAccesos, package->PID);
 						upFallosPagina(tablaAccesos, package->PID);
-						//log_info(logger, "Se hizo conexion con swap, se envio pedido de lectura de la"
-						//						"pagina a escribir y esta fue recibida correctamente");
 
-						// Como la transferencia con el swap fue exitosa, le envio la pagina al CPU
+						// Como la transferencia con el swap fue exitosa, le envio el flag
 						bool recibi= true;
 						send(socketCliente,&recibi,sizeof(bool),0);
 					}
@@ -573,6 +571,22 @@ t_tlb * buscarEntradaProcesoEnTlb (t_list * TLB, t_header * pagina, int * posici
 	return NULL;
 }
 
+int buscarIndicePunteroUno (t_list * lista_proceso)
+{
+	int x = 0;
+	int tamanio_lista = list_size(lista_proceso);
+	while ( x < tamanio_lista)
+	{
+		process_pag * reg = list_get(lista_proceso, x);
+		if (  reg->puntero == 1)
+		{
+				return x;
+		}
+		x++;
+	}
+	return -1;
+}
+
 int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mensaje, int serverSocket, t_header * header, t_list* tablaAccesos, int socketCliente)
 {
 	// paginaASwapear va a tener la pagina que ya esta en memoria y que se va a enviar al swap
@@ -687,7 +701,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	}else // CLOCK POR DESCARTE YA QUE NO PUEDE HABER ERRORES EN EL ARCHIVO DE CONFIGURACION, ACTUALIZA EL BIT DE ACCEDIDO A 1
 	{
 		log_info(logger, "Swapea corte Clock");
-		actualizarTablaProcesoClock(tablaProceso, header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco);
+		actualizarTablaProcesoClock(tablaProceso, header, paginaASwapear->direccion_fisica, paginaASwapear->marco, 0);
 	}
 
 	if (!strcmp(miContexto.tlbHabilitada, "SI"))
@@ -708,7 +722,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 
 	// ACTUALIZO LA PAGINA QUE SWAPEE ( LA ELIMINO Y LA VUELVO A AGREGAR VACIA DEL )
 	list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
-	list_add(tablaProceso, pag_proc_create(paginaASwapear->pag, NULL, -1, 0, 0));
+	list_add(tablaProceso, pag_proc_create(paginaASwapear->pag, NULL, -1, 0, 0, 0));
 
 	return 1;
 }
@@ -733,9 +747,9 @@ void actualizoTablaProceso(t_list * tablaProceso, t_marco_hueco * marco_a_llenar
 	{
 		log_info(logger, "Actualizando tabla corte CLOCK");
 		if(marco_a_llenar!=NULL)
-			actualizarTablaProcesoClock(tablaProceso, header->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
+			actualizarTablaProcesoClock(tablaProceso, header, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco, 1);
 		else
-			actualizarTablaProcesoClock(tablaProceso, header->pagina_proceso, NULL, NULL);
+			actualizarTablaProcesoClock(tablaProceso, header, NULL, NULL, 1);
 	}
 }
 
@@ -746,9 +760,9 @@ void actualizarTablaProcesoLru(t_list * tabla_proceso, int num_pagina, char * di
 	process_pag * pag = list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
 	process_pag * pagina;
 	if(direccion_marco!=NULL)
-		pagina = pag_proc_create(num_pagina, direccion_marco, num_marco, 0, 0);
+		pagina = pag_proc_create(num_pagina, direccion_marco, num_marco, 0, 0, 0);
 	else
-		pagina = pag_proc_create(num_pagina, pag->direccion_fisica, pag->marco, 0, 0);
+		pagina = pag_proc_create(num_pagina, pag->direccion_fisica, pag->marco, 0, 0, 0);
 	list_add(tabla_proceso,pagina);
 }
 
@@ -768,14 +782,63 @@ void actualizarTablaProcesoFifo(t_list * tabla_proceso, int num_pagina, char * d
 
 }
 
-void actualizarTablaProcesoClock(t_list * tabla_proceso, int num_pagina, char * direccion_marco, int num_marco)
+void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char * direccion_marco, int num_marco, int modo)
 {
-	bool _numeroDePagina (void * p) {return(*(int *)p == num_pagina);}
-
+	bool _numeroDePagina (void * p) {return(*(int *)p == header->pagina_proceso);}
+	int indicePuntero;
 	process_pag * pagina = list_find(tabla_proceso, (void*)_numeroDePagina);
-	pagina->direccion_fisica = direccion_marco;
-	pagina->marco = num_marco;
+
+	switch (modo)
+	{
+		case 0: // SI HAY QUE REMOVER PAGINA (SWAPEANDO)
+			indicePuntero = buscarIndicePunteroUno(tabla_proceso);
+			if ( indicePuntero != -1)
+			{
+				process_pag * pagina = list_find(tabla_proceso, (void*)_numeroDePagina);
+				if( pagina->direccion_fisica == NULL)
+				{
+					list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
+					pagina->direccion_fisica = direccion_marco;
+					pagina->marco = num_marco;
+					list_add_in_index(tabla_proceso, indicePuntero, pagina);
+				}
+			}else
+			{
+				puts("ERROR CLOCK");
+			}
+			break;
+		case 1: // LOS DEMAS CASOS
+			list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
+			pagina->direccion_fisica = direccion_marco;
+			pagina->marco = num_marco;
+			list_add(tabla_proceso, pagina);
+			break;
+		default:
+			puts("DEFAULT \n");
+	}
+
 	pagina->accessed = 1;
+	if(header->type_ejecution == 1)
+		pagina->dirty =1;
+}
+
+void actualizarPunteroClock(t_list * tabla_proceso, int num_pag)
+{
+	bool _numeroDePagina (void * p)	{	return(*(int*)p == num_pag);	}
+
+  	int x = 0;
+  	int tam = tabla_proceso->elements_count;
+
+  	while (x < tam)
+  	{
+  		process_pag * pagina = list_get(tabla_proceso, x);
+  		if (pagina->puntero == 1)
+  			pagina->puntero = 0;
+
+  	x++;
+  	}
+  	process_pag * pag = list_find(tabla_proceso, (void*)_numeroDePagina);
+  	pag->puntero = 1;
 }
 
 process_pag * traerPaginaARemover(t_list * tablaProceso)
@@ -833,8 +896,9 @@ process_pag * paginaARemoverClock(t_list * tablaProceso)
 process_pag * ambosBitsEnCero(t_list * tablaProceso)
 {
 	int tamanio = tablaProceso->elements_count;
-	int x = 0;
-	while ( x < tamanio)
+	int x = buscarIndicePunteroUno(tablaProceso);
+	int y = 0;
+	while ( y < tamanio)
 	{
 		process_pag * pagina = list_get(tablaProceso, x);
 		if ( pagina->accessed == 0 && pagina->dirty == 0)
@@ -842,6 +906,7 @@ process_pag * ambosBitsEnCero(t_list * tablaProceso)
 			return pagina;
 		}
 		x++;
+		y++;
 	}
 	return NULL;
 }
@@ -940,6 +1005,9 @@ void upPaginasAccedidas(t_list* tablaAccesos, int pid)
 
 	t_versus * reg = list_find(tablaAccesos, (void*)_numeroDePid);
 	reg->cantPagAccessed++;
+
+	//if (!strcmp(miContexto.algoritmoReemplazo), "CLOCK")
+
 }
 
 void upFallosPagina(t_list* tablaAccesos, int pid)
@@ -1087,7 +1155,7 @@ void tasasDeTLB()
 //-----------------------------------------------------------//
 
 // --------------ENTRADAS A LA TABLA DE PROCESO ------------ //
-process_pag * pag_proc_create (int pagina, char * direccion_fisica, int marco, int accedido, int dirty)
+process_pag * pag_proc_create (int pagina, char * direccion_fisica, int marco, int accedido, int dirty, int puntero)
 {
  process_pag * reg_pagina = malloc(sizeof(process_pag));
  reg_pagina->pag = pagina;
@@ -1095,6 +1163,7 @@ process_pag * pag_proc_create (int pagina, char * direccion_fisica, int marco, i
  reg_pagina->marco = marco;
  reg_pagina->accessed = accedido;
  reg_pagina->dirty = dirty;
+ reg_pagina->puntero = puntero;
  return reg_pagina;
 }
 
