@@ -198,7 +198,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 				int tmno =0;
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &tmno, sizeof(int),0);		//espero recibir la respuesta
-				usleep(configuracion.retardo); //retardo del cpu
+				usleep(configuracion.retardo * 100000); //retardo del cpu
 				if(tmno > 0)	//Controlo que haya llegado bien
 				{
 					char *contenido = (char*)malloc(sizeof(char) * tmno);
@@ -235,7 +235,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				send(socketMemoria, mensaje, header->tamanio_msj,0);	//envio el texto a excribir
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
-				usleep(configuracion.retardo); //retardo del cpu
+				usleep(configuracion.retardo * 100000); //retardo del cpu
 				if(recibi){	//Controlo que haya llegado bien
 					queue_push(resultados,resultado(1,PCB->PID,pagina,mensaje,1));
 					//free(mensaje);
@@ -256,7 +256,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
-				usleep(configuracion.retardo); //retardo del cpu
+				usleep(configuracion.retardo * 100000); //retardo del cpu
 				if(recibi)	//Controlo que haya llegado bien
 					queue_push(resultados,resultado(2,PCB->PID,NULL,NULL,1));
 					//log_info(logger, "mProc %d - Iniciado",PCB->PID);
@@ -277,7 +277,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 				creoHeader(PCB,header,3,pagina); //PCB HEADER TIPOEJECUCION PAGINA
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
-				usleep(configuracion.retardo); //retardo del cpu
+				usleep(configuracion.retardo * 100000); //retardo del cpu
 				if(recibi){	//Controlo que haya llegado bien
 					queue_push(resultados,resultado(3,PCB->PID,NULL,NULL,1));
 					//log_info(logger, "mProc %d - Finalizado",PCB->PID);
@@ -308,7 +308,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 			{
 				//puts("ENTRADA-SALIDA");
 				PCB->estado=3; //bloqueo proceso
-				usleep(configuracion.retardo); //retardo del cpu
+				usleep(configuracion.retardo * 100000); //retardo del cpu
 				//señal al plani avisando que cambie de estado
 				send(socketPlanificador, &cambio, sizeof(flag), 0);
 				PCB->tiempo=pagina;
