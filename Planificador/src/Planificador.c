@@ -74,7 +74,8 @@ int main() {
 	}else{				//por RoundRobin
 		log_info(logger, "Algoritmo seleccionado: RoundRobin con un Quantum de: %d",miContexto.quantum);
 	}
-	sleep(2);
+	//sleep(3); //estetico
+
 
 	//crear hilo de consola para que quede a la escucha de comandos por consola para el planificador
 	pthread_t hilo_consola, hilo_dispatcher, hilo_bloqueados;

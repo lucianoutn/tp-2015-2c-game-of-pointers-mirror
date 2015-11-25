@@ -38,6 +38,14 @@ void consola (void* arg)
 	printf("                     Consola VERSION 2.0 | Grupo: Game of Pointers\n");
 	printf("_____________________________________UTN_|_Sistemas Operativos_______________________________\n");
 
+	printf("\nConexion con la CPU establecida.\n");
+	printf("Cantidad de CPUS conectadas: %d.\n", miContexto.cantHilosCpus);
+	if	(!strcmp(miContexto.algoritmoPlanificacion, "FIFO")){ 		//por FIFO
+			printf("Algoritmo seleccionado: FIFO\n");
+	}else{				//por RoundRobin
+			printf("Algoritmo seleccionado: RoundRobin con un Quantum de: %d\n",miContexto.quantum);
+	}
+
 
 	do{				//valido comando ingresado
 		fflush(stdin);		//limpia el buffer del teclado
