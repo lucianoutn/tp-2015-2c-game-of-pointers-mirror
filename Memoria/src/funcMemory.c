@@ -640,6 +640,21 @@ int buscarIndicePunteroUno (t_list * lista_proceso)
 	return -1;
 }
 
+int buscarIndicePagina(t_list * tabla_paginas, process_pag * pagina)
+{
+	int x = 0;
+	int tamanio = tabla_paginas->elements_count;
+	while (x < tamanio)
+	{
+		process_pag * reg = list_get(tabla_paginas, x);
+		if (reg->pag == pagina->pag)
+		{
+			return x;
+		}
+	}
+	return -1;
+}
+
 int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mensaje, int serverSocket, t_header * header, t_list* tablaAccesos, int socketCliente)
 {
 	// paginaASwapear va a tener la pagina que ya esta en memoria y que se va a enviar al swap
@@ -841,34 +856,56 @@ void actualizarTablaProcesoFifo(t_list * tabla_proceso, int num_pagina, char * d
 
 void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char * direccion_marco, int num_marco, int modo)
 {
-	bool _numeroDePagina (void * p) {return(*(int *)p == header->pagina_proceso);}
+	int numPag = 0;
+	bool _numeroDePagina (void * p) {return(*(int *)p == numPag);}
 	int indicePuntero;
 	process_pag * pagina = list_find(tabla_proceso, (void*)_numeroDePagina);
 
 	switch (modo)
 	{
 		case 0: // SI HAY QUE REMOVER PAGINA (SWAPEANDO)
-			indicePuntero = buscarIndicePunteroUno(tabla_proceso);
-			if ( indicePuntero != -1)
+			numPag = header->pagina_proceso;
+			process_pag * pagina = list_find(tabla_proceso, (void*)_numeroDePagina);
+
+			if( pagina->direccion_fisica == NULL)
 			{
-				process_pag * pagina = list_find(tabla_proceso, (void*)_numeroDePagina);
-				if( pagina->direccion_fisica == NULL)
-				{
-					list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
-					pagina->direccion_fisica = direccion_marco;
-					pagina->marco = num_marco;
-					list_add_in_index(tabla_proceso, indicePuntero, pagina);
-				}
+				process_pag * paginaASwapear = traerPaginaARemover(tabla_proceso);
+				// Obtengo el indice de la pagina que voy a eliminar
+				indicePuntero = buscarIndicePagina(tabla_proceso, paginaASwapear);
+				numPag = paginaASwapear->pag;
+				process_pag * elem_apuntado = list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
+				// Actualizo los valores de la nueva pagina
+				pagina->direccion_fisica = elem_apuntado->direccion_fisica;
+				pagina->marco = elem_apuntado->marco;
+				pagina->accessed = 1; /* ESTO SE ACTUALIZA ACA? VER*/
+				// Limpio los valores de la pagina que ahora está en swap
+				elem_apuntado->direccion_fisica = NULL;
+				elem_apuntado->marco = -1;
+				elem_apuntado->dirty = 0;
+				elem_apuntado->accessed = 0;
+				/* ----------_> VER SI HAY QUE ACTUALIZAR ALGUN OTRO BIT */
+
+				//Agrego la nueva pagina en la posición en donde estaba la pagina que swapee
+				list_add_in_index(tabla_proceso, indicePuntero, pagina);
+				// Agrego la pagina que esta ahora en swap, al final con los valores limpios
+				list_add(tabla_proceso, elem_apuntado);
 			}else
 			{
 				puts("ERROR CLOCK");
 			}
 			break;
 		case 1: // LOS DEMAS CASOS
-			list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
-			pagina->direccion_fisica = direccion_marco;
-			pagina->marco = num_marco;
-			list_add(tabla_proceso, pagina);
+			if ( pagina->direccion_fisica != NULL) // Si ya esta en memoria
+			{
+				// No corro el puntero, no actualizo nada
+			}else // Si la trajo de swap y le tengo que asignar un marco y demas
+			{
+					list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
+					pagina->direccion_fisica = direccion_marco;
+					pagina->marco = num_marco;
+					list_add(tabla_proceso, pagina);
+			}
+			pagina->accessed = 1;
 			break;
 		default:
 			puts("DEFAULT \n");

@@ -226,6 +226,8 @@ void actualizarPunteroClock();
 
 int buscarIndicePunteroUno (t_list *);
 
+int buscarIndicePagina(t_list*, process_pag *);
+
 void dumpEnLog();
 void seniales(t_list*, char*, t_list * );
 //-----------------------------------------------------------//
