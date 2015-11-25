@@ -73,12 +73,16 @@ void ejecutoInstruccion(t_header * header, char * mensaje,char *  memoria_real, 
 				// SI NO ESTABA EN TLB, ME FIJO EN MEMORIA
 				if(!flagg)
 					pthread_mutex_lock (&mutexMem);
+					printf("Bloquee Mem \n");
 					leerEnMemReal(tabla_adm,TLB, header, serverSocket,socketCliente, tablaAccesos);
+					printf("DesBloquee Mem \n");
 					pthread_mutex_unlock (&mutexMem);
 			}
 			else
 				pthread_mutex_lock (&mutexMem);
+				printf("Bloquee Mem \n");
 				leerEnMemReal(tabla_adm, TLB,header, serverSocket,socketCliente, tablaAccesos);
+				printf("DesBloquee Mem \n");
 				pthread_mutex_unlock (&mutexMem);
 	 		break;
 	 	case 1:
@@ -92,13 +96,17 @@ void ejecutoInstruccion(t_header * header, char * mensaje,char *  memoria_real, 
 				// SI ESTABA EN LA TLB, YA LA FUNCION ESCRIBIO Y LISTO
 				if(!okTlb)
 					pthread_mutex_lock (&mutexMem);
+					printf("Bloquee Mem \n");
 					escribirEnMemReal(tabla_adm, TLB, header,serverSocket, socketCliente,  mensaje, tablaAccesos);
+					printf("DesBloquee Mem \n");
 					pthread_mutex_unlock (&mutexMem);
 			}
 			// SI NO ESTABA EN LA TLB, AHORA ME FIJO SI ESTA EN LA TABLA DE TABLAS
 			else
 				pthread_mutex_lock (&mutexMem);
+				printf("Bloquee Mem \n");
 				escribirEnMemReal(tabla_adm, TLB, header,serverSocket, socketCliente,  mensaje, tablaAccesos);
+				printf("DesBloquee Mem \n");
 				pthread_mutex_unlock (&mutexMem);
 	 		break;
 	 	case 2:
@@ -128,7 +136,9 @@ void ejecutoInstruccion(t_header * header, char * mensaje,char *  memoria_real, 
 			// Lo muestro aca porque si lo muestro despues de que lo mate, la tabla no tiene el registro
 			mostrarVersus(tablaAccesos, header->PID);
 			pthread_mutex_lock (&mutexMem);
+			printf("Bloquee Mem \n");
 			matarProceso(header, tabla_adm, TLB, tablaAccesos);
+			printf("DesBloquee Mem \n");
 			pthread_mutex_unlock (&mutexMem);
 			envioAlSwap(header, serverSocket, NULL, flag );
 
@@ -196,8 +206,10 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, t_header * proc, t_list* tabla
 		send(socketCliente,&tamanioMsj,sizeof(int),0);
 		if(tamanioMsj > 0)
 			send(socketCliente, registro_tlb->direccion_fisica, tamanioMsj , 0);
+		log_info(logger,"Se informa al CPU confirmacion de lectura");
 
 		pthread_mutex_lock(&mutexMem);
+		printf("Bloquee Mem \n");
 		t_list * tabla_proc = obtenerTablaProceso(tabla_adm, proc->PID);
 		// SI ENCONTRO UN REGISTRO CON ESE PID
 		if(tabla_proc!=NULL)
@@ -208,6 +220,7 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, t_header * proc, t_list* tabla
 		{
 			log_error(logger, "No se encontro la tabla del proceso");
 		}
+		printf("DesBloquee Mem \n");
 		pthread_mutex_unlock(&mutexMem);
 		return 1;
 	}
@@ -257,25 +270,27 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 						send(socketCliente,&tamanioMsj,sizeof(int),0);
 						if (tamanioMsj >0)
 							send(socketCliente, contenido, tamanioMsj, 0);
+						log_info(logger,"Se informa al CPU confirmacion de lectura");
 
 						upFallosPagina(tablaAccesos, package->PID);
 						free(flag);
-						return 1;
 					}
 					else
 					{
 						int recibi= -1;
 						send(socketCliente,&recibi,sizeof(int),0);
 						free(flag);
-						log_error(logger, "Hubo un problema con la conexion/envio al swap");
-						return 0;
+						log_error(logger, "Hubo un problema con la conexion/envio al swap. Se informa al CPU");
 					}
 					//free(contenido);
 				}else
 				{
-					log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedido");
 					mostrarVersus(tablaAccesos, package->PID);
 					matarProceso(package, tabla_adm, TLB, tablaAccesos);
+					int recibi= -1;
+					send(socketCliente,&recibi,sizeof(int),0);
+					free(flag);
+					log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedidoe informo al CPU");
 				}
 
 			}
@@ -307,13 +322,16 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		 	if (tamanioMsj >0)
 		 		send(socketCliente, pagina_proc->direccion_fisica, tamanioMsj, 0);
 			free(flag);
-			return 1;
 		}
 	}else
-		log_info(logger, "Se esta queriendo leer una pagina de un proceso que no esta iniciado");
+	{
+		log_info(logger, "Se esta queriendo leer una pagina de un proceso que no esta iniciado, informo al CPU");
+		int recibi= -1;
+		send(socketCliente,&recibi,sizeof(int),0);
+		free(flag);
+	}
 
 	free(flag);
-	return 0;
 }
 
 void asignarMarcosYTablas(char * contenido, t_header * package, t_list* tabla_proc, t_list * TLB)
@@ -365,6 +383,7 @@ void escribirEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int
 				{
 					bool recibi = true;
 					send(socketCliente,&recibi,sizeof(bool),0);
+					log_info(logger,"Se informa al CPU confirmacion de escritura");
 				}
 			}
 			/* SI TENGO ESPACIO PARA TRAERLA (CANT MAX DE MARCOS PARA ESE PROCESO
@@ -388,6 +407,7 @@ void escribirEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int
 						// Como la transferencia con el swap fue exitosa, le envio el flag
 						bool recibi= true;
 						send(socketCliente,&recibi,sizeof(bool),0);
+						log_info(logger,"Se informa al CPU confirmacion de escritura");
 					}
 					else
 					{
@@ -398,9 +418,12 @@ void escribirEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int
 					//free(contenido);
 				}else
 				{
-					log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedido");
 					mostrarVersus(tablaAccesos, package->PID);
 					matarProceso(package, tabla_adm, TLB, tablaAccesos);
+					int recibi= -1;
+					send(socketCliente,&recibi,sizeof(int),0);
+					log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedido e informo al CPU");
+					free(flag);
 				}
 
 			}
@@ -422,10 +445,13 @@ void escribirEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int
 				pagina_proc->dirty = 1;
 			bool recibi = true;
 			send(socketCliente,&recibi,sizeof(bool),0);
+			log_info(logger,"Se informa al CPU confirmacion de escritura");
 		}
 	}else
 	{
 		log_info(logger, "Se esta queriendo escribir una pagina de un proceso que no esta iniciado");
+		int recibi= -1;
+		send(socketCliente,&recibi,sizeof(int),0);
 	}
 
 	free(flag);
@@ -550,8 +576,8 @@ int escribirDesdeTlb (t_list * TLB, int tamanio_msg, char * message, t_header * 
 		escribirMarco(message, registro_tlb->direccion_fisica);
 		//strcpy (registro_tlb->direccion_fisica, message);
 
-
 		pthread_mutex_lock(&mutexMem);
+		printf("Bloquee Mem \n");
 		/**************************************/
 		// TRAIGO LA TABLA DEL PROCESO
 		t_list * tablaProceso = obtenerTablaProceso(tabla_adm, pagina->PID);
@@ -562,11 +588,12 @@ int escribirDesdeTlb (t_list * TLB, int tamanio_msg, char * message, t_header * 
 			paginaProceso->dirty = 1;
 		log_info(logger,"Se escribio en el marco: %d, el contenido: \"%s\"",paginaProceso->marco,message);
 		actualizoTablaProceso(tablaProceso, NULL, pagina);
+		printf("Desloquee Mem \n");
 		pthread_mutex_unlock(&mutexMem);
 
 		bool recibi = true;
 		send(socketCliente,&recibi,sizeof(bool),0);
-
+		log_info(logger,"Se informa al CPU confirmacion de escritura");
 		return 1;
 	}else
 	{
@@ -779,6 +806,8 @@ void actualizoTablaProceso(t_list * tablaProceso, t_marco_hueco * marco_a_llenar
 		else
 			actualizarTablaProcesoClock(tablaProceso, header, NULL, NULL, 1);
 	}
+
+	printf("Salgo de actualizo ++++++++++++++++++++++++\n ");
 }
 
 void actualizarTablaProcesoLru(t_list * tabla_proceso, int num_pagina, char * direccion_marco, int num_marco)
@@ -1116,6 +1145,7 @@ void tlbFlush(t_list * TLB)
 void limpiarMemoria(void * args)
 {
 	pthread_mutex_lock (&mutexMem);
+	printf("Bloquee Mem \n");
 	log_info(logger, "Se recibio SIGUSR2, se limpia la memoria \n");
 	puts("Empiezo a limpiar la memoria");
 	parametros * param;
@@ -1158,6 +1188,7 @@ void limpiarMemoria(void * args)
 	listaFramesHuecosMemR = crearListaHuecosFrames(miContexto.cantidadMarcos, miContexto.tamanioMarco, param->memoria);
 	tlbFlush(param->tlb);
 	log_info(logger, "Se finalizo el tratamiento de la señal SIGUSR2 \n");
+	printf("DesBloquee Mem \n");
 	pthread_mutex_unlock (&mutexMem);
 }
 
