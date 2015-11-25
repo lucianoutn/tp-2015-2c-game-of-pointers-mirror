@@ -26,13 +26,14 @@ endif
 all: Planificador
 
 dependents:
-	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug && $(MAKE) clean all
+	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug && $(MAKE) all
+	-cd /home/utnso/git/so-commons-library/Debug && $(MAKE) all
 
 # Tool invocations
-Planificador: $(OBJS) $(USER_OBJS) /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug/libSharedLibs.so
+Planificador: $(OBJS) $(USER_OBJS) /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug/libSharedLibs.so /home/utnso/git/so-commons-library/Debug/libcommons.so
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -L"/home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug" -o "Planificador" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -L"/home/utnso/git/so-commons-library/Debug" -L"/home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug" -o "Planificador" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 
@@ -44,5 +45,6 @@ clean:
 .PHONY: all clean dependents
 .SECONDARY:
 /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug/libSharedLibs.so:
+/home/utnso/git/so-commons-library/Debug/libcommons.so:
 
 -include ../makefile.targets
