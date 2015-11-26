@@ -81,7 +81,11 @@ void encolar(t_list* lstPcbs, t_queue* cola_ready)
 	sem_post(&semConsola); // debe ir arriba del procesarPCB para que se aproveche el paralelismo. vuelve a habilitar ingreso de nueva orden
 	t_pcb* pcb= procesarPCB(ruta);
 	list_add(lstPcbs, pcb);
+	//inicializo metrica
+	pcb->t_aux1=time(NULL);
+	//agrego el pcb a la cola de ready
 	queue_push(cola_ready, pcb);
+
 
 	//puts("PCB creado y encolado\n");
 	sem_post(&semEnvioPcb); //habilito el dispacher.(lo pongo aca para q sirva tanto para fifo como RR) lucho
@@ -118,16 +122,24 @@ void dispatcher()
 
 void enviaACpu(t_cpu *CPU)
 {
+	time_t inicio, fin;
+
 	//printf("SOY LA CPU Nro: %d\n", CPU->numCpu);
 	//bloqueo la cpu
 	CPU->enUso = true;
 	//CPU DISPONIBLE  saco de la cola y envio msj
 	t_pcb *pcb = queue_pop(cola_ready);
+	//finalizo metrica
+	pcb->t_espera+= difftime(time(NULL), pcb->t_aux1);
+
 	//chequeo el flag FINALIZAR. si esta prendido le pogno el IP al final, para cuando vuelva a ejecutar finalice. lucho
 	if (pcb->finalizar) {pcb->instructionPointer = pcb->numInstrucciones; puts("QUIERO FINALIZAR");}
 
 	//cambio estado de PCB a ejecutando
 	pcb->estado=2;
+	//inicializo la metrica de ejecucion
+	inicio=time(NULL);
+	//Seteo en quantum
 	if(pcb->quantum==0){
 		pcb->quantum=miContexto.quantum;
 	}
@@ -152,6 +164,9 @@ void enviaACpu(t_cpu *CPU)
 	if(!termino)	//Controlo que haya llegado bien
 		log_info(logger, "mProc %d <%s> Fallo",pcb->PID,ruta(pcb->PID));
 
+	//Finalizo el conteo y replico en la metrica
+	fin=time(NULL);
+	pcb->t_ejecucion+= difftime(fin, inicio);
 	//libero la cpu
 	CPU->enUso = false;
 	sem_post(&semCpuLibre);
@@ -163,12 +178,17 @@ void enviaACpu(t_cpu *CPU)
 			//si vuelve a estado ready es pq termino el cuanto
 			//encolo denuevo en la cola de readys pq termino el cuanto pero no termino de usar la cpu
 			log_info(logger, "mProc %d <%s> Volvio a la cola",pcb->PID,ruta(pcb->PID));
+			//inicializo metrica
+			pcb->t_aux1=time(NULL);
+			//Agrego a la cola de ready
 			queue_push(cola_ready, pcb);
 			sem_post(&semEnvioPcb);
 			break;
 		}
 		case 3: //bloqueado
 		{
+			//inicializo la metrica
+			pcb->t_aux2 =time(NULL);
 			//bloqueo el pcb, lo pongo en la cola de bloqueados
 			queue_push(cola_block, pcb);
 			sem_post(&semBloqueados); //habilito el hilo de bloqueados
@@ -177,6 +197,9 @@ void enviaACpu(t_cpu *CPU)
 		case 4: //finalizado
 		{
 			log_info(logger, "mProc %d <%s> Finalizo",pcb->PID,ruta(pcb->PID));
+			log_info(logger, "mProc %d <%s> Tiempo de ejecucion: %d",pcb->PID,ruta(pcb->PID), pcb->t_ejecucion);
+			log_info(logger, "mProc %d <%s> Tiempo de espera: %d",pcb->PID,ruta(pcb->PID), pcb->t_espera);
+			log_info(logger, "mProc %d <%s> Tiempo de respuesta %d",pcb->PID,ruta(pcb->PID), pcb->t_respuesta);
 			//libero todo el PCB!
 			//lo saco de la cola NO DE LA LISTA
 			//free(pcb); //no lo liberen aca xq dsp no los puedo ver como finalizados en el comando PS. luego podemos liberarlos desde la lista
@@ -203,6 +226,10 @@ void bloqueados()
 		//lo bloqueo segun el tiempo indicado
 		log_info(logger, "mProc %d En entrada-salida de tiempo: %d",pcb->PID,pcb->tiempo);
 		usleep(pcb->tiempo * 1000000);
+		//replico metricas
+		pcb->t_respuesta+=difftime(time(NULL), pcb->t_aux2);
+		//inicializo la metrica
+		pcb->t_aux1=time(NULL);
 		//lo vuelvo a poner en la cola de ready
 		queue_push(cola_ready, pcb);
 		//aviso
@@ -237,6 +264,10 @@ t_pcb* procesarPCB(char *path)
 	strcpy(pcb->ruta, path);
 	pcb->finalizar=false;
 	pcb->quantum= miContexto.quantum;
+
+	pcb->t_ejecucion=0;
+	pcb->t_espera=0;
+	pcb->t_respuesta=0;
 
 	return pcb;
 }

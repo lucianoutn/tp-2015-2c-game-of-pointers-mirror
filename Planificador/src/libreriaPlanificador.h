@@ -30,6 +30,7 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
+#include <time.h>
 
 
 #define BACKLOG 10 //comentar
@@ -90,6 +91,12 @@ typedef struct PCB {
 	bool finalizar;
 	char *ruta; //ruta del archivo mCod que tiene las instrucciones a procesar
 	int tiempo; //tiempo en la cola de bloqueados que tiene que cumplir el proceso
+	//Metricas
+	time_t t_ejecucion;
+	time_t t_espera;
+	time_t t_respuesta;
+	time_t t_aux1; //auxiliar para medir el tiempo de espera
+	time_t t_aux2; //auxiliar para medir el tiempo de respuesta
 
 }t_pcb;
 
@@ -122,6 +129,7 @@ sem_t semBloqueados;
 int numero_de_pid;
 
 int PID_actual;
+
 
 void traigoContexto();
 
