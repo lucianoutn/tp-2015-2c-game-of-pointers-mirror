@@ -228,6 +228,12 @@ int buscarIndicePunteroUno (t_list *);
 
 int buscarIndicePagina(t_list*, process_pag *);
 
+// Devuelve el indice de la ultima pagina con un marco asignado (Para Algoritmo Clock)
+int buscaIndiceUltimaPagina(t_list*);
+
+// Devuelve el indice de la primer pagina con un marco asignado (Para Algoritmo Clock)
+int buscarIndicePrimerPagina(t_list*);
+
 void dumpEnLog();
 void seniales(t_list*, char*, t_list * );
 //-----------------------------------------------------------//

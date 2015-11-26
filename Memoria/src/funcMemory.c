@@ -648,6 +648,37 @@ int buscarIndicePagina(t_list * tabla_paginas, process_pag * pagina)
 	return -1;
 }
 
+int buscaIndiceUltimaPagina(t_list* tabla_paginas)
+{
+	int x = 0;
+	int tamanio = tabla_paginas->elements_count;
+	while (x < tamanio)
+	{
+		process_pag * reg = list_get(tabla_paginas, x%tamanio);
+		process_pag * reg2 = list_get(tabla_paginas, (x+1)%tamanio);
+		if ( (reg->direccion_fisica != NULL) && (reg2->direccion_fisica == NULL) )
+		{
+			return x;
+		}
+	}
+	return -1;
+}
+
+int buscarIndicePrimerPagina(t_list* tabla_paginas)
+{
+	int x = 0;
+	int tamanio = tabla_paginas->elements_count;
+	while (x < tamanio)
+	{
+		process_pag * reg = list_get(tabla_paginas, x);
+		if ( reg->direccion_fisica != NULL)
+		{
+			return x;
+		}
+	}
+	return -1;
+}
+
 int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mensaje, int serverSocket, t_header * header, t_list* tablaAccesos, int socketCliente)
 {
 	// paginaASwapear va a tener la pagina que ya esta en memoria y que se va a enviar al swap
@@ -743,15 +774,12 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	//ACTUALIZO LA TABLA DEL PROCESO SEGUN ALGORITMOS // NO USO ACTUALIZOTABLAPROCESO POR LOS PARAMETROS
 	if ( !strcmp(miContexto.algoritmoReemplazo, "FIFO"))
 	{
-		log_info(logger, "Swapea corte FIFO");
 		actualizarTablaProcesoFifo(tablaProceso, header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco);
 	}else if (!strcmp(miContexto.algoritmoReemplazo, "LRU")) // LA MUE
 	{
-		log_info(logger, "Swapea corte LRU");
 		actualizarTablaProcesoLru(tablaProceso, header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco);
 	}else // CLOCK POR DESCARTE YA QUE NO PUEDE HABER ERRORES EN EL ARCHIVO DE CONFIGURACION, ACTUALIZA EL BIT DE ACCEDIDO A 1
 	{
-		log_info(logger, "Swapea corte Clock");
 		actualizarTablaProcesoClock(tablaProceso, header, paginaASwapear->direccion_fisica, paginaASwapear->marco, 0);
 	}
 
@@ -836,10 +864,14 @@ void actualizarTablaProcesoFifo(t_list * tabla_proceso, int num_pagina, char * d
 
 void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char * direccion_marco, int num_marco, int modo)
 {
-	int numPag = 0;
+	int numPag = header->pagina_proceso;
+	int tamanio = tabla_proceso->elements_count;
 	bool _numeroDePagina (void * p) {return(*(int *)p == numPag);}
 	int indicePuntero;
 	process_pag * pagina = list_find(tabla_proceso, (void*)_numeroDePagina);
+
+	int indiceUltPag = buscaIndiceUltimaPagina(tabla_proceso); 	// Indice de la ultima pagina que tiene asignado un marco
+	int indicePriPag = buscarIndicePrimerPagina(tabla_proceso); 	// Indice de la primer pagina que tiene asignado un marco
 
 	switch (modo)
 	{
@@ -877,13 +909,16 @@ void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char
 		case 1: // LOS DEMAS CASOS
 			if ( pagina->direccion_fisica != NULL) // Si ya esta en memoria
 			{
-				// No corro el puntero, no actualizo nada
+				// No corro el puntero, actualizo el bit de accedido (afuera del if)
 			}else // Si la trajo de swap y le tengo que asignar un marco y demas
 			{
 					list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
 					pagina->direccion_fisica = direccion_marco;
 					pagina->marco = num_marco;
-					list_add(tabla_proceso, pagina);
+					if (indiceUltPag != -1) // Si hay alguna cargada
+						list_add_in_index(tabla_proceso,(indiceUltPag+1)%tamanio, pagina);
+					else // Si no hay ninguna cargada la agrego al final
+						list_add(tabla_proceso, pagina);
 			}
 			pagina->accessed = 1;
 			break;
@@ -974,7 +1009,7 @@ process_pag * ambosBitsEnCero(t_list * tablaProceso)
 	int y = 0;
 	while ( y < tamanio)
 	{
-		process_pag * pagina = list_get(tablaProceso, x);
+		process_pag * pagina = list_get(tablaProceso, x%tamanio);
 		if ( pagina->accessed == 0 && pagina->dirty == 0)
 		{
 			return pagina;
@@ -987,11 +1022,12 @@ process_pag * ambosBitsEnCero(t_list * tablaProceso)
 
 process_pag * bitDirtyEnUno (t_list * tablaProceso)
 {
-	int y = 0;
 	int tamanio = tablaProceso->elements_count;
+	int x = buscarIndicePunteroUno(tablaProceso);
+	int y = 0;
 	while ( y < tamanio)
 	{
-		process_pag * pagina = list_get(tablaProceso, y);
+		process_pag * pagina = list_get(tablaProceso, x%tamanio);
 		if( pagina->accessed == 0 && pagina->dirty == 1)
 		{
 			return pagina;
