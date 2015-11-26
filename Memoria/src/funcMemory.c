@@ -237,7 +237,7 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, t_header * proc, t_list* tabla
 
 int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serverSocket, int socketCliente, t_list* tablaAccesos)
 {
-	int  * flag = malloc(sizeof(int));
+	int * flag = malloc(sizeof(int));
 	usleep(miContexto.retardoMemoria * 100000); // SLEEP PORQUE LA MEMORIA BUSCA EN SUS ESTRUCTURAS
 	t_list * tabla_proc = obtenerTablaProceso(tabla_adm, package->PID);
 
@@ -885,7 +885,7 @@ void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char
 	int tamanio = tabla_proceso->elements_count;
 	bool _numeroDePagina (void * p) {return(*(int *)p == numPag);}
 	int indicePuntero;
-	process_pag * pagina = list_find(tabla_proceso, (void*)_numeroDePagina);
+	process_pag * pagina = list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
 
 	int indiceUltPag = buscaIndiceUltimaPagina(tabla_proceso); 	// Indice de la ultima pagina que tiene asignado un marco
 	int indicePriPag = buscarIndicePrimerPagina(tabla_proceso); 	// Indice de la primer pagina que tiene asignado un marco
@@ -893,9 +893,6 @@ void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char
 	switch (modo)
 	{
 		case 0: // SI HAY QUE REMOVER PAGINA (SWAPEANDO) Falta actualizar puntero
-			numPag = header->pagina_proceso;
-			process_pag * pagina = list_find(tabla_proceso, (void*)_numeroDePagina);
-
 			if( pagina->direccion_fisica == NULL)
 			{
 				process_pag * paginaASwapear = traerPaginaARemover(tabla_proceso);
@@ -919,8 +916,11 @@ void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char
 
 				//Agrego la nueva pagina en la posición en donde estaba la pagina que swapee
 				list_add_in_index(tabla_proceso, indicePuntero, pagina);
-				// Agrego la pagina que esta ahora en swap, al final con los valores limpios
-				list_add(tabla_proceso, elem_apuntado);
+
+				if ( indiceUltPag == -1) // Si quedaron todas las que tienen un marco, agrego la vacia a lo ultimo
+					list_add(tabla_proceso, elem_apuntado);
+				else // Agrego la pagina que esta ahora en swap, al final con los valores limpios
+					list_add_in_index(tabla_proceso, indiceUltPag, elem_apuntado);
 
 			}else
 			{
