@@ -10,6 +10,7 @@
 
 #include <sys/ipc.h>
 #include <sys/shm.h>
+#include <time.h>
 
 /* Cargo las configuraciones del archivo Config.cfg
  * y compruebo que no haya errores.
@@ -156,7 +157,9 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 
 	int pagina;
 	char *mensaje;
-	//double tiempoInicio, tiempoFin;
+	time_t tiempoInicio, tiempoFin; //para los time
+	int tiempoEjec = 0; //lo inicializo xq sino rompe el casteo de time a int
+	//time_t *t1, *t2;
 	//time_t *t1 = malloc(sizeof(time_t));
 	//time_t *t2 = malloc(sizeof(time_t));
 	resultados = queue_create();
@@ -192,13 +195,13 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 			case 0: //leer
 
 				//puts("LEER");
-				//tiempoInicio = time(t1);
-				//printf("el tiempo es: %f\n", (double)(tiempoFin - tiempoInicio)); //test
 				creoHeader(PCB,header,0,pagina); //PCB HEADER TIPOEJECUCION PAGINA
 				int tmno =0;
+				time(&tiempoInicio);	//tomo el tiempo antes del send
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &tmno, sizeof(int),0);		//espero recibir la respuesta
 				usleep(configuracion.retardo); //retardo del cpu
+				time(&tiempoFin); //tomo el tiempo despues dl rcv
 				if(tmno > 0)	//Controlo que haya llegado bien
 				{
 					char *contenido = (char*)malloc(sizeof(char) * tmno);
@@ -217,13 +220,11 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 					recibi=false;
 					send(socketPlanificador,&recibi, sizeof(bool),0);
 				}
-				//tiempoFin = time(t2);
-				//puts("aca");
-				//tiempoEjec = 577; //test
-				//tiempoEjec =+ tiempoFin - tiempoInicio;
-				//printf("tiempo ejec: %f", tiempoEjec);
-				//puts("aca2");
-				*cantInstrucEjec= *cantInstrucEjec + 1; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
+
+				tiempoEjec= (int)(tiempoFin - tiempoInicio); //calculo el tiempo total y lo casteo a entero
+				//printf("\ntiempo ejec: %d\n", tiempoEjec); //teste
+
+				*cantInstrucEjec= *cantInstrucEjec + tiempoEjec; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				break;
 
 			case 1: //Escribir
@@ -232,10 +233,12 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 				//printf("Mensaje recibido: <%s>\nTamaño: %d.\n",mensaje,strlen(mensaje));
 				creoHeader(PCB,header,1,pagina); //PCB HEADER TIPOEJECUCION PAGINA
 				header->tamanio_msj = strlen(mensaje);
+				time(&tiempoInicio);	//tomo el tiempo antes del send
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				send(socketMemoria, mensaje, header->tamanio_msj,0);	//envio el texto a excribir
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
 				usleep(configuracion.retardo); //retardo del cpu
+				time(&tiempoFin); //tomo el tiempo despues dl rcv
 				if(recibi){	//Controlo que haya llegado bien
 					queue_push(resultados,resultado(1,PCB->PID,pagina,mensaje,1));
 					//free(mensaje);
@@ -246,7 +249,10 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 					PCB->estado =5;
 					send(socketPlanificador,&recibi, sizeof(flag),0);
 				}
-				*cantInstrucEjec= *cantInstrucEjec + 1; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
+
+				tiempoEjec= (int)(tiempoFin - tiempoInicio); //calculo el tiempo total y lo casteo a entero
+				//printf("\ntiempo ejec: %d\n", tiempoEjec); //teste
+				*cantInstrucEjec= *cantInstrucEjec + tiempoEjec; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				break;
 
 			case 2://iniciar
@@ -254,9 +260,11 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 				//puts("INICIAR");
 				creoHeader(PCB,header,2,pagina); //PCB HEADER TIPOEJECUCION PAGINA
 				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
+				time(&tiempoInicio);	//tomo el tiempo antes del send
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
 				usleep(configuracion.retardo); //retardo del cpu
+				time(&tiempoFin); //tomo el tiempo despues dl rcv
 				if(recibi)	//Controlo que haya llegado bien
 					queue_push(resultados,resultado(2,PCB->PID,NULL,NULL,1));
 					//log_info(logger, "mProc %d - Iniciado",PCB->PID);
@@ -268,7 +276,10 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 					PCB->estado =5;
 					send(socketPlanificador,&recibi, sizeof(flag),0);
 				}
-				*cantInstrucEjec= *cantInstrucEjec + 1; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
+
+				tiempoEjec= (int)(tiempoFin - tiempoInicio); //calculo el tiempo total y lo casteo a entero
+				//printf("\ntiempo ejec: %d\n", tiempoEjec); //teste
+				*cantInstrucEjec= *cantInstrucEjec + tiempoEjec; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				break;
 
 			case 3: //finalizar
