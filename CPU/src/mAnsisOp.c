@@ -9,6 +9,7 @@
 char* leerInstruccion(FILE *fd)
 {
 	char *buffer = (char*)malloc(sizeof(char)); //solicito espacio en la memoria para el buffer
+	if (buffer == NULL) puts("ERROR MALLOC 10");
 	char c;
 	int I=0;
 	c= fgetc(fd); //leo el primer caracter de la instruccion
@@ -35,11 +36,13 @@ char** leermCod(const char* ruta,unsigned int *num)
 	if(fd == NULL)
 		printf("Error al abrir el mCod. Path: <%s>.\n",ruta);
 	char **instruccion= (char**)malloc(sizeof(char*)); //solicito espacio en la memoria para el buffer
+	if (instruccion == NULL) puts("ERROR MALLOC 11");
 
 	int I=0;
 	while(!feof(fd))
 	{
 		instruccion[I]= (char*)malloc(sizeof(leerInstruccion(fd))); //solicito espacio en la memoria para la instruccion
+		if (instruccion[I] == NULL) puts("ERROR MALLOC 12");
 		instruccion[I]= leerInstruccion(fd); //leo la instruccion
 		if(strcmp(instruccion[I],"fin")==0) //para que no solicite mas espacio en la memoria
 		{

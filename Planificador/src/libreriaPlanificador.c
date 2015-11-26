@@ -70,6 +70,7 @@ void *escuchar (struct Conexiones* conexion){
 void encolar(t_list* lstPcbs, t_queue* cola_ready)
 {
 	char *ruta=(char*)malloc(sizeof(char) * 30);
+	if (ruta == NULL) puts("ERROR MALLOC 2");
 	//pido la ruta del archivo
 	puts("Ingrese el nombre del archivo que desea correr:");
 	fflush(stdin);
@@ -80,9 +81,9 @@ void encolar(t_list* lstPcbs, t_queue* cola_ready)
 	//Se crea el PCB y se lo pone en la cola de ready
 	sem_post(&semConsola); // debe ir arriba del procesarPCB para que se aproveche el paralelismo. vuelve a habilitar ingreso de nueva orden
 	t_pcb* pcb= procesarPCB(ruta);
-	list_add(lstPcbs, pcb);
 	//inicializo metrica
 	pcb->t_aux1=time(NULL);
+	list_add(lstPcbs, pcb);
 	//agrego el pcb a la cola de ready
 	queue_push(cola_ready, pcb);
 
@@ -147,6 +148,7 @@ void enviaACpu(t_cpu *CPU)
 	//if(pcb->quantum >= 0) printf("mande un quantum de: %d\n y el socket es: %d\n", pcb->quantum, CPU->socket); //teste
 
 	t_headcpu *header = malloc(sizeof(t_headcpu));
+	if (header == NULL) puts("ERROR MALLOC 3");
 	preparoHeader(header, pcb->PID);
 
 	//Envio el header

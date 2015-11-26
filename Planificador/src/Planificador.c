@@ -49,6 +49,7 @@ int main() {
 
 	// alojo memoria dinamicamente en tiempo de ejecucion
 	conexiones.CPUS= (t_cpu*)malloc(sizeof(t_cpu) * ((miContexto.cantHilosCpus) +1));
+	if (conexiones.CPUS == NULL) puts("ERROR MALLOC 1");
 	pthread_t hilo_conexiones;
 	if(pthread_create(&hilo_conexiones, NULL, (void*)escuchar,&conexiones)<0)
 		perror("Error HILO ESCUCHAS!");

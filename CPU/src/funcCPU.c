@@ -89,8 +89,11 @@ int procesaInstruccion(char* instruccion, int *pagina, char* mensaje){
 	//Inicializo variables y reservo memoria
 	int I=0, J=0, K=0, valor;
 	char *palabra=(char*) malloc(sizeof(char));
+	if (palabra == NULL) puts("ERROR MALLOC 1");
 	char *aux=(char*) malloc(sizeof(char));
+	if (aux == NULL) puts("ERROR MALLOC 2");
 	char *texto=(char*) malloc(sizeof(char));
+	if (texto == NULL) puts("ERROR MALLOC 3");
 
 	//CONTROLO QUE NO SE TERMINE LA PALABRA
 	while(instruccion[I]!= ' ')
@@ -156,7 +159,7 @@ int procesaInstruccion(char* instruccion, int *pagina, char* mensaje){
 void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cantInstrucEjec){
 
 	int pagina;
-	char *mensaje;
+	char *mensaje = "";
 	time_t tiempoInicio, tiempoFin; //para los time
 	int tiempoEjec = 0; //lo inicializo xq sino rompe el casteo de time a int
 	//time_t *t1, *t2;
@@ -166,6 +169,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 	//t_resultados *resultado;
 	//reservo espacio para el header
 	t_header *header = malloc(sizeof(t_header));
+	if (header == NULL) puts("ERROR MALLOC 4");
 
 	//flag para controlar la respuesta a las instrucciones por parte de la memoria
 	flag recibi= false;
@@ -189,7 +193,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 			break;
 		}
 		//Switch que verifica el tipo de cada instruccion
-		switch(procesaInstruccion(instrucciones[PCB->instructionPointer],&pagina,mensaje))
+		switch( procesaInstruccion(instrucciones[PCB->instructionPointer], &pagina, mensaje) )
 		{
 
 			case 0: //leer
@@ -198,24 +202,25 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 				creoHeader(PCB,header,0,pagina); //PCB HEADER TIPOEJECUCION PAGINA
 				int tmno =0;
 				time(&tiempoInicio);	//tomo el tiempo antes del send
+				usleep(configuracion.retardo); //retardo del cpu
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &tmno, sizeof(int),0);		//espero recibir la respuesta
-				usleep(configuracion.retardo); //retardo del cpu
 				time(&tiempoFin); //tomo el tiempo despues dl rcv
 				if(tmno > 0)	//Controlo que haya llegado bien
 				{
 					char *contenido = (char*)malloc(sizeof(char) * tmno);
+					if (contenido == NULL) puts("ERROR MALLOC 5");
 					recv(socketMemoria, contenido,tmno,0);
 					//contenido[tmno]='\0';
-					//log_info(logger, "mProc %d - Pagina %d - Leida :\"%s\"", PCB->PID, pagina, contenido);
+					log_info(logger, "mProc %d - Pagina %d - Leida :\"%s\"", PCB->PID, pagina, contenido);
 					queue_push(resultados,resultado(0,PCB->PID,pagina,contenido,1));
 					free(contenido);
 				}else if(tmno == 0){
 					queue_push(resultados,resultado(0,PCB->PID,pagina,NULL,0));
-					//log_info(logger, "mProc %d - Pagina %d - Leida : vacia", PCB->PID, pagina);
+					log_info(logger, "mProc %d - Pagina %d - Leida : vacia", PCB->PID, pagina);
 				}else{
 					queue_push(resultados,resultado(0,PCB->PID,pagina,NULL,-1));
-					//log_info(logger, "mProc %d - Pagina %d - Fallo al leer",PCB->PID, pagina);
+					log_info(logger, "mProc %d - Pagina %d - Fallo al leer",PCB->PID, pagina);
 					PCB->estado =5;
 					recibi=false;
 					send(socketPlanificador,&recibi, sizeof(bool),0);
@@ -234,18 +239,18 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 				creoHeader(PCB,header,1,pagina); //PCB HEADER TIPOEJECUCION PAGINA
 				header->tamanio_msj = strlen(mensaje);
 				time(&tiempoInicio);	//tomo el tiempo antes del send
+				usleep(configuracion.retardo); //retardo del cpu
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				send(socketMemoria, mensaje, header->tamanio_msj,0);	//envio el texto a excribir
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
-				usleep(configuracion.retardo); //retardo del cpu
 				time(&tiempoFin); //tomo el tiempo despues dl rcv
 				if(recibi){	//Controlo que haya llegado bien
 					queue_push(resultados,resultado(1,PCB->PID,pagina,mensaje,1));
 					//free(mensaje);
-					//log_info(logger, "mProc %d - Pagina %d - Escrita: \"%s\"",PCB->PID, pagina, mensaje);
+					log_info(logger, "mProc %d - Pagina %d - Escrita: \"%s\"",PCB->PID, pagina, mensaje);
 				}else{
 					queue_push(resultados,resultado(1,PCB->PID,pagina,mensaje,-1));
-					//log_info(logger, "mProc %d - Pagina %d - Fallo al escribir: %s",PCB->PID,pagina, mensaje);
+					log_info(logger, "mProc %d - Pagina %d - Fallo al escribir: %s",PCB->PID,pagina, mensaje);
 					PCB->estado =5;
 					send(socketPlanificador,&recibi, sizeof(flag),0);
 				}
@@ -261,17 +266,17 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 				creoHeader(PCB,header,2,pagina); //PCB HEADER TIPOEJECUCION PAGINA
 				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
 				time(&tiempoInicio);	//tomo el tiempo antes del send
+				usleep(configuracion.retardo); //retardo del cpu
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
-				usleep(configuracion.retardo); //retardo del cpu
 				time(&tiempoFin); //tomo el tiempo despues dl rcv
-				if(recibi)	//Controlo que haya llegado bien
-					queue_push(resultados,resultado(2,PCB->PID,NULL,NULL,1));
-					//log_info(logger, "mProc %d - Iniciado",PCB->PID);
+				if(recibi){	//Controlo que haya llegado bien
+					queue_push(resultados,resultado(2,PCB->PID,0,NULL,1));
+					log_info(logger, "mProc %d - Iniciado",PCB->PID);
 					//puts("Inicializado");
-				else{
-					queue_push(resultados,resultado(2,PCB->PID,NULL,NULL,-1));
-					//log_info(logger, "mProc %d - Fallo",PCB->PID);
+				}else{
+					queue_push(resultados,resultado(2,PCB->PID,0,NULL,-1));
+					log_info(logger, "mProc %d - Fallo",PCB->PID);
 					//puts("NO Inicializado");
 					PCB->estado =5;
 					send(socketPlanificador,&recibi, sizeof(flag),0);
@@ -286,17 +291,17 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 
 				//puts("FINALIZAR");
 				creoHeader(PCB,header,3,pagina); //PCB HEADER TIPOEJECUCION PAGINA
+				usleep(configuracion.retardo); //retardo del cpu
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
-				usleep(configuracion.retardo); //retardo del cpu
 				if(recibi){	//Controlo que haya llegado bien
-					queue_push(resultados,resultado(3,PCB->PID,NULL,NULL,1));
-					//log_info(logger, "mProc %d - Finalizado",PCB->PID);
+					queue_push(resultados,resultado(3,PCB->PID,0,NULL,1));
+					log_info(logger, "mProc %d - Finalizado",PCB->PID);
 					PCB->estado=4;
 					send(socketPlanificador, &cambio, sizeof(flag), 0);
 				}else{
-					queue_push(resultados,resultado(3,PCB->PID,NULL,NULL,-1));
-					//log_info(logger, "mProc %d - Fallo al finalizar",PCB->PID);
+					queue_push(resultados,resultado(3,PCB->PID,0,NULL,-1));
+					log_info(logger, "mProc %d - Fallo al finalizar",PCB->PID);
 					PCB->estado =5;
 					send(socketPlanificador,&recibi, sizeof(flag),0);
 					break;
@@ -325,7 +330,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 				PCB->tiempo=pagina;
 				//send(socketPlanificador, &pagina, sizeof(int), 0); //envio el tiempo del sleep
 				queue_push(resultados,resultado(4,PCB->PID,pagina,NULL,1));
-				//log_info(logger, "mProc %d - En entrada-salida de tiempo: %d",PCB->PID,pagina);
+				log_info(logger, "mProc %d - En entrada-salida de tiempo: %d",PCB->PID,pagina);
 
 				*cantInstrucEjec= *cantInstrucEjec + 1; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				break;
@@ -392,6 +397,7 @@ void iniciarCPU(t_cpu *CPUS){
 
 	//Estructuras que manejan los datos recibidos
 	t_headcpu * header = (t_headcpu*)malloc(sizeof(t_headcpu));
+	if (header == NULL) puts("ERROR MALLOC 6");
 
 	while(status!=0)	//MIENTRAS NO QUIERA SALIR RECIBO INSTRUCCIONES
 	{
@@ -426,8 +432,7 @@ void iniciarCPU(t_cpu *CPUS){
 			case 1: 	//INSTRUCCION PARA RECIBIR MSJS
 			{
 				long id_pcb = shmget(header->clave_pcb, sizeof(t_pcb), 0666); //reservo espacio dentro de la seccion de memoria compartida
-				t_pcb *PCB;
-				PCB = shmat(id_pcb,0, 0); //creo la variable y la asocio al segmento
+				t_pcb *PCB = shmat(id_pcb,0, 0); //creo la variable y la asocio al segmento
 				if (PCB == (t_pcb *)(-1))		//capturo error del shmat
 					perror("shmat pcb");
 
@@ -437,6 +442,7 @@ void iniciarCPU(t_cpu *CPUS){
 				    perror("shmat ruta");
 
 				//printf("PCB Recibido. PID:%d Ruta: <%s>\n",PCB->PID,PCB->ruta);
+				printf("Ejecuto PCB PID:%d en la CPU: %d\n",PCB->PID,CPUS->numeroCPU);
 				//ejecuto
 				ejecutoPCB(CPUS->socketMem,CPUS->socketPlani,PCB, &CPUS->cantInstrucEjec);	//analiza el PCB y envia a memoria si corresponde (nuevo)
 
@@ -445,7 +451,7 @@ void iniciarCPU(t_cpu *CPUS){
 
 			default:	//PARA ERRORES EN EL TIPO DE INSTRUCCION
 			{
-				puts("TIPO DE INSTRUCCION NO VALIDA\n");
+				puts("TIPO DE INSTRUCCION NO VALIDA. ERROR AL RECIBIR DEL PLANIFICADOR\n");
 				break;
 			}
 			}
@@ -479,6 +485,7 @@ int configuroSocketsYLogs (){
 	log_info(logger, "Conectado a la Memoria", NULL);
 	int i = 1;
 	CPU = (t_cpu*)malloc(sizeof(t_cpu) * ((configuracion.cantHilos) + 1));
+	if (CPU == NULL) puts("ERROR MALLOC 7");
 	//conexion para el comandoCpu
 	//afuera del while para q no se conecte con la memoria. solo c el plani
 	CPU[0].porcentajeUso=0;
@@ -588,6 +595,7 @@ void imprimeResultados(t_resultados *resultado)
 t_resultados* resultado(int codigo, int pid, int pagina, char* mensaje,int flag)
 {
 	t_resultados *resultado = (t_resultados*)malloc(sizeof(t_resultados));
+	if (resultado == NULL) puts("ERROR MALLOC 8");
 	resultado->codigo = codigo;
 	resultado->pid = pid;
 	resultado->pagina = pagina;
@@ -595,6 +603,7 @@ t_resultados* resultado(int codigo, int pid, int pagina, char* mensaje,int flag)
 	if(mensaje != NULL)
 	{
 		resultado->mensaje = (char*)malloc(strlen(mensaje));
+		if (resultado->mensaje == NULL) puts("ERROR MALLOC 9");
 		strcpy(resultado->mensaje,mensaje);
 	}else
 		resultado->mensaje=mensaje;

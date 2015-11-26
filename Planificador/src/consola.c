@@ -80,6 +80,7 @@ void consola (void* arg)
 			{
 				//comandos útiles para darle formato al archivo
 				char *ruta=(char*)malloc(sizeof(char) * 30);
+				if (ruta == NULL) puts("ERROR MALLOC");
 				printf("\n*** FORMATEAR mCod: ***\n");
 				printf("Ingrese el nombre del archivo que desea formatear:\n");
 				fflush(stdin);
@@ -253,6 +254,7 @@ int leeComando(void)
 {
 	int c, i = 0;
 	char *palabra=(char*)malloc(sizeof(char)*WORD_SIZE);
+	if (palabra == NULL) puts("ERROR MALLOC");
 	while ((c = getchar()) != '\n') //leo hasta identificar enter
 	{
 		if (i > WORD_SIZE)

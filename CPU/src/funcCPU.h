@@ -149,7 +149,7 @@ void creoHeader(t_pcb *, t_header*,int,int);
 
 int palabraAValor(char *palabra);
 
-int procesaInstruccion(char*,int *, char*);
+int procesaInstruccion(char*,int*,char*);
 
 void ejecutoPCB(int,int, t_pcb *,int*);
 
