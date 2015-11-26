@@ -98,8 +98,8 @@ int procesaInstruccion(char* instruccion, int *pagina, char* mensaje){
 	//CONTROLO QUE NO SE TERMINE LA PALABRA
 	while(instruccion[I]!= ' ')
 	{
-		if(instruccion[I]== '\0')	break;
 		if(instruccion[I]== ';') I++; //ignoro el ";" del final hasta llegar al"\0"
+		if(instruccion[I]== 'EOF')	break;
 		palabra[I]=instruccion[I];
 		I++;
 		palabra= (char*)realloc(palabra, (I+1)*sizeof(char));
@@ -159,7 +159,7 @@ int procesaInstruccion(char* instruccion, int *pagina, char* mensaje){
 void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cantInstrucEjec){
 
 	int pagina;
-	char *mensaje = "";
+	char *mensaje = (char*)malloc(sizeof(char));
 	time_t tiempoInicio, tiempoFin; //para los time
 	int tiempoEjec = 0; //lo inicializo xq sino rompe el casteo de time a int
 	//time_t *t1, *t2;
@@ -183,7 +183,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 	char **instrucciones = (leermCod(PCB->ruta, &PCB->numInstrucciones));
 
 	//Itera hasta tener que replanificar o finalizar
-	while(PCB->estado!=3 && PCB->estado !=4 && PCB->estado !=5)
+	while(PCB->estado!=3 && PCB->estado!=4 && PCB->estado!=5)
 	{		//3:Bloqueado      4:Finalizado       5:Fallo
 		if(PCB->quantum==0)
 		{
@@ -358,6 +358,13 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 		imprimeResultados(queue_pop(resultados));
 	}
 	printf("Numero de instrucciones ejecutadas 2: %d\n",PCB->instructionPointer);
+	int I=0;
+	while(I!=PCB->numInstrucciones)
+	{
+		free(instrucciones[I]);
+		I++;
+	}
+
 	free(instrucciones);
 	free(header);
 	queue_destroy(resultados);
