@@ -167,7 +167,6 @@ void ejecutoInstruccion(t_header * header, char * mensaje,char *  memoria_real, 
 			log_error(logger, "El tipo de ejecucion recibido no es valido");
 	 		break;
 	 	}
-	free(flag);
 }
 
 void iniciarProceso(t_list* tabla_adm, t_header * proceso, t_list* tablaAccesos)
@@ -198,7 +197,6 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, t_header * proc, t_list* tabla
 
 	int * posicion = malloc(sizeof(int));
 	t_tlb * registro_tlb = buscarEntradaProcesoEnTlb(TLB, proc, posicion );
-	free(posicion);
 
 	// SI LA ENCONTRO LA LEO Y LE ENVIO EL FLAG TODO JOYA AL CPU
 	if (registro_tlb != NULL)
@@ -288,7 +286,6 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 						send(socketCliente,&recibi,sizeof(int),0);
 						log_error(logger, "Hubo un problema con la conexion/envio al swap. Se informa al CPU");
 					}
-					//free(contenido);
 				}else
 				{
 					mostrarVersus(tablaAccesos, package->PID);
@@ -416,7 +413,6 @@ void escribirEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int
 						send(socketCliente,&recibi,sizeof(bool),0);
 						log_error(logger, "Hubo un problema con la conexion/envio al swap");
 					}
-					//free(contenido);
 				}else
 				{
 					mostrarVersus(tablaAccesos, package->PID);
@@ -424,7 +420,6 @@ void escribirEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int
 					bool recibi= false ;
 					send(socketCliente,&recibi,sizeof(bool),0);
 					log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedido e informo al CPU");
-					free(flag);
 				}
 
 			}
@@ -454,8 +449,6 @@ void escribirEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int
 		bool recibi= false;
 		send(socketCliente,&recibi,sizeof(bool),0);
 	}
-
-	free(flag);
 }
 
 t_list * obtenerTablaProceso(t_list * tabla_adm, int pid)
@@ -567,7 +560,6 @@ int escribirDesdeTlb (t_list * TLB, int tamanio_msg, char * message, t_header * 
 	t_tlb * registro_tlb = buscarEntradaProcesoEnTlb(TLB, pagina, posicion);
 	//Actualizo cantidad de accesos a TLB;
 	cantAccesosTlb=cantAccesosTlb+1;
-	free(posicion);
 	if (registro_tlb != NULL)
 	{
 		upPaginasAccedidas(tablaAccesos, pagina->PID);
@@ -714,13 +706,6 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		//bool recibi= true;
 		//send(socketCliente,&recibi,sizeof(bool),0);
 
-		/*
-		free(contenido);
-		free(status_escritura);
-		free(status_lectura);
-		free(header_escritura);
-		free(header_lectura);
-		*/
 		// SI SE TRATA DE UNA LECTURA
 	}else if(header->type_ejecution ==0)
 	{
@@ -752,10 +737,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		upPaginasAccedidas(tablaAccesos, header->PID);
 		upFallosPagina(tablaAccesos, header->PID);
 		num_pag = paginaASwapear->pag;
-		/*
-		free(contenido);
-		free(status_lectura);
-		*/
+
 	}
 
 	//ACTUALIZO LA TABLA DEL PROCESO SEGUN ALGORITMOS // NO USO ACTUALIZOTABLAPROCESO POR LOS PARAMETROS
@@ -787,7 +769,6 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 			list_remove(TLB, *posicion);
 		}
 		actualizarTlb(header->PID, header->pagina_proceso, paginaASwapear->direccion_fisica, TLB, paginaASwapear->marco);
-		free(posicion);
 	}
 	pthread_mutex_unlock (&mutexTLB);
 
@@ -1043,7 +1024,6 @@ void escribirMarco(char * mensaje, char* direccion)
 
 	log_info(logger, "Se escribio en el marco --> %s ", direccion);
 
-	//free(pagAux);
 }
 
 int marcosProcesoLlenos(t_list * lista_proceso)
@@ -1156,7 +1136,6 @@ void removerMarcoPorMarco(int marco)
 		}
 		x++;
 	}
-	free(marcoAux);
 }
 
 //------SEÑALES QUE TIENE QUE RECIBIR LA MEMORIA-------------//
@@ -1206,7 +1185,7 @@ void limpiarMemoria(void * args)
 		//Traigo una tabla
 		t_tabla_adm * entrada_tabla_tablas = list_get(param->tabla_adm,i);
 		t_list * tablaProceso = entrada_tabla_tablas->direc_tabla_proc;
-
+		usleep(miContexto.retardoMemoria * 100000);
 		for(;j<tablaProceso->elements_count;j++) //Recorro la tabla de procesos
 		{
 			process_pag * pagina_proc = list_get(tablaProceso, j); //Traigo una pagina
@@ -1238,12 +1217,12 @@ void dumpEnLog(char * memoria_real, t_list * tablaAdm)
 		//Traigo una tabla
 		t_tabla_adm * entrada_tabla_tablas = list_get(tablaAdm,i);
 		t_list * tablaProceso = entrada_tabla_tablas->direc_tabla_proc;
-
 		for(;j<tablaProceso->elements_count;j++) //Recorro la tabla de procesos
 		{
 			process_pag * pagina_proc = list_get(tablaProceso, j); //Traigo una pagina
 			if(pagina_proc->marco!=-1) //si el marco no es -1 es porque esta cargado en un marco
 			{
+				usleep(miContexto.retardoMemoria * 100000);
 				log_info(logger,"Marco: %d ; Contenido: \"%s\"",pagina_proc->marco, pagina_proc->direccion_fisica);
 			}
 		}

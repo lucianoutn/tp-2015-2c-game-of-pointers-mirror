@@ -68,7 +68,6 @@ int main() {
 	}
 	void limpiar()
 	{
-		//log_info(logger, "Se recibio SIGUSR2, se limpia la memoria \n");
 		parametros * param=malloc(sizeof(parametros));
 		param->memoria= memoria_real;
 		param->tabla_adm = tablaAdm;
@@ -77,8 +76,6 @@ int main() {
 		int err= pthread_create(&(senial[1]), NULL, (void*)limpiarMemoria,param);
 		if (err != 0)
 			printf("No se pudo crear el hilo de limpiarMemoria :[%s]", strerror(err));
-
-		//log_info(logger, "Se finalizo el tratamiento de la señal SIGUSR2 \n");
 	}
 	void dump()
 	{
@@ -94,8 +91,8 @@ int main() {
 	}
 
 	signal(SIGUSR1, flush);
-	signal(SIGINT, limpiar);
-	signal(SIGPOLL, dump);
+	signal(SIGUSR2, limpiar);
+	signal(SIGINT, dump);
 	signal(SIGALRM,mostrar);
 	alarm(600);
 
