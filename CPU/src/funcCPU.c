@@ -98,11 +98,10 @@ int procesaInstruccion(char* instruccion, int *pagina, char* mensaje){
 	//CONTROLO QUE NO SE TERMINE LA PALABRA
 	while(instruccion[I]!= ' ')
 	{
-		if(instruccion[I]== ';') I++; //ignoro el ";" del final hasta llegar al"\0"
-		if(instruccion[I]== 'EOF')	break;
 		palabra[I]=instruccion[I];
 		I++;
 		palabra= (char*)realloc(palabra, (I+1)*sizeof(char));
+		if(instruccion[I]== ';' || instruccion[I]== '\0') break; //ignoro el ";" del final hasta llegar al"\0"
 	}
 	palabra[I]='\0';
 	valor = palabraAValor(palabra);
@@ -139,7 +138,8 @@ int procesaInstruccion(char* instruccion, int *pagina, char* mensaje){
 		}
 		I++;
 	}
-	//mensaje=(char*)malloc(strlen(texto));
+	mensaje=(char*)malloc(strlen(texto)+1);
+	//mensaje=(char*)realloc(mensaje, strlen(texto)+1);
 	strcpy(mensaje, texto);
 	//printf("EL TEXTO ES: \"%s\"\n",texto);
 
@@ -159,7 +159,8 @@ int procesaInstruccion(char* instruccion, int *pagina, char* mensaje){
 void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cantInstrucEjec){
 
 	int pagina;
-	char *mensaje = (char*)malloc(sizeof(char));
+	//char *mensaje = (char*)malloc(sizeof(char));
+	char *mensaje;
 	time_t tiempoInicio, tiempoFin; //para los time
 	int tiempoEjec = 0; //lo inicializo xq sino rompe el casteo de time a int
 	//time_t *t1, *t2;
@@ -609,7 +610,7 @@ t_resultados* resultado(int codigo, int pid, int pagina, char* mensaje,int flag)
 	resultado->flag = flag;
 	if(mensaje != NULL)
 	{
-		resultado->mensaje = (char*)malloc(strlen(mensaje));
+		resultado->mensaje = (char*)malloc(strlen(mensaje)+1);
 		if (resultado->mensaje == NULL) puts("ERROR MALLOC 9");
 		strcpy(resultado->mensaje,mensaje);
 	}else
