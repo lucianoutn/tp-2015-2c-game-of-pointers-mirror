@@ -72,11 +72,10 @@ void traigoContexto() {
 void analizoPaquete(t_header * package, int socketCliente) {
 	global = package;
 	int status=0;
+	char * contenido = malloc(contexto->tam_pagina+1);
 	switch (package->type_ejecution)
 	{
 	case 0:
-		log_info(logger,"Se recibio orden de lectura PID: %d, Pagina %d", package->PID, package->pagina_proceso);
-		char * contenido = malloc(contexto->tam_pagina+1);
 		leerSwap(package,contenido);
 		if(contenido!=NULL){
 			status = 1;
@@ -89,22 +88,18 @@ void analizoPaquete(t_header * package, int socketCliente) {
 			usleep(contexto->retardo_swap * 100000);
 			send(socketCliente,&status,sizeof(int),0);
 		}
-		free(contenido);
 		break;
 	case 1:
-		log_info(logger,"Se recibio orden de escritura PID: %d, Pagina %d", package->PID, package->pagina_proceso);
 		status = escribirSwap(package, socketCliente);
 		usleep(contexto->retardo_swap * 100000);
 		send(socketCliente,&status,sizeof(int),0);
 		break;
 	case 2:
-		log_info(logger,"Se recibio orden de inicializacion PID: %d", package->PID);
 		status = inicializarProc(package);
 		usleep(contexto->retardo_swap * 100000);
 		send(socketCliente,&status,sizeof(int),0);
 		break;
 	case 3:
-		log_info(logger,"Se recibio orden de finalizacion PID: %d, Pagina %d", package->PID);
 		status = finalizarProc(package);
 		usleep(contexto->retardo_swap * 100000);
 		send(socketCliente,&status,sizeof(int),0);
@@ -114,6 +109,7 @@ void analizoPaquete(t_header * package, int socketCliente) {
 		abort();
 		break;
 	}
+	free(contenido);
 }
 
 void leerSwap(t_header * package,char * contenido)
@@ -166,7 +162,7 @@ int escribirSwap(t_header * package, int socketCliente)
 		for(;relleno<=final_pagina;relleno++)
 		{
 			fseek(archivo,relleno,SEEK_SET);
-			fwrite("\0", strlen("\0"), 1, archivo);
+			fwrite("", strlen(""), 1, archivo);
 		}
 	}
 	else

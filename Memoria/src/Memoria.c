@@ -92,7 +92,7 @@ int main() {
 
 	signal(SIGUSR1, flush);
 	signal(SIGUSR2, limpiar);
-	signal(SIGINT, dump);
+	signal(SIGPOLL, dump);
 	signal(SIGALRM,mostrar);
 	alarm(600);
 
@@ -106,70 +106,7 @@ int main() {
 	log_destroy(logger);
 	return 1;
 }
-/*
-void seniales(t_list* TLB, char* memoria_real, t_list * tablaAdm)
-{
-	puts("Entre a seniales");
-	// Se inicializa el mutex
-	pthread_t senial[3];
-	pthread_mutex_init (&mutexTLB, NULL);
-	pthread_mutex_init (&mutexMem, NULL);
-	void flush()
-	{
-		pthread_mutex_lock (&mutexTLB);
-		log_info(logger,"Se recibio SIGUSR1, si corresponde se vacia la TLB.");
-		int err= pthread_create(&(senial[0]), NULL, (void*)tlbFlush,TLB);
-		if (err != 0)
-			printf("No se pudo crear el hilo de TLBFlush :[%s]", strerror(err));
-		pthread_join(senial[0], NULL);
-			//tlbFlush(TLB);
-		log_info(logger, "Tratamiento de la señal SIGUSR1 terminado.");
-		pthread_mutex_unlock (&mutexTLB);
-	}
-	void limpiar()
-	{
-		pthread_mutex_lock (&mutexMem);
 
-		log_info(logger, "Se recibio SIGUSR2, se limpia la memoria.");
-
-	//	parametros * param=malloc(sizeof(parametros));
-
-		printf("La direccion de la mem real es: %p \n",memoria_real);
-
-		param->memoria= memoria_real;
-		param->tabla_adm = tablaAdm;
-		param->tlb=TLB;
-
-				int err= pthread_create(&(senial[1]), NULL, (void*)limpiarMemoria,param);
-				if (err != 0)
-					printf("No se pudo crear el hilo de limpiarMemoria :[%s]", strerror(err));
-				pthread_join(senial[1], NULL);
-
-		//limpiarMemoria(memoria_real, TLB, tablaAdm);
-
-		log_info(logger, "Se finalizo el tratamiento de la señal SIGUSR2.");
-		pthread_mutex_unlock (&mutexMem);
-	}
-	void dump()
-	{
-		log_info(logger,"Se recibio SIGPOLL, se muestra el contenido de la memoria actualmente");
-		dumpEnLog(memoria_real, tablaAdm);
-		log_info(logger, "Tratamiento de la señal SIGPOLL terminado");
-	}
-	void mostrar()
-	{
-		log_info(logger,"Luego de un minuto, muestro tasa de aciertos de la TLB");
-		tasasDeTLB();
-		alarm(600);
-	}
-
-	signal(SIGUSR1, flush);
-	signal(SIGINT, limpiar);
-	signal(SIGPOLL, dump);
-	signal(SIGALRM,mostrar);
-	alarm(600);
-}
-*/
 void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* tablaAccesos)
 {
 	t_header * package = malloc(sizeof(t_header));

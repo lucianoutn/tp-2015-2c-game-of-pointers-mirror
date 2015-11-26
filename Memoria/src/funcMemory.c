@@ -803,8 +803,6 @@ void actualizoTablaProceso(t_list * tablaProceso, t_marco_hueco * marco_a_llenar
 		else
 			actualizarTablaProcesoClock(tablaProceso, header, NULL, NULL, 1);
 	}
-
-	printf("Salgo de actualizo ++++++++++++++++++++++++\n ");
 }
 
 void actualizarTablaProcesoLru(t_list * tabla_proceso, int num_pagina, char * direccion_marco, int num_marco)
