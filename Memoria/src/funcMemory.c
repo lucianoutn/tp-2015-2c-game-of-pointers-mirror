@@ -245,7 +245,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 	if(tabla_proc!=NULL)
 	{	// TRAIGO LA PAGINA BUSCADA
 		process_pag * pagina_proc= obtenerPaginaProceso(tabla_proc, package->pagina_proceso);
-
+''
 		// SI LA DIRECCION ES NULL ES PORQUE ESTA EN SWAP, SINO YA LA ENCONTRE EN MEMORIA
 		if ( pagina_proc->direccion_fisica == NULL)
 		{
@@ -888,10 +888,11 @@ void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char
 	int tamanio = tabla_proceso->elements_count;
 	bool _numeroDePagina (void * p) {return(*(int *)p == numPag);}
 	int indicePuntero;
-	process_pag * pagina = list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
 
 	int indiceUltPag = buscaIndiceUltimaPagina(tabla_proceso); 	// Indice de la ultima pagina que tiene asignado un marco
 	int indicePriPag = buscarIndicePrimerPagina(tabla_proceso); 	// Indice de la primer pagina que tiene asignado un marco
+
+	process_pag * pagina = list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
 
 	switch (modo)
 	{
@@ -936,7 +937,6 @@ void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char
 				// No corro el puntero, actualizo el bit de accedido (afuera del if)
 			}else // Si la trajo de swap y le tengo que asignar un marco y demas
 			{
-					list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
 					pagina->direccion_fisica = direccion_marco;
 					pagina->marco = num_marco;
 					if (indiceUltPag != -1) // Si hay alguna cargada
@@ -945,7 +945,7 @@ void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char
 						list_add(tabla_proceso, pagina);
 						pagina->puntero = 1;
 			}
-			pagina->accessed = 1;
+
 			break;
 		default:
 			puts("DEFAULT \n");
