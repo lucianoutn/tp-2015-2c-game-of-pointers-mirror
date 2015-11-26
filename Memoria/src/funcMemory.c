@@ -273,13 +273,11 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 						log_info(logger,"Se informa al CPU confirmacion de lectura");
 
 						upFallosPagina(tablaAccesos, package->PID);
-						free(flag);
 					}
 					else
 					{
 						int recibi= -1;
 						send(socketCliente,&recibi,sizeof(int),0);
-						free(flag);
 						log_error(logger, "Hubo un problema con la conexion/envio al swap. Se informa al CPU");
 					}
 					//free(contenido);
@@ -289,8 +287,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 					matarProceso(package, tabla_adm, TLB, tablaAccesos);
 					int recibi= -1;
 					send(socketCliente,&recibi,sizeof(int),0);
-					free(flag);
-					log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedidoe informo al CPU");
+					log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedido e informo al CPU");
 				}
 
 			}
@@ -321,17 +318,13 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 
 		 	if (tamanioMsj >0)
 		 		send(socketCliente, pagina_proc->direccion_fisica, tamanioMsj, 0);
-			free(flag);
 		}
 	}else
 	{
 		log_info(logger, "Se esta queriendo leer una pagina de un proceso que no esta iniciado, informo al CPU");
 		int recibi= -1;
 		send(socketCliente,&recibi,sizeof(int),0);
-		free(flag);
 	}
-
-	free(flag);
 }
 
 void asignarMarcosYTablas(char * contenido, t_header * package, t_list* tabla_proc, t_list * TLB)
@@ -420,8 +413,8 @@ void escribirEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int
 				{
 					mostrarVersus(tablaAccesos, package->PID);
 					matarProceso(package, tabla_adm, TLB, tablaAccesos);
-					int recibi= -1;
-					send(socketCliente,&recibi,sizeof(int),0);
+					bool recibi= false ;
+					send(socketCliente,&recibi,sizeof(bool),0);
 					log_info(logger, "Ya no tengo mas marcos disponibles en la memoria, rechazo pedido e informo al CPU");
 					free(flag);
 				}
@@ -450,8 +443,8 @@ void escribirEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int
 	}else
 	{
 		log_info(logger, "Se esta queriendo escribir una pagina de un proceso que no esta iniciado");
-		int recibi= -1;
-		send(socketCliente,&recibi,sizeof(int),0);
+		bool recibi= false;
+		send(socketCliente,&recibi,sizeof(bool),0);
 	}
 
 	free(flag);
