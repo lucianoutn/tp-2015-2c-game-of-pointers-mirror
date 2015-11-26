@@ -644,6 +644,7 @@ int buscarIndicePagina(t_list * tabla_paginas, process_pag * pagina)
 		{
 			return x;
 		}
+		x++;
 	}
 	return -1;
 }
@@ -660,6 +661,7 @@ int buscaIndiceUltimaPagina(t_list* tabla_paginas)
 		{
 			return x;
 		}
+		x++;
 	}
 	return -1;
 }
@@ -675,6 +677,7 @@ int buscarIndicePrimerPagina(t_list* tabla_paginas)
 		{
 			return x;
 		}
+		x++;
 	}
 	return -1;
 }
