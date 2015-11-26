@@ -72,18 +72,22 @@ void ejecutoInstruccion(t_header * header, char * mensaje,char *  memoria_real, 
 				pthread_mutex_unlock (&mutexTLB);
 				// SI NO ESTABA EN TLB, ME FIJO EN MEMORIA
 				if(!flagg)
+				{
 					pthread_mutex_lock (&mutexMem);
 					printf("Bloquee Mem \n");
 					leerEnMemReal(tabla_adm,TLB, header, serverSocket,socketCliente, tablaAccesos);
 					printf("DesBloquee Mem \n");
 					pthread_mutex_unlock (&mutexMem);
+				}
 			}
 			else
+			{
 				pthread_mutex_lock (&mutexMem);
 				printf("Bloquee Mem \n");
 				leerEnMemReal(tabla_adm, TLB,header, serverSocket,socketCliente, tablaAccesos);
 				printf("DesBloquee Mem \n");
 				pthread_mutex_unlock (&mutexMem);
+			}
 	 		break;
 	 	case 1:
 			log_info(logger, "Solicitud de escritura recibida del PID: %d y Pagina: %d, el mensaje es: \"%s\"", header->PID, header->pagina_proceso, mensaje);
@@ -95,19 +99,23 @@ void ejecutoInstruccion(t_header * header, char * mensaje,char *  memoria_real, 
 				pthread_mutex_unlock (&mutexTLB);
 				// SI ESTABA EN LA TLB, YA LA FUNCION ESCRIBIO Y LISTO
 				if(!okTlb)
+				{
 					pthread_mutex_lock (&mutexMem);
 					printf("Bloquee Mem \n");
 					escribirEnMemReal(tabla_adm, TLB, header,serverSocket, socketCliente,  mensaje, tablaAccesos);
 					printf("DesBloquee Mem \n");
 					pthread_mutex_unlock (&mutexMem);
+				}
 			}
 			// SI NO ESTABA EN LA TLB, AHORA ME FIJO SI ESTA EN LA TABLA DE TABLAS
 			else
+			{
 				pthread_mutex_lock (&mutexMem);
 				printf("Bloquee Mem \n");
 				escribirEnMemReal(tabla_adm, TLB, header,serverSocket, socketCliente,  mensaje, tablaAccesos);
 				printf("DesBloquee Mem \n");
 				pthread_mutex_unlock (&mutexMem);
+			}
 	 		break;
 	 	case 2:
 	 		/* LA INICIALIZACION SE MANDA DIRECO AL SWAP PARA QUE RESERVE ESPACIO,
