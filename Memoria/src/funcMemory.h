@@ -234,6 +234,9 @@ int buscaIndiceUltimaPagina(t_list*);
 // Devuelve el indice de la primer pagina con un marco asignado (Para Algoritmo Clock)
 int buscarIndicePrimerPagina(t_list*);
 
+// Actualiza el puntero a la pagina correspondiente segun swapeo (Para Algoritmo Clock)
+int actualizarPunteroProximaPagina(t_list*, int);
+
 void dumpEnLog();
 void seniales(t_list*, char*, t_list * );
 //-----------------------------------------------------------//

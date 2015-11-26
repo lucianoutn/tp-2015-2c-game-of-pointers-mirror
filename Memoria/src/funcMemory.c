@@ -679,6 +679,23 @@ int buscarIndicePrimerPagina(t_list* tabla_paginas)
 	return -1;
 }
 
+int actualizarPunteroProximaPagina(t_list* tabla_paginas, int indice)
+{
+	int tamanio = tabla_paginas->elements_count;
+	int y = 0;
+	while (y < tamanio)
+	{
+		process_pag * pagina = list_get(tabla_paginas, (++indice)%tamanio);
+		if ( pagina->direccion_fisica != NULL) // Si tiene un marco asignado
+		{
+			pagina->puntero = 1;
+			return 1;
+		}
+		y++;
+	}
+	return -1;
+}
+
 int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mensaje, int serverSocket, t_header * header, t_list* tablaAccesos, int socketCliente)
 {
 	// paginaASwapear va a tener la pagina que ya esta en memoria y que se va a enviar al swap
@@ -875,7 +892,7 @@ void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char
 
 	switch (modo)
 	{
-		case 0: // SI HAY QUE REMOVER PAGINA (SWAPEANDO)
+		case 0: // SI HAY QUE REMOVER PAGINA (SWAPEANDO) Falta actualizar puntero
 			numPag = header->pagina_proceso;
 			process_pag * pagina = list_find(tabla_proceso, (void*)_numeroDePagina);
 
@@ -889,18 +906,22 @@ void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char
 				// Actualizo los valores de la nueva pagina
 				pagina->direccion_fisica = elem_apuntado->direccion_fisica;
 				pagina->marco = elem_apuntado->marco;
-				pagina->accessed = 1; /* ESTO SE ACTUALIZA ACA? VER*/
+				pagina->accessed = 1;
 				// Limpio los valores de la pagina que ahora está en swap
 				elem_apuntado->direccion_fisica = NULL;
 				elem_apuntado->marco = -1;
 				elem_apuntado->dirty = 0;
 				elem_apuntado->accessed = 0;
-				/* ----------_> VER SI HAY QUE ACTUALIZAR ALGUN OTRO BIT */
+				elem_apuntado->puntero = 0; // Por las dudas
+
+				// Apunto a la pagina que corresponde apuntar
+				actualizarPunteroProximaPagina(tabla_proceso, indicePuntero);
 
 				//Agrego la nueva pagina en la posición en donde estaba la pagina que swapee
 				list_add_in_index(tabla_proceso, indicePuntero, pagina);
 				// Agrego la pagina que esta ahora en swap, al final con los valores limpios
 				list_add(tabla_proceso, elem_apuntado);
+
 			}else
 			{
 				puts("ERROR CLOCK");
@@ -917,8 +938,9 @@ void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char
 					pagina->marco = num_marco;
 					if (indiceUltPag != -1) // Si hay alguna cargada
 						list_add_in_index(tabla_proceso,(indiceUltPag+1)%tamanio, pagina);
-					else // Si no hay ninguna cargada la agrego al final
+					else // Si no hay ninguna cargada la agrego al final y le asigno el puntero
 						list_add(tabla_proceso, pagina);
+						pagina->puntero = 1;
 			}
 			pagina->accessed = 1;
 			break;
