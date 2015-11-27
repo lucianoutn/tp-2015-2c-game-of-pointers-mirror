@@ -84,7 +84,7 @@ int palabraAValor(char *palabra)
 /* Recibe una instruccion y una variable para la pagina
  * y devuelve el numero del tipo de instruccion y la pagina
  */
-int procesaInstruccion(char* instruccion, int *pagina, char* mensaje){
+int procesaInstruccion(char* instruccion, int *pagina){
 
 	//Inicializo variables y reservo memoria
 	int I=0, J=0, K=0, valor;
@@ -138,10 +138,10 @@ int procesaInstruccion(char* instruccion, int *pagina, char* mensaje){
 		}
 		I++;
 	}
-	mensaje=(char*)malloc(strlen(texto)+1);
+	//mensaje = (char*) malloc(strlen(texto)+1);
 	//mensaje=(char*)realloc(mensaje, strlen(texto)+1);
-	strcpy(mensaje, texto);
-	//printf("EL TEXTO ES: \"%s\"\n",texto);
+	//strcpy(mensaje, texto);
+	//printf("EL TEXTO ES: \"%s\"\n",mensaje);
 
 	//Libero memoria
 	free(palabra);
@@ -150,6 +150,45 @@ int procesaInstruccion(char* instruccion, int *pagina, char* mensaje){
 
 	//Retorno el valor del tipo de instruccion
 	return valor;
+
+}
+
+char* procesaMensaje(char* instruccion){
+
+	//Inicializo variables y reservo memoria
+	int I=0, K=0;
+	char *mensaje=(char*) malloc(sizeof(char));
+	if (mensaje == NULL) puts("ERROR MALLOC MENSAJE");
+
+	//SALTEO LA INSTRUCCION
+	while(instruccion[I]!= ' ')
+	{
+		I++;
+	}
+
+	I++;
+
+	//CONTROLO QUE NO SE TERMINE LA INSTRUCCION
+	while(instruccion[I] != ' ')
+	{
+		I++;
+	}
+
+	I++;
+	I++;
+
+	while(instruccion[I] != '\"')
+	{
+		mensaje[K++]=instruccion[I++];
+		mensaje = (char*)realloc(mensaje, (K)*sizeof(char));
+		if (mensaje == NULL) puts("ERROR MALLOC MENSAJE");
+	}
+
+	mensaje[K] = '\0';
+	//printf("EL TEXTO ES: \"%s\"\n",mensaje);
+
+	//Retorno el valor del tipo de instruccion
+	return mensaje;
 
 }
 
@@ -194,7 +233,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 			break;
 		}
 		//Switch que verifica el tipo de cada instruccion
-		switch( procesaInstruccion(instrucciones[PCB->instructionPointer], &pagina, mensaje) )
+		switch( procesaInstruccion(instrucciones[PCB->instructionPointer], &pagina) )
 		{
 
 			case 0: //leer
@@ -237,11 +276,14 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 
 				//puts("ESCRIBIR");
 				//printf("Mensaje recibido: <%s>\nTamaño: %d.\n",mensaje,strlen(mensaje));
+				//char *mensaje;
+				mensaje = procesaMensaje(instrucciones[PCB->instructionPointer]);
 				creoHeader(PCB,header,1,pagina); //PCB HEADER TIPOEJECUCION PAGINA
 				header->tamanio_msj = strlen(mensaje);
 				time(&tiempoInicio);	//tomo el tiempo antes del send
 				usleep(configuracion.retardo); //retardo del cpu
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
+				//printf("Envio el msj: \"%s\" de: %d caracteres.\n",mensaje, header->tamanio_msj);
 				send(socketMemoria, mensaje, header->tamanio_msj,0);	//envio el texto a excribir
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
 				time(&tiempoFin); //tomo el tiempo despues dl rcv
@@ -255,7 +297,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 					PCB->estado =5;
 					send(socketPlanificador,&recibi, sizeof(flag),0);
 				}
-
+				free(mensaje);
 				tiempoEjec= (int)(tiempoFin - tiempoInicio); //calculo el tiempo total y lo casteo a entero
 				//printf("\ntiempo ejec: %d\n", tiempoEjec); //teste
 				*cantInstrucEjec= *cantInstrucEjec + tiempoEjec; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
@@ -327,8 +369,8 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 				PCB->estado=3; //bloqueo proceso
 				usleep(configuracion.retardo); //retardo del cpu
 				//señal al plani avisando que cambie de estado
-				send(socketPlanificador, &cambio, sizeof(flag), 0);
 				PCB->tiempo=pagina;
+				send(socketPlanificador, &cambio, sizeof(flag), 0);
 				//send(socketPlanificador, &pagina, sizeof(int), 0); //envio el tiempo del sleep
 				queue_push(resultados,resultado(4,PCB->PID,pagina,NULL,1));
 				log_info(logger, "mProc %d - En entrada-salida de tiempo: %d",PCB->PID,pagina);
@@ -342,15 +384,15 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 				puts("default\n");
 				break;
 			}
+		}//FIN SWITCH
+
+		//Disminuyo el quanto
+		if(PCB->quantum>0)
+		{
+			PCB->quantum--;
 		}
-			//Disminuyo el quanto
-			if(PCB->quantum>0)
-			{
-				PCB->quantum--;
-			}
-			//PASO A LA OTRA INSTRUCCION
-			PCB->instructionPointer	++;
-			//free(mensaje);
+		//PASO A LA OTRA INSTRUCCION
+		PCB->instructionPointer	++;
 
 	}	//FIN WHILE
 
