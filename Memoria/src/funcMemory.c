@@ -1173,18 +1173,12 @@ void tlbFlush(t_list * TLB)
 	}
 }
 
-void limpiarMemoria(char * memoria_real, t_list * TLB, t_list * tabla_adm)
+void limpiarMemoria(char * memoria_real, t_list * TLB, t_list * tabla_adm, int serverSocket)
 {
 	puts("Empiezo a limpiar la memoria");
 	//Vacio la memoria
 	int k = 0;
 	char * punteroAMemoria=  memoria_real;
-	while(k<miContexto.cantidadMarcos*miContexto.tamanioMarco)
-	{
-		strcpy(punteroAMemoria,"");
-		punteroAMemoria++;
-		k++;
-	}
 
 	//Actualizo las listas
 	int i = 0, j = 0;
@@ -1198,12 +1192,34 @@ void limpiarMemoria(char * memoria_real, t_list * TLB, t_list * tabla_adm)
 		for(;j<tablaProceso->elements_count;j++) //Recorro la tabla de procesos
 		{
 			process_pag * pagina_proc = list_get(tablaProceso, j); //Traigo una pagina
+
+			if(pagina_proc->direccion_fisica!=NULL) //Se la mando a escribir al swap.
+			{
+
+				t_header * header_escritura = crearHeaderEscritura(entrada_tabla_tablas->pid, pagina_proc->pag, 0);
+
+				int * status_escritura = malloc(sizeof(int));
+				envioAlSwap(header_escritura, serverSocket, pagina_proc->direccion_fisica, status_escritura);
+
+				if ( *status_escritura != 1)
+				{
+					log_error(logger, "No se pudo escribir en el Swap.");
+				}
+
+			}
 			//Actualizo la pagina
 			pagina_proc->direccion_fisica=NULL;
 			pagina_proc->marco=-1;
 			pagina_proc->dirty=0;
 			pagina_proc->accessed=0;
 		}
+	}
+
+	while(k<miContexto.cantidadMarcos*miContexto.tamanioMarco)
+	{
+		strcpy(punteroAMemoria,"");
+		punteroAMemoria++;
+		k++;
 	}
 
 	//Actualizo marcos

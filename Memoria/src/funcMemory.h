@@ -212,7 +212,7 @@ void tlbFlush(t_list *);
  * Cuando se recibe esta señal, se debe limpiar completamente la memoria principal,
  * actualizando los bits que sean necesarios en las tablas de páginas de los diferentes procesos
  */
-void limpiarMemoria(char *, t_list *, t_list *);
+void limpiarMemoria(char *, t_list *, t_list *,int);
 /*
  * Cuando recibe esta señal se deberá realizar un volcado (dump) del contenido de la memoria principal,
  * en el archivo log de Administrador de Memoria, creando para tal fin un proceso nuevo.
@@ -235,7 +235,7 @@ int buscarIndicePrimerPagina(t_list*);
 int actualizarPunteroProximaPagina(t_list*, int);
 
 void dumpEnLog(char *, t_list *);
-void chequearSeniales(t_list *, char *, t_list *);
+void chequearSeniales(t_list *, char *, t_list *,int);
 //-----------------------------------------------------------//
 void tasasDeTLB();
 

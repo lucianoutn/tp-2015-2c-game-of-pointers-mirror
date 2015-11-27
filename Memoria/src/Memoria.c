@@ -243,7 +243,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 			}
 			if(!meHablaron)//Sali por timeout
 			{
-				chequearSeniales(TLB, memoria_real, tablaAdm);
+				chequearSeniales(TLB, memoria_real, tablaAdm, serverSocket);
 				meHablaron = false;
 				tv.tv_sec= 0;
 				tv.tv_usec=10000000;
@@ -260,7 +260,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 		}
 }
 
-void chequearSeniales(t_list * TLB, char * memoria_real, t_list * tabla_adm)
+void chequearSeniales(t_list * TLB, char * memoria_real, t_list * tabla_adm, int serverSocket)
 {
 	if(tlbflush==1)
 	{
@@ -270,8 +270,8 @@ void chequearSeniales(t_list * TLB, char * memoria_real, t_list * tabla_adm)
 	}
 	if(limpiarMem==1)
 	{
-		log_info(logger,"Se recibio SIGPOLL, se limpia la memoria");
-		limpiarMemoria(memoria_real, TLB, tabla_adm);
+		log_info(logger,"Se recibio SIGUSR2, se limpia la memoria");
+		limpiarMemoria(memoria_real, TLB, tabla_adm, serverSocket);
 		log_info(logger, "Tratamiento de la señal SIGUSR2 terminado.");
 	}
 	if(dumpLog==1)
