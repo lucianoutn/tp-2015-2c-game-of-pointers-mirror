@@ -156,13 +156,13 @@ int escribirSwap(t_header * package, int socketCliente)
 		//Actualizo cant escritas
 		pag->escritas= pag->escritas+1;
 		//Relleno paginas
-		int relleno= pag->inicio + strlen(mensaje);
+		int relleno= pag->inicio + ((package->pagina_proceso) * contexto->tam_pagina)+ strlen(mensaje)+1;
 		int final_pagina= pag->inicio+((package->pagina_proceso + 1) * contexto->tam_pagina);
 
 		for(;relleno<=final_pagina;relleno++)
 		{
 			fseek(archivo,relleno,SEEK_SET);
-			fwrite("", strlen(""), 1, archivo);
+			fputc('\0',archivo);
 		}
 	}
 	else
