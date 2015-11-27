@@ -217,7 +217,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 	if(tabla_proc!=NULL)
 	{	// TRAIGO LA PAGINA BUSCADA
 		process_pag * pagina_proc= obtenerPaginaProceso(tabla_proc, package->pagina_proceso);
-
+''
 		// SI LA DIRECCION ES NULL ES PORQUE ESTA EN SWAP, SINO YA LA ENCONTRE EN MEMORIA
 		if ( pagina_proc->direccion_fisica == NULL)
 		{

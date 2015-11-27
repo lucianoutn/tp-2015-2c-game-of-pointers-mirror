@@ -207,6 +207,11 @@ void enviaACpu(t_cpu *CPU)
 			//free(pcb); //no lo liberen aca xq dsp no los puedo ver como finalizados en el comando PS. luego podemos liberarlos desde la lista
 			break;
 		}
+		case 5: //fallo
+		{
+			log_info(logger, "mProc %d <%s> Fallo",pcb->PID,ruta(pcb->PID));
+			break;
+		}
 		default:
 		{
 

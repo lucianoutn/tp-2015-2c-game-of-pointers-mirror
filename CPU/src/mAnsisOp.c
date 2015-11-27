@@ -17,7 +17,7 @@ char* leerInstruccion(FILE *fd)
 	{
 		return "fin";
 	}
-	while(c!='\n' && c!=EOF) //agrego EOF sino no sale nunca salvo q despues del finalizar hayan hecho un ENTER
+	while(c!=EOF && c!='\n') //agrego EOF sino no sale nunca salvo q despues del finalizar hayan hecho un ENTER
 	{
 		buffer[I]=c;
 		I++;
