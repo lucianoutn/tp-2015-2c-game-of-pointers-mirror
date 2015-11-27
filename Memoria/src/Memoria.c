@@ -54,34 +54,20 @@ int main() {
 		cantHitTlb = 0;
 	}
 	//Me quedo atenta a las señales, y si las recibe ejecuta esa funcion
-	// Se inicializa el mutex
-	pthread_t senial[3];
-	pthread_mutex_init (&mutexTLB, NULL);
-	pthread_mutex_init (&mutexMem, NULL);
+	limpiarMem = 0;
+	dumpLog = 0;
+	tlbflush = 0;
 	void flush ()
 	{
-		log_info(logger, "Se recibio SIGUSR1, si corresponde se vacia la TLB \n");
-		int err= pthread_create(&(senial[0]), NULL, (void*)tlbFlush,TLB);
-		if (err != 0)
-			printf("no se pudo crear el hilo de TLBFlush :[%s]", strerror(err));
-		log_info(logger, "Tratamiento de la señal SIGUSR1 terminado.");
+		tlbflush = 1;
 	}
 	void limpiar()
 	{
-		parametros * param=malloc(sizeof(parametros));
-		param->memoria= memoria_real;
-		param->tabla_adm = tablaAdm;
-		param->tlb=TLB;
-
-		int err= pthread_create(&(senial[1]), NULL, (void*)limpiarMemoria,param);
-		if (err != 0)
-			printf("No se pudo crear el hilo de limpiarMemoria :[%s]", strerror(err));
+		limpiarMem= 1;
 	}
 	void dump()
 	{
-		log_info(logger,"Se recibio SIGPOLL, se muestra el contenido de la memoria actualmente");
-		dumpEnLog(memoria_real, tablaAdm);
-		log_info(logger, "Tratamiento de la señal SIGPOLL terminado");
+		dumpLog = 1;
 	}
 	void mostrar()
 	{
@@ -118,6 +104,9 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 	// struct sockaddr_in myaddr;     // dirección del servidor
 	struct sockaddr_in remoteaddr; // dirección del cliente
 	struct sockaddr_in myaddr;
+	struct timeval tv;
+	tv.tv_sec= 0;
+	tv.tv_usec=10000000;
 	int fdmax;        // número máximo de descriptores de fichero
 	int listener;     // descriptor de socket a la escucha
 	int newfd;        // descriptor de socket de nueva conexión aceptada
@@ -125,6 +114,8 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 	int yes = 1;        // para setsockopt() SO_REUSEADDR, más abajo
 	int addrlen;
 	int i, j;
+
+	bool meHablaron=false;
 
 	FD_ZERO(&master);    // borra los conjuntos maestro y temporal
 	FD_ZERO(&read_fds);        // obtener socket a la escucha
@@ -165,11 +156,11 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 			read_fds = master; // cópialo
 
 			select_restart:
-			if ((err = select(fdmax+1, &read_fds, NULL, NULL, NULL)) == -1)
+			if ((err = select(fdmax+1, &read_fds, NULL, NULL, &tv)) == -1)
 			{
 				if (errno == EINTR)
 				{  	// Alguna señal nos ha interrumpido, así que regresemos a select()
-					puts("Me interrumpio una señal, pero no me cabe una y vuelvo al select \n");
+					puts("Me interrumpio una señal, y vuelvo al select \n");
 					goto select_restart;
 				}
 				// Los errores reales de select() se manejan aquí:
@@ -180,6 +171,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 			{
 				if (FD_ISSET(i, &read_fds))
 				{ // ¡¡tenemos datos!!
+					meHablaron= true;
 					if (i == listener)
 					{
 						// gestionar nuevas conexiones
@@ -247,5 +239,36 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 					} // Esto es ¡TAN FEO!
 				}
 			}
+			if(!meHablaron)
+			{
+				chequearSeniales(TLB, memoria_real, tablaAdm);
+				meHablaron = false;
+				tv.tv_sec= 0;
+				tv.tv_usec=10000000;
+
+			}
 		}
+}
+
+void chequearSeniales(t_list * TLB, char * memoria_real, t_list * tabla_adm)
+{
+	if(tlbflush==1)
+	{
+		log_info(logger, "Se recibio SIGUSR1, si corresponde se vacia la TLB \n");
+		tlbFlush(TLB);
+		log_info(logger, "Tratamiento de la señal SIGUSR1 terminado.");
+	}
+	if(limpiarMem==1)
+	{
+		log_info(logger,"Se recibio SIGPOLL, se limpia la memoria");
+		limpiarMemoria(memoria_real, TLB, tabla_adm);
+		log_info(logger, "Tratamiento de la señal SIGUSR2 terminado.");
+	}
+	if(dumpLog==1)
+	{
+		log_info(logger,"Se recibio SIGPOLL, se muestra el contenido de la memoria actualmente");
+		dumpEnLog(memoria_real, tabla_adm);
+		log_info(logger, "Tratamiento de la señal SIGPOLL terminado.");
+	}
+
 }

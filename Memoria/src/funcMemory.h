@@ -44,11 +44,10 @@ typedef struct
    int puntero;
 }process_pag;
 // ------------------------------------//
-typedef struct{
-	char * memoria;
-	t_list *tabla_adm;
-	t_list *tlb;
-}parametros;
+
+int limpiarMem;
+int dumpLog;
+int tlbflush;
 
 
 //DECLARACIONES GLOBALES PARA MOSTRAR TASA DE ACIERTOS DE LA TLB.
@@ -68,8 +67,6 @@ contexto miContexto;
 t_list * listaFramesMemR; // LISTA DE FRAMES OCUPADOS
 t_list * listaFramesHuecosMemR; // LISTA DE FRAMES VACIOS
 
-pthread_mutex_t mutexTLB;
-pthread_mutex_t mutexMem;
 
 // FUNCION QUE OBTIENE EL CONTEXTO DE LA MEMORIA Y LO GUARDA EN "miContexto" (variable global)
 void traigoContexto();
@@ -128,7 +125,7 @@ void escribirEnMemReal(t_list * , t_list * , t_header * , int , int , char * , t
 
 // ESCRIBO EL MARCO TENIENDO EN CUENTA QUE EL MENSAJE QUE ME LLEGA PUEDE SER MÁS LARGO Y QUE YA
 //PODIA LLEGAR A ESTAR ESCRITO DE ANTES CON ALGO MÁS LARGO
-void escribirMarco(char*, char*);
+void escribirMarco(char*, char*,int);
 
 // ASIGNA UN MARCO A UNA PAGINA RECIEN TRAIDA DEL SWAP, ACTUALIZA TABLA PROCESO, TLB
 void asignarMarcoPagSwap(t_header*,char*, t_list*, t_list*, t_list*, int);
@@ -215,7 +212,7 @@ void tlbFlush(t_list *);
  * Cuando se recibe esta señal, se debe limpiar completamente la memoria principal,
  * actualizando los bits que sean necesarios en las tablas de páginas de los diferentes procesos
  */
-void limpiarMemoria(void*);
+void limpiarMemoria(char *, t_list *, t_list *);
 /*
  * Cuando recibe esta señal se deberá realizar un volcado (dump) del contenido de la memoria principal,
  * en el archivo log de Administrador de Memoria, creando para tal fin un proceso nuevo.
@@ -237,8 +234,8 @@ int buscarIndicePrimerPagina(t_list*);
 // Actualiza el puntero a la pagina correspondiente segun swapeo (Para Algoritmo Clock)
 int actualizarPunteroProximaPagina(t_list*, int);
 
-void dumpEnLog();
-void seniales(t_list*, char*, t_list * );
+void dumpEnLog(char *, t_list *);
+void chequearSeniales(t_list *, char *, t_list *);
 //-----------------------------------------------------------//
 void tasasDeTLB();
 
