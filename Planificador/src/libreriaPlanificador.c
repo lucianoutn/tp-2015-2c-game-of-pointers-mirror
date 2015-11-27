@@ -237,6 +237,8 @@ void bloqueados()
 		pcb->t_respuesta+=difftime(time(NULL), pcb->t_aux2);
 		//inicializo la metrica
 		pcb->t_aux1=time(NULL);
+		//actualizo el estado
+		pcb->estado=1;
 		//lo vuelvo a poner en la cola de ready
 		queue_push(cola_ready, pcb);
 		//aviso
