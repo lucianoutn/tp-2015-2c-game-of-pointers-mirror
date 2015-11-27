@@ -707,9 +707,6 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		log_info(logger, "Se escribe en el marco liberado la pagina que se quiere escribir****************");
 		escribirMarco(mensaje, paginaASwapear->direccion_fisica, paginaASwapear->marco);
 
-
-		num_pag = paginaASwapear->pag;
-
 		upPaginasAccedidas(tablaAccesos, header->PID);
 		upFallosPagina(tablaAccesos, header->PID);
 		//bool recibi= true;
@@ -743,9 +740,8 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 
 		upPaginasAccedidas(tablaAccesos, header->PID);
 		upFallosPagina(tablaAccesos, header->PID);
-		num_pag = paginaASwapear->pag;
-
 	}
+	num_pag = paginaASwapear->pag;
 
 	if (!strcmp(miContexto.tlbHabilitada, "SI"))
 	{
@@ -774,10 +770,12 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		actualizarTablaProcesoClock(tablaProceso, header, paginaASwapear->direccion_fisica, paginaASwapear->marco, 0);
 	}
 
-	// ACTUALIZO LA PAGINA QUE SWAPEE ( LA ELIMINO Y LA VUELVO A AGREGAR VACIA DEL )
-	list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
-	list_add(tablaProceso, pag_proc_create(paginaASwapear->pag, NULL, -1, 0, 0, 0));
-
+	// ACTUALIZO LA PAGINA QUE SWAPEE ( LA ELIMINO Y LA VUELVO A AGREGAR VACIA )
+	if ( strcmp(miContexto.algoritmoReemplazo, "CLOCK") )
+	{
+		list_remove_by_condition(tablaProceso, (void*)_numeroDePag);
+		list_add(tablaProceso, pag_proc_create(paginaASwapear->pag, NULL, -1, 0, 0, 0));
+	}
 	return 1;
 }
 
@@ -1177,7 +1175,6 @@ void tlbFlush(t_list * TLB)
 
 void limpiarMemoria(char * memoria_real, t_list * TLB, t_list * tabla_adm)
 {
-	log_info(logger, "Se recibio SIGUSR2, se limpia la memoria \n");
 	puts("Empiezo a limpiar la memoria");
 	//Vacio la memoria
 	int k = 0;
@@ -1216,7 +1213,6 @@ void limpiarMemoria(char * memoria_real, t_list * TLB, t_list * tabla_adm)
 	listaFramesMemR = crearListaFrames();
 	listaFramesHuecosMemR = crearListaHuecosFrames(miContexto.cantidadMarcos, miContexto.tamanioMarco, memoria_real);
 	tlbFlush(TLB);
-	log_info(logger, "Se finalizo el tratamiento de la señal SIGUSR2 \n");
 }
 
 void dumpEnLog(char * memoria_real, t_list * tablaAdm)
