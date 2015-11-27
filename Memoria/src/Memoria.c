@@ -241,15 +241,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 					} // Esto es ¡TAN FEO!
 				}
 			}
-			if(!meHablaron)//Sali por timeout
-			{
-				chequearSeniales(TLB, memoria_real, tablaAdm, serverSocket);
-				meHablaron = false;
-				tv.tv_sec= 0;
-				tv.tv_usec=10000000;
-
-			}
-			meHablaron=false;
+			chequearSeniales(TLB, memoria_real, tablaAdm, serverSocket);
 
 			//Si ya no tengo mas conexiones cierro todo
 			if(cerreConexiones)
@@ -267,18 +259,21 @@ void chequearSeniales(t_list * TLB, char * memoria_real, t_list * tabla_adm, int
 		log_info(logger, "Se recibio SIGUSR1, si corresponde se vacia la TLB \n");
 		tlbFlush(TLB);
 		log_info(logger, "Tratamiento de la señal SIGUSR1 terminado.");
+		tlbflush=0;
 	}
 	if(limpiarMem==1)
 	{
 		log_info(logger,"Se recibio SIGUSR2, se limpia la memoria");
 		limpiarMemoria(memoria_real, TLB, tabla_adm, serverSocket);
 		log_info(logger, "Tratamiento de la señal SIGUSR2 terminado.");
+		limpiarMem=0;
 	}
 	if(dumpLog==1)
 	{
 		log_info(logger,"Se recibio SIGPOLL, se muestra el contenido de la memoria actualmente");
 		dumpEnLog(memoria_real, tabla_adm);
 		log_info(logger, "Tratamiento de la señal SIGPOLL terminado.");
+		dumpLog=0;
 	}
 
 }
