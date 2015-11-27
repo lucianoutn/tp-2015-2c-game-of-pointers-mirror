@@ -844,13 +844,15 @@ void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char
 	int indiceUltPag = buscaIndiceUltimaPagina(tabla_proceso); 	// Indice de la ultima pagina que tiene asignado un marco
 	int indicePriPag = buscarIndicePrimerPagina(tabla_proceso); 	// Indice de la primer pagina que tiene asignado un marco
 
-	process_pag * pagina = list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
+	process_pag * pagina = list_find(tabla_proceso, (void*)_numeroDePagina);
 
 	switch (modo)
 	{
 		case 0: // SI HAY QUE REMOVER PAGINA (SWAPEANDO) Falta actualizar puntero
 			if( pagina->direccion_fisica == NULL)
 			{
+				pagina = list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
+
 				process_pag * paginaASwapear = traerPaginaARemover(tabla_proceso);
 				// Obtengo el indice de la pagina que voy a eliminar
 				indicePuntero = buscarIndicePagina(tabla_proceso, paginaASwapear);
@@ -889,19 +891,18 @@ void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char
 				// No corro el puntero, actualizo el bit de accedido (afuera del if)
 			}else // Si la trajo de swap y le tengo que asignar un marco y demas
 			{
-					pagina->direccion_fisica = direccion_marco;
-					pagina->marco = num_marco;
-					if (indiceUltPag != -1) // Si hay alguna cargada
-					{
-						list_add_in_index(tabla_proceso,(indiceUltPag+1)%tamanio, pagina);
-
-					}else // Si no hay ninguna cargada la agrego al final y le asigno el puntero
-					{
-						list_add(tabla_proceso, pagina);
-						pagina->puntero = 1;
-					}
+				pagina = list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
+				pagina->direccion_fisica = direccion_marco;
+				pagina->marco = num_marco;
+				if (indiceUltPag != -1) // Si hay alguna cargada
+				{
+					list_add_in_index(tabla_proceso,(indiceUltPag+1)%tamanio, pagina);
+				}else // Si no hay ninguna cargada la agrego al final y le asigno el puntero
+				{
+					list_add(tabla_proceso, pagina);
+					pagina->puntero = 1;
+				}
 			}
-
 			break;
 		default:
 			puts("DEFAULT \n");
@@ -971,11 +972,14 @@ process_pag * paginaARemoverClock(t_list * tablaProceso)
 		pagina= bitDirtyEnUno(tablaProceso);
 		if ( pagina == NULL)
 		{
-			return ambosBitsEnCero(tablaProceso);
+			pagina = ambosBitsEnCero(tablaProceso);
+			if (pagina == NULL)
+				return bitDirtyEnUno(tablaProceso);
+			else
+				return pagina;
 		}else
-		{
 			return pagina;
-		}
+
 	// SI ENCONTRE UNA PAGINA CON AMBOS BITS EN CERO, LA RETORNO
 	}else
 	{
