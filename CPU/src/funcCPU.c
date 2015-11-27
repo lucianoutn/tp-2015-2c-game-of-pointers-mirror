@@ -84,16 +84,12 @@ int palabraAValor(char *palabra)
 /* Recibe una instruccion y una variable para la pagina
  * y devuelve el numero del tipo de instruccion y la pagina
  */
-int procesaInstruccion(char* instruccion, int *pagina){
+int procesaInstruccion(char* instruccion){
 
 	//Inicializo variables y reservo memoria
-	int I=0, J=0, K=0, valor;
+	int I=0, valor;
 	char *palabra=(char*) malloc(sizeof(char));
 	if (palabra == NULL) puts("ERROR MALLOC 1");
-	char *aux=(char*) malloc(sizeof(char));
-	if (aux == NULL) puts("ERROR MALLOC 2");
-	char *texto=(char*) malloc(sizeof(char));
-	if (texto == NULL) puts("ERROR MALLOC 3");
 
 	//CONTROLO QUE NO SE TERMINE LA PALABRA
 	while(instruccion[I]!= ' ')
@@ -106,47 +102,8 @@ int procesaInstruccion(char* instruccion, int *pagina){
 	palabra[I]='\0';
 	valor = palabraAValor(palabra);
 
-	I++;	//incremento para ver el valor de instruccion
-	//CONTROLO QUE NO SE TERMINE LA INSTRUCCION
-	while(instruccion[I] != ' ')
-	{
-		if(instruccion[I]=='\0') break;
-		aux[J]=instruccion[I];
-		aux= (char*)realloc(aux, (J+1)*sizeof(char));
-		I++; J++;
-	}
-	//Convierto a int la cadena y guardo el valor para liberar memoria
-	*pagina = atoi(aux);
-
-	//I++;	//incremento para ver el texto a escribir
-	//CONTROLO QUE NO SE TERMINE LA INSTRUCCION
-	int H=1;
-	I++;
-	while(instruccion[I] != '\0')
-	{
-		if (instruccion[I] == '\"'){
-			if (H==0){
-				texto[K]='\0';
-				break;
-			}else{
-				H--;
-			}
-		}else{
-			texto[K]=instruccion[I];
-			texto= (char*)realloc(texto, (K+1)*sizeof(char));
-			K++;
-		}
-		I++;
-	}
-	//mensaje = (char*) malloc(strlen(texto)+1);
-	//mensaje=(char*)realloc(mensaje, strlen(texto)+1);
-	//strcpy(mensaje, texto);
-	//printf("EL TEXTO ES: \"%s\"\n",mensaje);
-
 	//Libero memoria
 	free(palabra);
-	free(aux);
-	free(texto);
 
 	//Retorno el valor del tipo de instruccion
 	return valor;
@@ -192,13 +149,42 @@ char* procesaMensaje(char* instruccion){
 
 }
 
+int procesaPagina(char* instruccion){
+
+	//Inicializo variables y reservo memoria
+	int I=0, J=0, pagina;
+	char *aux=(char*) malloc(sizeof(char));
+	if (aux == NULL) puts("ERROR MALLOC MENSAJE");
+
+	//SALTEO LA INSTRUCCION
+	while(instruccion[I]!= ' ')
+	{
+		I++;
+	}
+
+	I++;
+
+	while(instruccion[I] != ' ')
+	{
+		if(instruccion[I]=='\0') break;
+		aux[J]=instruccion[I];
+		aux= (char*)realloc(aux, (J+1)*sizeof(char));
+		I++; J++;
+	}
+
+	aux[J] = '\0';
+	pagina = atoi(aux);
+	free(aux);
+	return pagina;
+
+}
+
 /* Procesa los MSJ recibidos
  * y envia el MSJ correspondiente a la memoria
  */
 void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cantInstrucEjec){
 
 	int pagina;
-	//char *mensaje = (char*)malloc(sizeof(char));
 	char *mensaje;
 	time_t tiempoInicio, tiempoFin; //para los time
 	int tiempoEjec = 0; //lo inicializo xq sino rompe el casteo de time a int
@@ -206,7 +192,6 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 	//time_t *t1 = malloc(sizeof(time_t));
 	//time_t *t2 = malloc(sizeof(time_t));
 	resultados = queue_create();
-	//t_resultados *resultado;
 	//reservo espacio para el header
 	t_header *header = malloc(sizeof(t_header));
 	if (header == NULL) puts("ERROR MALLOC 4");
@@ -232,13 +217,15 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 			send(socketPlanificador, &cambio, sizeof(flag), 0);
 			break;
 		}
+
 		//Switch que verifica el tipo de cada instruccion
-		switch( procesaInstruccion(instrucciones[PCB->instructionPointer], &pagina) )
+		switch( procesaInstruccion(instrucciones[PCB->instructionPointer]) )
 		{
 
 			case 0: //leer
 
 				//puts("LEER");
+				pagina = procesaPagina(instrucciones[PCB->instructionPointer]);
 				creoHeader(PCB,header,0,pagina); //PCB HEADER TIPOEJECUCION PAGINA
 				int tmno =0;
 				time(&tiempoInicio);	//tomo el tiempo antes del send
@@ -251,15 +238,15 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 					char *contenido = (char*)malloc(sizeof(char) * tmno);
 					if (contenido == NULL) puts("ERROR MALLOC 5");
 					recv(socketMemoria, contenido,tmno,0);
-					//contenido[tmno]='\0';
+					contenido[tmno]='\0';
 					log_info(logger, "mProc %d - Pagina %d - Leida :\"%s\"", PCB->PID, pagina, contenido);
-					queue_push(resultados,resultado(0,PCB->PID,pagina,contenido,1));
+					//queue_push(resultados,resultado(0,PCB->PID,pagina,contenido,1));
 					free(contenido);
 				}else if(tmno == 0){
-					queue_push(resultados,resultado(0,PCB->PID,pagina,NULL,0));
+					//queue_push(resultados,resultado(0,PCB->PID,pagina,NULL,0));
 					log_info(logger, "mProc %d - Pagina %d - Leida : vacia", PCB->PID, pagina);
 				}else{
-					queue_push(resultados,resultado(0,PCB->PID,pagina,NULL,-1));
+					//queue_push(resultados,resultado(0,PCB->PID,pagina,NULL,-1));
 					log_info(logger, "mProc %d - Pagina %d - Fallo al leer",PCB->PID, pagina);
 					PCB->estado =5;
 					recibi=false;
@@ -275,6 +262,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 			case 1: //Escribir
 
 				//puts("ESCRIBIR");
+				pagina = procesaPagina(instrucciones[PCB->instructionPointer]);
 				//printf("Mensaje recibido: <%s>\nTamaño: %d.\n",mensaje,strlen(mensaje));
 				//char *mensaje;
 				mensaje = procesaMensaje(instrucciones[PCB->instructionPointer]);
@@ -288,11 +276,11 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
 				time(&tiempoFin); //tomo el tiempo despues dl rcv
 				if(recibi){	//Controlo que haya llegado bien
-					queue_push(resultados,resultado(1,PCB->PID,pagina,mensaje,1));
+					//queue_push(resultados,resultado(1,PCB->PID,pagina,mensaje,1));
 					//free(mensaje);
 					log_info(logger, "mProc %d - Pagina %d - Escrita: \"%s\"",PCB->PID, pagina, mensaje);
 				}else{
-					queue_push(resultados,resultado(1,PCB->PID,pagina,mensaje,-1));
+					//queue_push(resultados,resultado(1,PCB->PID,pagina,mensaje,-1));
 					log_info(logger, "mProc %d - Pagina %d - Fallo al escribir: %s",PCB->PID,pagina, mensaje);
 					PCB->estado =5;
 					send(socketPlanificador,&recibi, sizeof(flag),0);
@@ -306,6 +294,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 			case 2://iniciar
 
 				//puts("INICIAR");
+				pagina = procesaPagina(instrucciones[PCB->instructionPointer]);
 				creoHeader(PCB,header,2,pagina); //PCB HEADER TIPOEJECUCION PAGINA
 				//printf ("HEADER TIPO EJECUCION: %d \n", header->type_ejecution); //CONTROL (no va)
 				time(&tiempoInicio);	//tomo el tiempo antes del send
@@ -314,11 +303,11 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
 				time(&tiempoFin); //tomo el tiempo despues dl rcv
 				if(recibi){	//Controlo que haya llegado bien
-					queue_push(resultados,resultado(2,PCB->PID,0,NULL,1));
+					//queue_push(resultados,resultado(2,PCB->PID,0,NULL,1));
 					log_info(logger, "mProc %d - Iniciado",PCB->PID);
 					//puts("Inicializado");
 				}else{
-					queue_push(resultados,resultado(2,PCB->PID,0,NULL,-1));
+					//queue_push(resultados,resultado(2,PCB->PID,0,NULL,-1));
 					log_info(logger, "mProc %d - Fallo",PCB->PID);
 					//puts("NO Inicializado");
 					PCB->estado =5;
@@ -333,17 +322,17 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 			case 3: //finalizar
 
 				//puts("FINALIZAR");
-				creoHeader(PCB,header,3,pagina); //PCB HEADER TIPOEJECUCION PAGINA
+				creoHeader(PCB,header,3,0); //PCB HEADER TIPOEJECUCION PAGINA
 				usleep(configuracion.retardo); //retardo del cpu
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
 				if(recibi){	//Controlo que haya llegado bien
-					queue_push(resultados,resultado(3,PCB->PID,0,NULL,1));
+					//queue_push(resultados,resultado(3,PCB->PID,0,NULL,1));
 					log_info(logger, "mProc %d - Finalizado",PCB->PID);
 					PCB->estado=4;
 					send(socketPlanificador, &cambio, sizeof(flag), 0);
 				}else{
-					queue_push(resultados,resultado(3,PCB->PID,0,NULL,-1));
+					//queue_push(resultados,resultado(3,PCB->PID,0,NULL,-1));
 					log_info(logger, "mProc %d - Fallo al finalizar",PCB->PID);
 					PCB->estado =5;
 					send(socketPlanificador,&recibi, sizeof(flag),0);
@@ -366,13 +355,14 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 			case 4: //entrada-salida
 			{
 				//puts("ENTRADA-SALIDA");
+				pagina = procesaPagina(instrucciones[PCB->instructionPointer]);
 				PCB->estado=3; //bloqueo proceso
 				usleep(configuracion.retardo); //retardo del cpu
 				//señal al plani avisando que cambie de estado
 				PCB->tiempo=pagina;
 				send(socketPlanificador, &cambio, sizeof(flag), 0);
 				//send(socketPlanificador, &pagina, sizeof(int), 0); //envio el tiempo del sleep
-				queue_push(resultados,resultado(4,PCB->PID,pagina,NULL,1));
+				//queue_push(resultados,resultado(4,PCB->PID,pagina,NULL,1));
 				log_info(logger, "mProc %d - En entrada-salida de tiempo: %d",PCB->PID,pagina);
 
 				*cantInstrucEjec= *cantInstrucEjec + 1; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones

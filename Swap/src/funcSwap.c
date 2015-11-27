@@ -274,7 +274,7 @@ void compactarSwap()
 
 			//escribo donde debe estar
 			fseek(archivo,inicio+k*contexto->cant_paginas,SEEK_SET);
-			fwrite(contenido, strlen(contenido), 1, archivo);
+			fwrite(contenido, contexto->tam_pagina, 1, archivo);
 		}
 
 		//actualizo el inicio en el nodo.
