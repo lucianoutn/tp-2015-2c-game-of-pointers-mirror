@@ -116,7 +116,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 	int i, j;
 
 	bool meHablaron=false;
-
+	bool cerreConexiones=false;
 	FD_ZERO(&master);    // borra los conjuntos maestro y temporal
 	FD_ZERO(&read_fds);        // obtener socket a la escucha
 
@@ -199,6 +199,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 							{
 								// conexión cerrada
 								printf("Conexion del socket %d cerrada \n", i);
+								cerreConexiones=true;
 							} else
 							{
 								perror("recv");
@@ -230,6 +231,7 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 										}
 										// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
 										ejecutoInstruccion(package, mensaje,memoria_real, TLB, tablaAdm, j,serverSocket, tablaAccesos);
+
 										free(mensaje);
 										break;
 									}
@@ -239,13 +241,21 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 					} // Esto es ¡TAN FEO!
 				}
 			}
-			if(!meHablaron)
+			if(!meHablaron)//Sali por timeout
 			{
 				chequearSeniales(TLB, memoria_real, tablaAdm);
 				meHablaron = false;
 				tv.tv_sec= 0;
 				tv.tv_usec=10000000;
 
+			}
+			meHablaron=false;
+
+			//Si ya no tengo mas conexiones cierro todo
+			if(cerreConexiones)
+			{
+				close(serverSocket);
+				return;
 			}
 		}
 }
