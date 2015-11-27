@@ -311,7 +311,7 @@ void asignarMarcosYTablas(char * contenido, t_header * package, t_list* tabla_pr
 
 	// LO ESCRIBO CON EL MENSAJE QUE ME DICEN QUE LO ESCRIBA PORQUE NO TENGO QUE TRAER LO QUE YA ESTE ESCRITO DEL SWAP
 	escribirMarco(contenido, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
-	//memcpy ( marco_a_llenar->direccion_inicio, contenido, strlen(contenido));
+
 
 	//AGREGO EL MARCO AHORA ESCRITO, A LA LISTA DE MARCOS ESCRITOS
 	list_add(listaFramesMemR, marco_a_llenar);
@@ -747,18 +747,6 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 
 	}
 
-	//ACTUALIZO LA TABLA DEL PROCESO SEGUN ALGORITMOS // NO USO ACTUALIZOTABLAPROCESO POR LOS PARAMETROS
-	if ( !strcmp(miContexto.algoritmoReemplazo, "FIFO"))
-	{
-		actualizarTablaProcesoFifo(tablaProceso, header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco);
-	}else if (!strcmp(miContexto.algoritmoReemplazo, "LRU")) // LA MUE
-	{
-		actualizarTablaProcesoLru(tablaProceso, header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco);
-	}else // CLOCK POR DESCARTE YA QUE NO PUEDE HABER ERRORES EN EL ARCHIVO DE CONFIGURACION, ACTUALIZA EL BIT DE ACCEDIDO A 1
-	{
-		actualizarTablaProcesoClock(tablaProceso, header, paginaASwapear->direccion_fisica, paginaASwapear->marco, 0);
-	}
-
 	if (!strcmp(miContexto.tlbHabilitada, "SI"))
 	{
 		int * posicion = malloc(sizeof(int));
@@ -772,6 +760,18 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 			list_remove(TLB, *posicion);
 		}
 		actualizarTlb(header->PID, header->pagina_proceso, paginaASwapear->direccion_fisica, TLB, paginaASwapear->marco);
+	}
+
+	//ACTUALIZO LA TABLA DEL PROCESO SEGUN ALGORITMOS // NO USO ACTUALIZOTABLAPROCESO POR LOS PARAMETROS
+	if ( !strcmp(miContexto.algoritmoReemplazo, "FIFO"))
+	{
+		actualizarTablaProcesoFifo(tablaProceso, header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco);
+	}else if (!strcmp(miContexto.algoritmoReemplazo, "LRU")) // LA MUE
+	{
+		actualizarTablaProcesoLru(tablaProceso, header->pagina_proceso, paginaASwapear->direccion_fisica, paginaASwapear->marco);
+	}else // CLOCK POR DESCARTE YA QUE NO PUEDE HABER ERRORES EN EL ARCHIVO DE CONFIGURACION, ACTUALIZA EL BIT DE ACCEDIDO A 1
+	{
+		actualizarTablaProcesoClock(tablaProceso, header, paginaASwapear->direccion_fisica, paginaASwapear->marco, 0);
 	}
 
 	// ACTUALIZO LA PAGINA QUE SWAPEE ( LA ELIMINO Y LA VUELVO A AGREGAR VACIA DEL )
