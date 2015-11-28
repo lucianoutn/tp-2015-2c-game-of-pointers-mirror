@@ -156,14 +156,16 @@ int escribirSwap(t_header * package, int socketCliente)
 		//Actualizo cant escritas
 		pag->escritas= pag->escritas+1;
 		//Relleno paginas
+
 		int relleno= pag->inicio + ((package->pagina_proceso) * contexto->tam_pagina)+ strlen(mensaje)+1;
 		int final_pagina= pag->inicio+((package->pagina_proceso + 1) * contexto->tam_pagina);
 
-		for(;relleno<=final_pagina;relleno++)
+		for(;relleno<final_pagina;relleno++)
 		{
 			fseek(archivo,relleno,SEEK_SET);
 			fputc('\0',archivo);
 		}
+
 	}
 	else
 	{
@@ -188,6 +190,7 @@ int inicializarProc(t_header * package) {
 				,package->PID, hueco->inicio,package->pagina_proceso * contexto->tam_pagina);
 		rellenarParticion(hueco->inicio, package->pagina_proceso);
 		//Actualizo huecos
+		hueco->inicio= hueco->inicio+package->pagina_proceso*contexto->tam_pagina;
 		hueco->paginas = hueco->paginas - package->pagina_proceso;
 		return 1;
 	}
@@ -269,12 +272,12 @@ void compactarSwap()
 		for(;k<=pagina->paginas;k++)
 		{
 			//leo donde estaba
-			fseek(archivo,pagina->inicio+k*contexto->cant_paginas,SEEK_SET);
+			fseek(archivo,pagina->inicio+k*contexto->tam_pagina,SEEK_SET);
 			fread(contenido, contexto->tam_pagina, 1, archivo);
-
 			//escribo donde debe estar
-			fseek(archivo,inicio+k*contexto->cant_paginas,SEEK_SET);
+			fseek(archivo,inicio+k*contexto->tam_pagina,SEEK_SET);
 			fwrite(contenido, contexto->tam_pagina, 1, archivo);
+
 		}
 
 		//actualizo el inicio en el nodo.
