@@ -848,8 +848,6 @@ void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char
 
 	process_pag * pagina = list_find(tabla_proceso, (void*)_numeroDePagina);
 
-	puts("actualizarclock \n");
-
 	switch (modo)
 	{
 		case 0: // SI HAY QUE REMOVER PAGINA (SWAPEANDO) Falta actualizar puntero
@@ -866,7 +864,6 @@ void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char
 
 				numPag = paginaASwapear->pag;
 				process_pag * elem_apuntado = list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
-				printf("Elem apuntado ---> %s \n", elem_apuntado->direccion_fisica);
 
 				// Actualizo los valores de la nueva pagina
 				pagina->direccion_fisica = elem_apuntado->direccion_fisica;
@@ -1200,11 +1197,6 @@ void limpiarMemoria(char * memoria_real, t_list * TLB, t_list * tabla_adm, int s
 		//Traigo una tabla
 		t_tabla_adm * entrada_tabla_tablas = list_get(tabla_adm,i);
 		t_list * tablaProceso = entrada_tabla_tablas->direc_tabla_proc;
-<<<<<<< HEAD
-		//usleep(miContexto.retardoMemoria * 1000000);
-=======
-		usleep(miContexto.retardoMemoria * SLEEP);
->>>>>>> refs/remotes/origin/master
 		for(;j<tablaProceso->elements_count;j++) //Recorro la tabla de procesos
 		{
 			process_pag * pagina_proc = list_get(tablaProceso, j); //Traigo una pagina
@@ -1238,6 +1230,9 @@ void limpiarMemoria(char * memoria_real, t_list * TLB, t_list * tabla_adm, int s
 		k++;
 	}
 
+	if(tabla_adm->elements_count==0)
+	{
+	}
 	//Actualizo marcos
 	puts("Actualizo marcos");
 	list_destroy_and_destroy_elements(listaFramesMemR,(void *)marco_destroy);
@@ -1260,14 +1255,13 @@ void dumpEnLog(char * memoria_real, t_list * tablaAdm)
 			process_pag * pagina_proc = list_get(tablaProceso, j); //Traigo una pagina
 			if(pagina_proc->marco!=-1) //si el marco no es -1 es porque esta cargado en un marco
 			{
-<<<<<<< HEAD
-				//usleep(miContexto.retardoMemoria * 1000000);
-=======
-				usleep(miContexto.retardoMemoria * SLEEP);
->>>>>>> refs/remotes/origin/master
-				log_info(logger,"Marco: %d ; Contenido: \"%s\"",pagina_proc->marco, pagina_proc->direccion_fisica);
+					log_info(logger,"Marco: %d ; Contenido: \"%s\"",pagina_proc->marco, pagina_proc->direccion_fisica);
 			}
 		}
+	}
+	if(tablaAdm->elements_count==0)
+	{
+		log_info(logger,"La memoria esta vacia");
 	}
 }
 void tasasDeTLB()
