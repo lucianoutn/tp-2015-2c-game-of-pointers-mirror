@@ -211,12 +211,12 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 						} else
 						{
 							// tenemos datos de algún cliente
-							for (j = 0; j <= fdmax; j++)
-							{
-								if (FD_ISSET(j, &master))
-								{
-									if (j != listener)
-									{
+							//for (j = 0; j <= fdmax; j++)
+							//{
+							//	if (FD_ISSET(j, &master))
+							//	{
+							//		if (j != listener)
+							//		{
 										printf("El tipo de ejecucion recibido es %d \n",package->type_ejecution);
 										char * mensaje = malloc(package->tamanio_msj);
 										if (package->type_ejecution == 1) //Escritura
@@ -230,13 +230,13 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 											mensaje = NULL;
 										}
 										// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
-										ejecutoInstruccion(package, mensaje,memoria_real, TLB, tablaAdm, j,serverSocket, tablaAccesos);
+										ejecutoInstruccion(package, mensaje,memoria_real, TLB, tablaAdm, i,serverSocket, tablaAccesos);
 
 										free(mensaje);
 										break;
-									}
-								}
-							}
+								//	}
+							//	}
+						//	}
 						}
 					} // Esto es ¡TAN FEO!
 				}
