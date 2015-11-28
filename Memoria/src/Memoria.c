@@ -73,14 +73,14 @@ int main() {
 	{
 		log_info(logger,"Luego de un minuto, muestro tasa de aciertos de la TLB");
 		tasasDeTLB();
-		alarm(600);
+		alarm(60);
 	}
 
 	signal(SIGUSR1, flush);
 	signal(SIGUSR2, limpiar);
 	signal(SIGPOLL, dump);
 	signal(SIGALRM,mostrar);
-	alarm(600);
+	alarm(60);
 
 	reciboDelCpu(memoria_real, TLB, tablaAdm, tablaAccesos);
 

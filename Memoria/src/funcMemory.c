@@ -121,7 +121,7 @@ void ejecutoInstruccion(t_header * header, char * mensaje,char *  memoria_real, 
 	 		}
 	 		break;
 	 	case 3:
-			log_info(logger, "+++++++++++++++++++++Se recibio orden de finalizacion del PID: %d+++++++++++++++++++++",header->PID);
+			log_info(logger, "Se recibio orden de finalizacion del PID: %d",header->PID);
 			// Lo muestro aca porque si lo muestro despues de que lo mate, la tabla no tiene el registro
 			mostrarVersus(tablaAccesos, header->PID);
 			matarProceso(header, tabla_adm, TLB, tablaAccesos);
