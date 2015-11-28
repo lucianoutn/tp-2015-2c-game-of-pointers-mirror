@@ -179,7 +179,7 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, t_header * proc, t_list* tabla
 	{
 		log_info(logger, "TLB HIT pagina: %d en el marco numero: %d y dice: \"%s\"", registro_tlb->pagina,registro_tlb->marco, registro_tlb->direccion_fisica);
 		// SEGUN ISSUE 71, SI LA ENCUENTRA EN TLB HACE UN RETARDO SOLO, CUANDO OPERA CON LA PÁGINA (LA LEE)
-		usleep(miContexto.retardoMemoria * 100000);
+		usleep(miContexto.retardoMemoria * 1000000);
 
 		upPaginasAccedidas(tablaAccesos, registro_tlb->pid);
 
@@ -210,7 +210,7 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, t_header * proc, t_list* tabla
 int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serverSocket, int socketCliente, t_list* tablaAccesos)
 {
 	int * flag = malloc(sizeof(int));
-	usleep(miContexto.retardoMemoria * 100000); // SLEEP PORQUE LA MEMORIA BUSCA EN SUS ESTRUCTURAS
+	usleep(miContexto.retardoMemoria * 1000000); // SLEEP PORQUE LA MEMORIA BUSCA EN SUS ESTRUCTURAS
 	t_list * tabla_proc = obtenerTablaProceso(tabla_adm, package->PID);
 
 	// SI ENCONTRO UN REGISTRO CON ESE PID
@@ -270,7 +270,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		}else // SI NO ESTA EN SWAP, YA CONOZCO LA DIRECCION DE SU MARCO //
 		{
 			log_info(logger, "Se encontro la pagina a leer en memoria");
-			usleep(miContexto.retardoMemoria * 100000); 	// SLEEP PORQUE OPERO CON LA PAGINA SEGUN ISSUE 71
+			usleep(miContexto.retardoMemoria * 1000000); 	// SLEEP PORQUE OPERO CON LA PAGINA SEGUN ISSUE 71
 
 			/*
 			 * KOLOOO
@@ -307,7 +307,7 @@ void asignarMarcosYTablas(char * contenido, t_header * package, t_list* tabla_pr
 
 	log_info(logger, "Traje la pagina del swap, voy a llenar el marco %d", marco_a_llenar->numero_marco);
 	// SLEEP PORQUE OPERO CON LA PAGINA SEGUN ISSUE 71
-	usleep(miContexto.retardoMemoria * 100000);
+	usleep(miContexto.retardoMemoria * 1000000);
 
 	// LO ESCRIBO CON EL MENSAJE QUE ME DICEN QUE LO ESCRIBA PORQUE NO TENGO QUE TRAER LO QUE YA ESTE ESCRITO DEL SWAP
 	escribirMarco(contenido, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
@@ -329,7 +329,7 @@ void escribirEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int
 {
 	int  * flag = malloc(sizeof(int));
 	// SLEEP PORQUE LA MEMORIA BUSCA EN SUS ESTRUCTURAS
-	usleep(miContexto.retardoMemoria * 100000);
+	usleep(miContexto.retardoMemoria * 1000000);
 	t_list * tabla_proc = obtenerTablaProceso(tabla_adm, package->PID);
 
 	// SI ENCONTRO UN REGISTRO CON ESE PID
@@ -666,7 +666,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 	log_info(logger, "Acceso a swap: Se swapea para traer la pagina %d porque no quedan marcos disponibles para el proceso %d", header->pagina_proceso, header->PID);
 	log_info(logger, "Se va a remover la pagina: %d, que contiene: \"%s\"",paginaASwapear->pag, paginaASwapear->direccion_fisica);
 
-	usleep(miContexto.retardoMemoria * 100000);
+	usleep(miContexto.retardoMemoria * 1000000);
 
 	t_header * header_escritura = crearHeaderEscritura( header->PID, paginaASwapear->pag, 0);
 
@@ -729,7 +729,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 
 		log_info(logger, "Se escribe el marco liberado con la pagina recien traida del swap");
 		// SLEEP PORQUE OPERO CON LA PAGINA SEGUN ISSUE 71
-		usleep(miContexto.retardoMemoria * 100000);
+		usleep(miContexto.retardoMemoria * 1000000);
 		escribirMarco(contenido, paginaASwapear->direccion_fisica, paginaASwapear->marco);
 
 		int tamanioMsj = strlen(contenido)+1;
@@ -1029,7 +1029,7 @@ process_pag * bitDirtyEnUno (t_list * tablaProceso)
 
 void escribirMarco(char * mensaje, char* direccion, int marco)
 {
-	usleep(miContexto.retardoMemoria * 100000);
+	usleep(miContexto.retardoMemoria * 1000000);
 	char * pagAux = calloc(1, miContexto.tamanioMarco); // sobreescribo pagina con \0
 	strcpy(direccion, pagAux);
 	int tam_msj = strlen(mensaje);
@@ -1192,7 +1192,7 @@ void limpiarMemoria(char * memoria_real, t_list * TLB, t_list * tabla_adm, int s
 		//Traigo una tabla
 		t_tabla_adm * entrada_tabla_tablas = list_get(tabla_adm,i);
 		t_list * tablaProceso = entrada_tabla_tablas->direc_tabla_proc;
-		usleep(miContexto.retardoMemoria * 100000);
+		usleep(miContexto.retardoMemoria * 1000000);
 		for(;j<tablaProceso->elements_count;j++) //Recorro la tabla de procesos
 		{
 			process_pag * pagina_proc = list_get(tablaProceso, j); //Traigo una pagina
@@ -1248,7 +1248,7 @@ void dumpEnLog(char * memoria_real, t_list * tablaAdm)
 			process_pag * pagina_proc = list_get(tablaProceso, j); //Traigo una pagina
 			if(pagina_proc->marco!=-1) //si el marco no es -1 es porque esta cargado en un marco
 			{
-				usleep(miContexto.retardoMemoria * 100000);
+				usleep(miContexto.retardoMemoria * 1000000);
 				log_info(logger,"Marco: %d ; Contenido: \"%s\"",pagina_proc->marco, pagina_proc->direccion_fisica);
 			}
 		}
