@@ -159,4 +159,6 @@ void preparoHeader(t_headcpu *, int);
 
 char* estadoActual (int estado); //la uso para el comando PS del planificador.lucho
 
+void* liberarPCB(t_pcb* element);
+
 #endif /* SRC_LIBRERIAPLANIFICADOR_H_ */
