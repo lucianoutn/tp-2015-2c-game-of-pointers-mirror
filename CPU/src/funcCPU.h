@@ -99,7 +99,7 @@ sem_t *semProduccionMsjs;
 sem_t *semRespuestaCpu;
 //int semVCPU; // vector de semaforos dinamico compartidos
 
-pthread_mutex_t mutex;
+//pthread_mutex_t mutex;
 //ptrhead_mutex_unlock(&mutex);
 //fin semaforos
 
