@@ -217,24 +217,23 @@ void reciboDelCpu(char * memoria_real, t_list * TLB, t_list * tablaAdm,t_list* t
 							//	{
 							//		if (j != listener)
 							//		{
-										printf("El tipo de ejecucion recibido es %d \n",package->type_ejecution);
-										char * mensaje = malloc(package->tamanio_msj);
-										if (package->type_ejecution == 1) //Escritura
-										{
-											recv(j, mensaje, package->tamanio_msj,0);
-											mensaje[package->tamanio_msj] = '\0';
-											printf("Mensaje recibido: <%s>  Tamaño: %d.\n",	mensaje, package->tamanio_msj);
-										}
-										else
-										{
-											mensaje = NULL;
-										}
-										// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
-										ejecutoInstruccion(package, mensaje,memoria_real, TLB, tablaAdm, i,serverSocket, tablaAccesos);
-
-										free(mensaje);
-										break;
-								//	}
+							printf("El tipo de ejecucion recibido es %d \n",package->type_ejecution);
+							char * mensaje = malloc(package->tamanio_msj);
+							if (package->type_ejecution == 1) //Escritura
+							{
+								recv(i, mensaje, package->tamanio_msj,0);
+								mensaje[package->tamanio_msj] = '\0';
+								printf("Mensaje recibido: <%s>  Tamaño: %d.\n",	mensaje, package->tamanio_msj);
+							}
+							else
+							{
+								mensaje = NULL;
+							}
+							// MANDO EL PAQUETE RECIBIDO A ANALIZAR SU TIPO DE INSTRUCCION PARA SABER QUE HACER
+							ejecutoInstruccion(package, mensaje,memoria_real, TLB, tablaAdm, i,serverSocket, tablaAccesos);
+							free(mensaje);
+							break;
+							//	}
 							//	}
 						//	}
 						}
