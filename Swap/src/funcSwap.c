@@ -287,6 +287,16 @@ void compactarSwap()
 	hueco->inicio = inicio_ant + pag_ant * contexto->tam_pagina;
 	hueco->paginas = contexto->cant_paginas - cant_pag;
 
+	int relleno= hueco->inicio;
+	int final_swap= contexto->cant_paginas*contexto->tam_pagina;
+	//relleno lo que queda del archivo con \0
+
+	for(;relleno <=final_swap;relleno++)
+	{
+		fseek(archivo,relleno,SEEK_SET);
+		fputc('\0',archivo);
+	}
+
 	int j= 1;
 	for(; j<tamanio_huecos; j++)
 	{
