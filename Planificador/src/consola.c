@@ -279,7 +279,7 @@ int leeComando(void)
 		// mantener el parecido del comportamiento de una consola
 		return enter;
 	}
-
+	palabra[i] = '\0';
 	//si estoy aca es porque detecte un enter! Entonces mi palabra deberia estar lista para comparar
 	i = 0; // reutilizo i porque el primer while ya no la necesita
 	// comparo la palabra con cada uno de los comandos permitidos, hasta salir que es el ultimo

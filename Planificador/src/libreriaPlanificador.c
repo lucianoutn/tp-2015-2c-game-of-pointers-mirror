@@ -209,7 +209,7 @@ void enviaACpu(t_cpu *CPU)
 		}
 		case 5: //fallo
 		{
-			log_info(logger, "mProc %d <%s> Fallo",pcb->PID,ruta(pcb->PID));
+			//log_info(logger, "mProc %d <%s> Fallo",pcb->PID,ruta(pcb->PID));
 			break;
 		}
 		default:
