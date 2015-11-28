@@ -144,6 +144,7 @@ void ejecutoInstruccion(t_header * header, char * mensaje,char *  memoria_real, 
 			log_error(logger, "El tipo de ejecucion recibido no es valido");
 	 		break;
 	 	}
+	free(flag);
 }
 
 void iniciarProceso(t_list* tabla_adm, t_header * proceso, t_list* tablaAccesos)
@@ -201,10 +202,12 @@ int leerDesdeTlb(int socketCliente, t_list * TLB, t_header * proc, t_list* tabla
 		{
 			log_error(logger, "No se encontro la tabla del proceso");
 		}
+		free(posicion);
 		return 1;
 	}
 	// SI LA TLB NO ESTA HABILITADA ENTONCES TENGO QUE VERIFICAR EN LA TABLA DE TABLAS
 	//  SI YA ESTA CARGADA EN MEMORIA O SI ESTA EN SWAP
+	free(posicion);
 	return 0;
 }
 
@@ -258,6 +261,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 						send(socketCliente,&recibi,sizeof(int),0);
 						log_error(logger, "Hubo un problema con la conexion/envio al swap. Se informa al CPU");
 					}
+					free(contenido);
 				}else
 				{
 					mostrarVersus(tablaAccesos, package->PID);
@@ -300,6 +304,7 @@ int leerEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int serv
 		int recibi= -1;
 		send(socketCliente,&recibi,sizeof(int),0);
 	}
+	free(flag);
 }
 
 void asignarMarcosYTablas(char * contenido, t_header * package, t_list* tabla_proc, t_list * TLB)
@@ -381,6 +386,7 @@ void escribirEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int
 						send(socketCliente,&recibi,sizeof(bool),0);
 						log_error(logger, "Hubo un problema con la conexion/envio al swap");
 					}
+					free(contenido);
 				}else
 				{
 					mostrarVersus(tablaAccesos, package->PID);
@@ -415,6 +421,7 @@ void escribirEnMemReal(t_list * tabla_adm, t_list * TLB, t_header * package, int
 		bool recibi= false;
 		send(socketCliente,&recibi,sizeof(bool),0);
 	}
+	free(flag);
 }
 
 t_list * obtenerTablaProceso(t_list * tabla_adm, int pid)
@@ -546,11 +553,13 @@ int escribirDesdeTlb (t_list * TLB, int tamanio_msg, char * message, t_header * 
 		bool recibi = true;
 		send(socketCliente,&recibi,sizeof(bool),0);
 		log_info(logger,"Se informa al CPU confirmacion de escritura");
+		free(posicion);
 		return 1;
 	}else
 	{
 		// SI NO LA ENCONTRO RETORNO 0
 		log_info(logger, "TLB MISS");
+		free(posicion);
 		return 0;
 	}
 }
@@ -683,6 +692,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		return 0;
 	}
 
+	free(status_escritura);
 	int num_pag;
 
 	bool _numeroDePag (void * p){ return(*(int*)p == num_pag); }
@@ -703,10 +713,11 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 			log_error(logger, "No se pudo leer del Swap, aviso al CPU");
 			bool recibi=false;
 			send(socketCliente,&recibi,sizeof(bool),0);
+			free(status_lectura);
+			free(contenido);
 			return 0;
 		}
 
-		log_info(logger, "Se escribe en el marco liberado la pagina que se quiere escribir****************");
 		escribirMarco(mensaje, paginaASwapear->direccion_fisica, paginaASwapear->marco);
 
 		upPaginasAccedidas(tablaAccesos, header->PID);
@@ -714,6 +725,8 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		//bool recibi= true;
 		//send(socketCliente,&recibi,sizeof(bool),0);
 
+		free(contenido);
+		free(status_lectura);
 		// SI SE TRATA DE UNA LECTURA
 	}else if(header->type_ejecution ==0)
 	{
@@ -726,6 +739,8 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 			int recibi = -1;
 			send(socketCliente,&recibi,sizeof(int),0);
 			log_error(logger, "No se pudo leer de swap, aviso al CPU");
+			free(status_lectura);
+			free(contenido);
 			return 0;
 		}
 
@@ -742,6 +757,8 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 
 		upPaginasAccedidas(tablaAccesos, header->PID);
 		upFallosPagina(tablaAccesos, header->PID);
+		free(status_lectura);
+		free(contenido);
 	}
 	num_pag = paginaASwapear->pag;
 
@@ -758,6 +775,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 			list_remove(TLB, *posicion);
 		}
 		actualizarTlb(header->PID, header->pagina_proceso, paginaASwapear->direccion_fisica, TLB, paginaASwapear->marco);
+		free(posicion);
 	}
 
 	//ACTUALIZO LA TABLA DEL PROCESO SEGUN ALGORITMOS // NO USO ACTUALIZOTABLAPROCESO POR LOS PARAMETROS
@@ -785,21 +803,21 @@ void actualizoTablaProceso(t_list * tablaProceso, t_marco_hueco * marco_a_llenar
 {
 	if(!strcmp(miContexto.algoritmoReemplazo, "FIFO"))
 	{
-		log_info(logger, "Actualizando tabla corte FIFO");
+		log_info(logger, "Actualizando tabla segun algoritmo FIFO");
 		if(marco_a_llenar!=NULL)
 			actualizarTablaProcesoFifo(tablaProceso, header->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
 		else
 			actualizarTablaProcesoFifo(tablaProceso, header->pagina_proceso, NULL, NULL);
 	}else if (!strcmp(miContexto.algoritmoReemplazo, "LRU"))
 	{
-		log_info(logger, "Actualizando tabla corte LRU");
+		log_info(logger, "Actualizando tabla segun algoritmo LRU");
 		if(marco_a_llenar!=NULL)
 			actualizarTablaProcesoLru(tablaProceso, header->pagina_proceso, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
 		else
 			actualizarTablaProcesoLru(tablaProceso, header->pagina_proceso, NULL, NULL);
 	}else
 	{
-		log_info(logger, "Actualizando tabla corte CLOCK");
+		log_info(logger, "Actualizando tabla segun algoritmo CLOCK");
 		if(marco_a_llenar!=NULL)
 			actualizarTablaProcesoClock(tablaProceso, header, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco, 1);
 		else
@@ -1103,9 +1121,6 @@ void upPaginasAccedidas(t_list* tablaAccesos, int pid)
 
 	t_versus * reg = list_find(tablaAccesos, (void*)_numeroDePid);
 	reg->cantPagAccessed++;
-
-	log_info(logger, "--------------------------------------ACCESO------------------------------------------------");
-
 }
 
 void upFallosPagina(t_list* tablaAccesos, int pid)
@@ -1114,8 +1129,6 @@ void upFallosPagina(t_list* tablaAccesos, int pid)
 
 	t_versus * reg = list_find(tablaAccesos, (void*)_numeroDePid);
 	reg->cantFallosPag++;
-
-	log_info(logger, "--------------------------------------FALLO------------------------------------------------");
 }
 
 void mostrarVersus(t_list* tablaAccesos, int pid)
@@ -1174,17 +1187,16 @@ void tlbFlush(t_list * TLB)
 		{
 			list_remove_and_destroy_element(TLB, 0,(void*)reg_tlb_destroy);
 		}
-		puts("Se vacio la TLB \n");
+		log_info(logger,"Se vacio la TLB");
 	}
 	else
 	{
-		puts("La TLB NO esta habilitada. \n");
+		log_info(logger,"La TLB NO esta habilitada");
 	}
 }
 
 void limpiarMemoria(char * memoria_real, t_list * TLB, t_list * tabla_adm, int serverSocket)
 {
-	puts("Empiezo a limpiar la memoria");
 	//Vacio la memoria
 	int k = 0;
 	char * punteroAMemoria=  memoria_real;
@@ -1193,7 +1205,7 @@ void limpiarMemoria(char * memoria_real, t_list * TLB, t_list * tabla_adm, int s
 	int i = 0, j = 0;
 	for(;i<tabla_adm->elements_count;i++) //Recorro la tabla de tablas
 	{
-		puts("Actualizo listas");
+		log_info(logger,"Se comienza a borrar la memoria");
 		//Traigo una tabla
 		t_tabla_adm * entrada_tabla_tablas = list_get(tabla_adm,i);
 		t_list * tablaProceso = entrada_tabla_tablas->direc_tabla_proc;
@@ -1203,7 +1215,6 @@ void limpiarMemoria(char * memoria_real, t_list * TLB, t_list * tabla_adm, int s
 
 			if(pagina_proc->direccion_fisica!=NULL) //Se la mando a escribir al swap.
 			{
-
 				t_header * header_escritura = crearHeaderEscritura(entrada_tabla_tablas->pid, pagina_proc->pag, 0);
 
 				int * status_escritura = malloc(sizeof(int));
@@ -1213,6 +1224,7 @@ void limpiarMemoria(char * memoria_real, t_list * TLB, t_list * tabla_adm, int s
 				{
 					log_error(logger, "No se pudo escribir en el Swap.");
 				}
+				free(status_escritura);
 
 			}
 			//Actualizo la pagina
@@ -1230,11 +1242,7 @@ void limpiarMemoria(char * memoria_real, t_list * TLB, t_list * tabla_adm, int s
 		k++;
 	}
 
-	if(tabla_adm->elements_count==0)
-	{
-	}
 	//Actualizo marcos
-	puts("Actualizo marcos");
 	list_destroy_and_destroy_elements(listaFramesMemR,(void *)marco_destroy);
 	list_destroy_and_destroy_elements(listaFramesHuecosMemR,(void *)marco_hueco_destroy);
 	listaFramesMemR = crearListaFrames();
