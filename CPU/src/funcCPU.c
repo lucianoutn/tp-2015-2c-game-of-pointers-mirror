@@ -205,7 +205,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 	//primero leo para saber el numero de instrucciones
 	//char **instrucciones= (char**)malloc(sizeof(char*));
 	//guardo las intrucciones
-	char **instrucciones = (leermCod(PCB->ruta, &PCB->numInstrucciones));
+	char **instrucciones = leermCod(PCB->ruta, &PCB->numInstrucciones);
 
 	//Itera hasta tener que replanificar o finalizar
 	while(PCB->estado!=3 && PCB->estado!=4 && PCB->estado!=5)
@@ -339,6 +339,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 					break;
 				}
 
+				*cantInstrucEjec= *cantInstrucEjec + 1; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
 
 				//aviso al plani indicando que termino con este semaforo:
@@ -348,8 +349,6 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 					semOperacion.sem_flg = 0; //un flag siempre en0
 					semop (semVCPU, &semOperacion, 1); //aplico la operacion sobre el semaforo
 		     	*/
-
-				*cantInstrucEjec= *cantInstrucEjec + 1; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				break;
 
 			case 4: //entrada-salida
@@ -381,8 +380,10 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 		{
 			PCB->quantum--;
 		}
-		//PASO A LA OTRA INSTRUCCION
-		PCB->instructionPointer	++;
+
+		if(PCB->estado!=4 && PCB->estado!=5)
+			//PASO A LA OTRA INSTRUCCION
+			PCB->instructionPointer	++;
 
 	}	//FIN WHILE
 
@@ -390,7 +391,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 	{
 		imprimeResultados(queue_pop(resultados));
 	}
-	printf("Numero de instrucciones ejecutadas 2: %d\n",PCB->instructionPointer);
+	printf("Numero de instrucciones ejecutadas en la refaga: %d\n",(PCB->instructionPointer + 1));
 	int I=0;
 	while(I!=PCB->numInstrucciones)
 	{
@@ -400,7 +401,7 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 
 	free(instrucciones);
 	free(header);
-	queue_destroy(resultados);
+	//queue_destroy(resultados);
 
 }
 
