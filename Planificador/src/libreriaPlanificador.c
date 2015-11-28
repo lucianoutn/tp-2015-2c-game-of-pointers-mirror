@@ -6,6 +6,7 @@
  */
 
 #include "libreriaPlanificador.h"
+#define SLEEP 1000000
 
 int key_pcb=1235; //clave de la seccion memoria pcb
 int key_ruta=3212; //cable de la seccion memoria ruta
@@ -232,7 +233,7 @@ void bloqueados()
 		t_pcb* pcb= queue_pop(cola_block);
 		//lo bloqueo segun el tiempo indicado
 		log_info(logger, "mProc %d En entrada-salida de tiempo: %d",pcb->PID,pcb->tiempo);
-		usleep(pcb->tiempo * 1000000);
+		usleep(pcb->tiempo * SLEEP);
 		//replico metricas
 		pcb->t_respuesta+=difftime(time(NULL), pcb->t_aux2);
 		//inicializo la metrica

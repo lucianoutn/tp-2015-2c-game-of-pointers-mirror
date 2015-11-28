@@ -11,6 +11,7 @@
 #include <commons/string.h>
 #include <string.h>
 #include <sys/mman.h>
+#define SLEEP 100000
 
 FILE* crearParticion() {
 	char * comando = malloc(200);
@@ -79,29 +80,29 @@ void analizoPaquete(t_header * package, int socketCliente) {
 		leerSwap(package,contenido);
 		if(contenido!=NULL){
 			status = 1;
-			usleep(contexto->retardo_swap * 1000000);
+			usleep(contexto->retardo_swap * SLEEP);
 			send(socketCliente,&status,sizeof(int),0);
 			send(socketCliente,contenido,contexto->tam_pagina,0);
 		}
 		else{
 			puts("Todo mal");
-			usleep(contexto->retardo_swap * 1000000);
+			usleep(contexto->retardo_swap * SLEEP);
 			send(socketCliente,&status,sizeof(int),0);
 		}
 		break;
 	case 1:
 		status = escribirSwap(package, socketCliente);
-		usleep(contexto->retardo_swap * 1000000);
+		usleep(contexto->retardo_swap * SLEEP);
 		send(socketCliente,&status,sizeof(int),0);
 		break;
 	case 2:
 		status = inicializarProc(package);
-		usleep(contexto->retardo_swap * 1000000);
+		usleep(contexto->retardo_swap * SLEEP);
 		send(socketCliente,&status,sizeof(int),0);
 		break;
 	case 3:
 		status = finalizarProc(package);
-		usleep(contexto->retardo_swap * 1000000);
+		usleep(contexto->retardo_swap * SLEEP);
 		send(socketCliente,&status,sizeof(int),0);
 		break;
 	default:
@@ -306,7 +307,7 @@ void compactarSwap()
 		list_remove(lista_huecos, 1);
 	}
 
-	usleep(contexto->retardo_compac * 1000000);
+	usleep(contexto->retardo_compac * SLEEP);
 	log_info(logger, "Se finalizo la compactacion");
 }
 
