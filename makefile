@@ -7,16 +7,16 @@
 RM := rm -rf
 
 all:
-	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug && $(MAKE) make clean
-	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug && $(MAKE) make all
-	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/Swap/Debug && $(MAKE) make clean
-	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/Memoria/Debug && $(MAKE) make clean
-	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/Planificador/Debug && $(MAKE) make clean
-	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/CPU/Debug && $(MAKE) make clean
-	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/Swap/Debug && $(MAKE) make all
-	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/Memoria/Debug && $(MAKE) make all
-	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/Planificador/Debug && $(MAKE) make all
-	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/CPU/Debug && $(MAKE) make all
+	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug && $(MAKE) clean
+	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/SharedLibs/Debug && $(MAKE) all
+	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/Swap/Debug && $(MAKE) clean
+	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/Memoria/Debug && $(MAKE) clean
+	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/Planificador/Debug && $(MAKE) clean
+	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/CPU/Debug && $(MAKE) clean
+	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/Swap/Debug && $(MAKE) all
+	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/Memoria/Debug && $(MAKE) all
+	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/Planificador/Debug && $(MAKE) all
+	-cd /home/utnso/git/tp-2015-2c-game-of-pointers/CPU/Debug && $(MAKE) all
 
 .PHONY: all clean dependents
 .SECONDARY:
