@@ -27,7 +27,7 @@ int main()
 	else
 		return EXIT_FAILURE;
 
-	pthread_mutex_init(&mutex, NULL); //inicializo semaforo.lucho
+	//pthread_mutex_init(&mutex, NULL); //inicializo semaforo.lucho
 
 
 	//creando los hilos
