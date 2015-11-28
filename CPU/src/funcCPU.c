@@ -182,12 +182,12 @@ int procesaPagina(char* instruccion){
 /* Procesa los MSJ recibidos
  * y envia el MSJ correspondiente a la memoria
  */
-void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cantInstrucEjec){
+void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *tiempoEjec){
 
 	int pagina;
 	char *mensaje;
 	time_t tiempoInicio, tiempoFin; //para los time
-	int tiempoEjec = 0; //lo inicializo xq sino rompe el casteo de time a int
+	int tiempoEjecParcial = 0; //lo inicializo xq sino rompe el casteo de time a int
 	//time_t *t1, *t2;
 	//time_t *t1 = malloc(sizeof(time_t));
 	//time_t *t2 = malloc(sizeof(time_t));
@@ -253,10 +253,10 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 					send(socketPlanificador,&recibi, sizeof(bool),0);
 				}
 
-				tiempoEjec= (int)(tiempoFin - tiempoInicio); //calculo el tiempo total y lo casteo a entero
+				tiempoEjecParcial= (int)(tiempoFin - tiempoInicio); //calculo el tiempo total y lo casteo a entero
 				//printf("\ntiempo ejec: %d\n", tiempoEjec); //teste
 
-				*cantInstrucEjec= *cantInstrucEjec + tiempoEjec; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
+				*tiempoEjec= *tiempoEjec + tiempoEjecParcial; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				break;
 
 			case 1: //Escribir
@@ -286,9 +286,9 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 					send(socketPlanificador,&recibi, sizeof(flag),0);
 				}
 				free(mensaje);
-				tiempoEjec= (int)(tiempoFin - tiempoInicio); //calculo el tiempo total y lo casteo a entero
+				tiempoEjecParcial= (int)(tiempoFin - tiempoInicio); //calculo el tiempo total y lo casteo a entero
 				//printf("\ntiempo ejec: %d\n", tiempoEjec); //teste
-				*cantInstrucEjec= *cantInstrucEjec + tiempoEjec; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
+				*tiempoEjec= *tiempoEjec + tiempoEjecParcial; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				break;
 
 			case 2://iniciar
@@ -314,16 +314,18 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 					send(socketPlanificador,&recibi, sizeof(flag),0);
 				}
 
-				tiempoEjec= (int)(tiempoFin - tiempoInicio); //calculo el tiempo total y lo casteo a entero
+				tiempoEjecParcial= (int)(tiempoFin - tiempoInicio); //calculo el tiempo total y lo casteo a entero
 				//printf("\ntiempo ejec: %d\n", tiempoEjec); //teste
-				*cantInstrucEjec= *cantInstrucEjec + tiempoEjec; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
+				*tiempoEjec= *tiempoEjec + tiempoEjecParcial; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				break;
 
 			case 3: //finalizar
 
 				//puts("FINALIZAR");
 				creoHeader(PCB,header,3,0); //PCB HEADER TIPOEJECUCION PAGINA
+				time(&tiempoInicio);	//tomo el tiempo antes del retardo
 				usleep(configuracion.retardo); //retardo del cpu
+				time(&tiempoFin); //tomo el tiempo despues dl retrado
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
 				if(recibi){	//Controlo que haya llegado bien
@@ -339,7 +341,9 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 					break;
 				}
 
-				*cantInstrucEjec= *cantInstrucEjec + 1; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
+				tiempoEjecParcial= (int)(tiempoFin - tiempoInicio); //calculo el tiempo total y lo casteo a entero
+				//printf("\ntiempo ejec: %d\n", tiempoEjec); //teste
+				*tiempoEjec= *tiempoEjec + tiempoEjecParcial; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
 
 				//aviso al plani indicando que termino con este semaforo:
@@ -356,7 +360,9 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 				//puts("ENTRADA-SALIDA");
 				pagina = procesaPagina(instrucciones[PCB->instructionPointer]);
 				PCB->estado=3; //bloqueo proceso
+				time(&tiempoInicio);	//tomo el tiempo antes del retardo
 				usleep(configuracion.retardo); //retardo del cpu
+				time(&tiempoFin); //tomo el tiempo despues dl retrado
 				//señal al plani avisando que cambie de estado
 				PCB->tiempo=pagina;
 				send(socketPlanificador, &cambio, sizeof(flag), 0);
@@ -364,7 +370,9 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *cant
 				//queue_push(resultados,resultado(4,PCB->PID,pagina,NULL,1));
 				log_info(logger, "mProc %d - En entrada-salida de tiempo: %d",PCB->PID,pagina);
 
-				*cantInstrucEjec= *cantInstrucEjec + 1; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
+				tiempoEjecParcial= (int)(tiempoFin - tiempoInicio); //calculo el tiempo total y lo casteo a entero
+				//printf("\ntiempo ejec: %d\n", tiempoEjec); //teste
+				*tiempoEjec= *tiempoEjec + tiempoEjecParcial; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				break;
 
 			}
@@ -413,7 +421,7 @@ void timer(){ //funcion que resetea y calcula los valores de porcentaje de uso d
 		for (i=1; i <= configuracion.cantHilos; i++){
 		//	printf("\ntiempoEjec: %d\n", CPU[i].tiempoEjec);	//teste
 		//CPU[i].porcentajeUso = ((double)(CPU[i].tiempoEjec) * 100) / 60; //si se toma en cuenta el tiempo
-		CPU[i].porcentajeUso = ((CPU[i].cantInstrucEjec) * 100) / (60 * 1000000 / configuracion.retardo); //si se toma en cuenta la cantidad de instrucciones
+		CPU[i].porcentajeUso = ((CPU[i].tiempoEjec) * 100) / 60; //si se toma en cuenta la cantidad de instrucciones
 		//reseteo los valores
 		CPU[i].tiempoEjec = 0;
 		CPU[i].cantInstrucEjec = 0;
@@ -485,7 +493,7 @@ void iniciarCPU(t_cpu *CPUS){
 				//printf("PCB Recibido. PID:%d Ruta: <%s>\n",PCB->PID,PCB->ruta);
 				printf("Ejecuto PCB PID:%d en la CPU: %d\n",PCB->PID,CPUS->numeroCPU);
 				//ejecuto
-				ejecutoPCB(CPUS->socketMem,CPUS->socketPlani,PCB, &CPUS->cantInstrucEjec);	//analiza el PCB y envia a memoria si corresponde (nuevo)
+				ejecutoPCB(CPUS->socketMem,CPUS->socketPlani,PCB, &CPUS->tiempoEjec);	//analiza el PCB y envia a memoria si corresponde (nuevo)
 
 				break;
 			}

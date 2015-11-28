@@ -95,8 +95,6 @@ int main() {
 			case 0: //orden correr
 			{
 				encolar(lstPcbs, cola_ready);
-
-
 				break;
 			}
 			case 1: //orden salir

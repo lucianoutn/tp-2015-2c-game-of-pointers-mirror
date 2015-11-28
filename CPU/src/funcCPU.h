@@ -110,7 +110,7 @@ typedef struct {
 	int numeroCPU;
 	int porcentajeUso;
 	int cantInstrucEjec;
-	double tiempoEjec;
+	int tiempoEjec;
 }t_cpu;
 
 t_cpu *CPU;
