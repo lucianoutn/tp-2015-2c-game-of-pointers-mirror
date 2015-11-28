@@ -134,7 +134,7 @@ void enviaACpu(t_cpu *CPU)
 	pcb->t_espera+= difftime(time(NULL), pcb->t_aux1);
 
 	//chequeo el flag FINALIZAR. si esta prendido le pogno el IP al final, para cuando vuelva a ejecutar finalice. lucho
-	if (pcb->finalizar) {pcb->instructionPointer = pcb->numInstrucciones; puts("QUIERO FINALIZAR");}
+	if (pcb->finalizar) {pcb->instructionPointer = (pcb->numInstrucciones - 1); puts("QUIERO FINALIZAR");}
 
 	//cambio estado de PCB a ejecutando
 	pcb->estado=2;
@@ -198,10 +198,10 @@ void enviaACpu(t_cpu *CPU)
 		}
 		case 4: //finalizado
 		{
-			log_info(logger, "mProc %d <%s> Finalizo",pcb->PID,ruta(pcb->PID));
-			log_info(logger, "mProc %d <%s> Tiempo de ejecucion: %d",pcb->PID,ruta(pcb->PID), pcb->t_ejecucion);
-			log_info(logger, "mProc %d <%s> Tiempo de espera: %d",pcb->PID,ruta(pcb->PID), pcb->t_espera);
-			log_info(logger, "mProc %d <%s> Tiempo de respuesta %d",pcb->PID,ruta(pcb->PID), pcb->t_respuesta);
+			log_info(logger, "mProc %d <%s> Finalizo\n       Tiempo de ejecucion: %d - Tiempo de espera: %d - Tiempo de respuesta %d",pcb->PID,ruta(pcb->PID),pcb->t_ejecucion,pcb->t_espera,pcb->t_respuesta);
+			//log_info(logger, "mProc %d <%s> Tiempo de ejecucion: %d",pcb->PID,ruta(pcb->PID), pcb->t_ejecucion);
+			//log_info(logger, "mProc %d <%s> Tiempo de espera: %d",pcb->PID,ruta(pcb->PID), pcb->t_espera);
+			//log_info(logger, "mProc %d <%s> Tiempo de respuesta %d",pcb->PID,ruta(pcb->PID), pcb->t_respuesta);
 			//libero todo el PCB!
 			//lo saco de la cola NO DE LA LISTA
 			//free(pcb); //no lo liberen aca xq dsp no los puedo ver como finalizados en el comando PS. luego podemos liberarlos desde la lista
