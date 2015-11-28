@@ -323,7 +323,9 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *tiem
 
 				//puts("FINALIZAR");
 				creoHeader(PCB,header,3,0); //PCB HEADER TIPOEJECUCION PAGINA
+				time(&tiempoInicio);	//tomo el tiempo antes del retardo
 				usleep(configuracion.retardo); //retardo del cpu
+				time(&tiempoFin); //tomo el tiempo despues dl retrado
 				send(socketMemoria, header, sizeof(t_header), 0);	//envio la instruccion
 				recv(socketMemoria, &recibi, sizeof(flag),0);		//espero recibir la respuesta
 				if(recibi){	//Controlo que haya llegado bien
@@ -339,7 +341,9 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *tiem
 					break;
 				}
 
-				//*cantInstrucEjec= *cantInstrucEjec + 1; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
+				tiempoEjecParcial= (int)(tiempoFin - tiempoInicio); //calculo el tiempo total y lo casteo a entero
+				//printf("\ntiempo ejec: %d\n", tiempoEjec); //teste
+				*tiempoEjec= *tiempoEjec + tiempoEjecParcial; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				printf("Numero de instrucciones ejecutadas: %d\n",PCB->numInstrucciones);
 
 				//aviso al plani indicando que termino con este semaforo:
@@ -356,7 +360,9 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *tiem
 				//puts("ENTRADA-SALIDA");
 				pagina = procesaPagina(instrucciones[PCB->instructionPointer]);
 				PCB->estado=3; //bloqueo proceso
+				time(&tiempoInicio);	//tomo el tiempo antes del retardo
 				usleep(configuracion.retardo); //retardo del cpu
+				time(&tiempoFin); //tomo el tiempo despues dl retrado
 				//señal al plani avisando que cambie de estado
 				PCB->tiempo=pagina;
 				send(socketPlanificador, &cambio, sizeof(flag), 0);
@@ -364,7 +370,9 @@ void ejecutoPCB(int socketMemoria, int socketPlanificador, t_pcb *PCB, int *tiem
 				//queue_push(resultados,resultado(4,PCB->PID,pagina,NULL,1));
 				log_info(logger, "mProc %d - En entrada-salida de tiempo: %d",PCB->PID,pagina);
 
-				//*cantInstrucEjec= *cantInstrucEjec + 1; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
+				tiempoEjecParcial= (int)(tiempoFin - tiempoInicio); //calculo el tiempo total y lo casteo a entero
+				//printf("\ntiempo ejec: %d\n", tiempoEjec); //teste
+				*tiempoEjec= *tiempoEjec + tiempoEjecParcial; //para el comando CPU si se toma en cuenta metricas x cant de instrucciones
 				break;
 
 			}
