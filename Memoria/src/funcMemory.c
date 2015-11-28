@@ -6,7 +6,7 @@
  */
 //#include <SharedLibs/manejoListas.h>
 #include "funcMemory.h"
-#define SLEEP 100000
+#define SLEEP 1000000
 
 void traigoContexto()
 {
@@ -312,12 +312,9 @@ void asignarMarcosYTablas(char * contenido, t_header * package, t_list* tabla_pr
 	t_marco_hueco * marco_a_llenar = list_remove(listaFramesHuecosMemR, 0);
 
 	log_info(logger, "Traje la pagina del swap, voy a llenar el marco %d", marco_a_llenar->numero_marco);
-	// SLEEP PORQUE OPERO CON LA PAGINA SEGUN ISSUE 71
-	usleep(miContexto.retardoMemoria * SLEEP);
 
 	// LO ESCRIBO CON EL MENSAJE QUE ME DICEN QUE LO ESCRIBA PORQUE NO TENGO QUE TRAER LO QUE YA ESTE ESCRITO DEL SWAP
 	escribirMarco(contenido, marco_a_llenar->direccion_inicio, marco_a_llenar->numero_marco);
-
 
 	//AGREGO EL MARCO AHORA ESCRITO, A LA LISTA DE MARCOS ESCRITOS
 	list_add(listaFramesMemR, marco_a_llenar);
@@ -745,8 +742,7 @@ int swapeando(t_list* tablaProceso,t_list* tabla_adm , t_list * TLB, char * mens
 		}
 
 		log_info(logger, "Se escribe el marco liberado con la pagina recien traida del swap");
-		// SLEEP PORQUE OPERO CON LA PAGINA SEGUN ISSUE 71
-		usleep(miContexto.retardoMemoria * SLEEP);
+
 		escribirMarco(contenido, paginaASwapear->direccion_fisica, paginaASwapear->marco);
 
 		int tamanioMsj = strlen(contenido)+1;
