@@ -630,10 +630,11 @@ int buscarIndicePrimerPagina(t_list* tabla_paginas)
 	int tamanio = tabla_paginas->elements_count;
 	while (x < tamanio)
 	{
-		process_pag * reg = list_get(tabla_paginas, x);
-		if ( reg->direccion_fisica != NULL)
+		process_pag * reg = list_get(tabla_paginas, x%tamanio);
+		process_pag * reg2 = list_get(tabla_paginas, (x+1)%tamanio);
+		if ( (reg->direccion_fisica == NULL) && (reg2->direccion_fisica != NULL) )
 		{
-			return x;
+			return x+1;
 		}
 		x++;
 	}
@@ -846,6 +847,8 @@ void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char
 
 	process_pag * pagina = list_find(tabla_proceso, (void*)_numeroDePagina);
 
+	puts("actualizarclock \n");
+
 	switch (modo)
 	{
 		case 0: // SI HAY QUE REMOVER PAGINA (SWAPEANDO) Falta actualizar puntero
@@ -854,14 +857,21 @@ void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char
 				pagina = list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
 
 				process_pag * paginaASwapear = traerPaginaARemover(tabla_proceso);
+
 				// Obtengo el indice de la pagina que voy a eliminar
 				indicePuntero = buscarIndicePagina(tabla_proceso, paginaASwapear);
+				// Apunto a la pagina que corresponde apuntar
+				actualizarPunteroProximaPagina(tabla_proceso, indicePuntero);
+
 				numPag = paginaASwapear->pag;
 				process_pag * elem_apuntado = list_remove_by_condition(tabla_proceso, (void*)_numeroDePagina);
+				printf("Elem apuntado ---> %s \n", elem_apuntado->direccion_fisica);
+
 				// Actualizo los valores de la nueva pagina
 				pagina->direccion_fisica = elem_apuntado->direccion_fisica;
 				pagina->marco = elem_apuntado->marco;
 				pagina->accessed = 1;
+
 				// Limpio los valores de la pagina que ahora está en swap
 				elem_apuntado->direccion_fisica = NULL;
 				elem_apuntado->marco = -1;
@@ -869,17 +879,12 @@ void actualizarTablaProcesoClock(t_list * tabla_proceso, t_header * header, char
 				elem_apuntado->accessed = 0;
 				elem_apuntado->puntero = 0; // Por las dudas
 
-				// Apunto a la pagina que corresponde apuntar
-				actualizarPunteroProximaPagina(tabla_proceso, indicePuntero);
-
 				//Agrego la nueva pagina en la posición en donde estaba la pagina que swapee
 				list_add_in_index(tabla_proceso, indicePuntero, pagina);
-
 				if ( indiceUltPag == -1) // Si quedaron todas las que tienen un marco, agrego la vacia a lo ultimo
 					list_add(tabla_proceso, elem_apuntado);
 				else // Agrego la pagina que esta ahora en swap, al final con los valores limpios
 					list_add_in_index(tabla_proceso, indiceUltPag, elem_apuntado);
-
 			}else
 			{
 				puts("ERROR CLOCK");
@@ -1101,7 +1106,7 @@ void upPaginasAccedidas(t_list* tablaAccesos, int pid)
 	t_versus * reg = list_find(tablaAccesos, (void*)_numeroDePid);
 	reg->cantPagAccessed++;
 
-	//if (!strcmp(miContexto.algoritmoReemplazo), "CLOCK")
+	log_info(logger, "--------------------------------------ACCESO------------------------------------------------");
 
 }
 
@@ -1111,6 +1116,8 @@ void upFallosPagina(t_list* tablaAccesos, int pid)
 
 	t_versus * reg = list_find(tablaAccesos, (void*)_numeroDePid);
 	reg->cantFallosPag++;
+
+	log_info(logger, "--------------------------------------FALLO------------------------------------------------");
 }
 
 void mostrarVersus(t_list* tablaAccesos, int pid)
@@ -1192,7 +1199,7 @@ void limpiarMemoria(char * memoria_real, t_list * TLB, t_list * tabla_adm, int s
 		//Traigo una tabla
 		t_tabla_adm * entrada_tabla_tablas = list_get(tabla_adm,i);
 		t_list * tablaProceso = entrada_tabla_tablas->direc_tabla_proc;
-		usleep(miContexto.retardoMemoria * 1000000);
+		//usleep(miContexto.retardoMemoria * 1000000);
 		for(;j<tablaProceso->elements_count;j++) //Recorro la tabla de procesos
 		{
 			process_pag * pagina_proc = list_get(tablaProceso, j); //Traigo una pagina
@@ -1248,7 +1255,7 @@ void dumpEnLog(char * memoria_real, t_list * tablaAdm)
 			process_pag * pagina_proc = list_get(tablaProceso, j); //Traigo una pagina
 			if(pagina_proc->marco!=-1) //si el marco no es -1 es porque esta cargado en un marco
 			{
-				usleep(miContexto.retardoMemoria * 1000000);
+				//usleep(miContexto.retardoMemoria * 1000000);
 				log_info(logger,"Marco: %d ; Contenido: \"%s\"",pagina_proc->marco, pagina_proc->direccion_fisica);
 			}
 		}
