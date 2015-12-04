@@ -1080,7 +1080,7 @@ int marcosProcesoLlenos(t_list * lista_proceso)
 		x++;
 	}
 
-	if (paginas_ocupadas == miContexto.maxMarcos)
+	if ((paginas_ocupadas == miContexto.maxMarcos)||(paginas_ocupadas>0 && listaFramesHuecosMemR->elements_count == 0))
 		return 1;
 	else
 		return 0;
@@ -1248,12 +1248,13 @@ void limpiarMemoria(char * memoria_real, t_list * TLB, t_list * tabla_adm, int s
 
 void dumpEnLog(char * memoria_real, t_list * tablaAdm)
 {
-	int i = 0, j = 0;
+	int i = 0;
 	for(;i<tablaAdm->elements_count;i++) //Recorro la tabla de tablas
 	{
 		//Traigo una tabla
 		t_tabla_adm * entrada_tabla_tablas = list_get(tablaAdm,i);
 		t_list * tablaProceso = entrada_tabla_tablas->direc_tabla_proc;
+		int j= 0;
 		for(;j<tablaProceso->elements_count;j++) //Recorro la tabla de procesos
 		{
 			process_pag * pagina_proc = list_get(tablaProceso, j); //Traigo una pagina
